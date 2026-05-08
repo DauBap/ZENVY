@@ -1,0 +1,266 @@
+/* Minimal global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  color: #333;
+  background-color: #fafafa;
+  line-height: 1.6;
+}
+
+body.home-hero {
+  padding: 0 !important;
+  background-color: #fafafa;
+  overflow: hidden;
+}
+
+.app-main {
+  min-height: 60vh;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.heroFullscreen {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.heroCtas {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+  width: 100%;
+  max-width: 180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.heroCta {
+  flex: 1;
+}
+
+.heroCtas a {
+  display: block;
+  width: 100%;
+}
+
+.heroCta a {
+  flex: 1;
+}
+
+.heroCtas button {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #0052a3;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Header responsive nav */
+@media (min-width: 769px) {
+  .desktop-nav {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+  }
+}
+
+h1, h2, h3 {
+  margin-bottom: 15px;
+}
+
+section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+input, select, textarea {
+  font-size: 16px;
+}
+
+table {
+  font-size: 14px;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+
+  button {
+    padding: 12px 18px;
+    font-size: 15px;
+  }
+
+  section {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+
+  body {
+    padding: 0 10px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+
+  button {
+    padding: 12px 16px;
+    font-size: 16px;
+    min-height: 44px;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  section {
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+
+  input, select, textarea {
+    padding: 12px;
+    font-size: 16px;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 8px;
+    font-weight: bold;
+  }
+
+  table {
+    font-size: 12px;
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+
+  th, td {
+    padding: 8px;
+  }
+
+  /* Stack grid items on mobile */
+  [style*="grid-template-columns: repeat"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  [style*="display: grid"] {
+    gap: 10px;
+  }
+
+  [style*="display: flex"] {
+    flex-direction: column;
+  }
+
+  ul, ol {
+    margin-left: 20px;
+    margin-bottom: 15px;
+  }
+
+  li {
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  button {
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+
+  section {
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+
+  table th, table td {
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+}
