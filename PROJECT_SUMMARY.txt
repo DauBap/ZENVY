@@ -1,0 +1,107 @@
+PROJECT SUMMARY
+===============
+
+This file is the reference guide for the ZENVY Next.js project. It is intended to be the first-pass document for understanding the main architecture, route map, shared UI modules, and where to find key code.
+
+---
+
+PROJECT OVERVIEW
+----------------
+- Framework: Next.js 16 (App Router) with TypeScript
+- React version: 19
+- Styling: Tailwind CSS v4 and global CSS
+- UI primitives: Radix UI, lucide-react, framer-motion, class-variance-authority, sonner
+- Forms: react-hook-form and zod
+- Build scripts: `pnpm dev`, `pnpm build`, `pnpm start`, `pnpm lint`
+
+ROOT FILES
+----------
+- `package.json` - dependencies, scripts, runtime context
+- `next.config.mjs` - Next.js configuration; typescript build errors ignored and images unoptimized
+- `tsconfig.json` - TypeScript config (not detailed here)
+- `components.json` - likely component metadata used by tooling or design systems
+- `public/` - static assets; images and icons used by the front-end
+- `styles/globals.css` - global CSS definitions and Tailwind imports
+
+APP ROUTES (`app/`)
+-------------------
+The app uses the App Router. Main page files are in `app/` and nested folders map to routes.
+
+- `/` -> `app/page.tsx`
+- `/admin` -> `app/admin/page.tsx`
+- `/ai-tarot` -> `app/ai-tarot/page.tsx`
+- `/auth/login` -> `app/auth/login/page.tsx`
+- `/auth/register` -> `app/auth/register/page.tsx`
+- `/booking/[readerId]` -> `app/booking/[readerId]/page.tsx`
+- `/chat` -> `app/chat/page.tsx`
+- `/community` -> `app/community/page.tsx`
+- `/dashboard` -> `app/dashboard/page.tsx`
+- `/readers` -> `app/readers/page.tsx`
+- `/readers/[id]` -> `app/readers/[id]/page.tsx`
+
+Shared layout files:
+- `app/layout.tsx` - application root layout
+- `app/globals.css` - app-wide CSS loaded by root layout
+
+COMPONENTS (`components/`)
+--------------------------
+Shared components are organized into core groups.
+
+1. `components/home/` - home page sections
+   - `ai-tarot-section.tsx`
+   - `faq-section.tsx`
+   - `featured-readers.tsx`
+   - `hero-section.tsx`
+   - `how-it-works.tsx`
+   - `testimonials-section.tsx`
+   - `trust-section.tsx`
+
+2. `components/layout/` - layout, header, footer, mobile nav
+   - `header.tsx`
+   - `footer.tsx`
+   - `mobile-nav.tsx`
+
+3. `components/ui/` - reusable UI primitives and design system wrappers
+   - Buttons, inputs, cards, dialogs, dropdowns, forms, tooltips, tables, etc.
+   - Example files: `button.tsx`, `card.tsx`, `dialog.tsx`, `input.tsx`, `toast.tsx`, `tooltip.tsx`, `checkbox.tsx`, `switch.tsx`, `table.tsx`, `tabs.tsx`, `select.tsx`
+
+4. Other shared components:
+   - `components/reader-card.tsx` - reader profile card component
+   - `components/theme-provider.tsx` - theme handling wrapper for color mode / dark mode
+
+HOOKS (`hooks/`)
+----------------
+- `hooks/use-mobile.ts` - mobile viewport helper or detection utility
+- `hooks/use-toast.ts` - toast notification wrapper using Sonner or custom logic
+
+LIBRARY / UTILITIES (`lib/`)
+----------------------------
+- `lib/data.ts` - app-specific data definitions or sample data used by pages/components
+- `lib/utils.ts` - general helper functions used across the app
+
+STYLES / ASSETS
+---------------
+- `styles/globals.css` - global styling and Tailwind base styles
+- `public/` - static assets: images, icons, fonts, and any client-visible static files
+
+NOTABLE CONFIG
+--------------
+- `next.config.mjs` sets image optimization off and ignores TypeScript build errors.
+- `package.json` shows the app depends on many Radix UI components, Tailwind v4, React 19, and utility libraries like `clsx`, `date-fns`, `framer-motion`, `recharts`, and `zod`.
+
+HOW TO USE THIS FILE
+--------------------
+- Read here first when you need to orient yourself in the repo.
+- For route behavior, inspect the corresponding `app/.../page.tsx` file.
+- For shared UI patterns, inspect `components/ui/` and `components/layout/`.
+- For app-specific data or helpers, inspect `lib/data.ts` and `lib/utils.ts`.
+
+MAINTENANCE NOTE
+----------------
+When adding or changing routes/components:
+1. Update the `app/` route map section with the new page path and file.
+2. Add new component or layout entries under `components/` with a short description.
+3. Add new hook or utility entries under `hooks/` or `lib/` as needed.
+4. Keep the top-level overview aligned with actual dependencies and runtime config.
+
+If this file grows too large, consider splitting it into `PROJECT_SUMMARY.md` with sections and a shorter `README` file, but keep this root text file as the first reference point.
