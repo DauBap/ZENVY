@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Send, Paperclip, Mic, MoreVertical, Phone, Video,
   ChevronLeft, Check, CheckCheck, Smile
@@ -17,7 +17,6 @@ import { Input } from '@/components/ui/input'
 import { OnlineIndicator } from '@/components/ui/online-indicator'
 import { VerifiedBadge } from '@/components/ui/verified-badge'
 import { cn } from '@/lib/utils'
-import { getReaders } from '@/lib/actions'
 import type { SerializedReader } from '@/lib/serializers'
 
 interface Message {
@@ -27,6 +26,10 @@ interface Message {
   timestamp: Date
   status: 'sent' | 'delivered' | 'read'
   type: 'text' | 'voice' | 'image'
+}
+
+interface ChatPageProps {
+  readers: Reader[]
 }
 
 const mockMessages: Message[] = [
@@ -72,18 +75,13 @@ const mockMessages: Message[] = [
   },
 ]
 
-export default async function ChatPage() {
-  const readers = await getReaders({ isOnline: true, limit: 4 })
-  return <ChatClient readers={readers} />
-}
-
-function ChatClient({ readers }: { readers: SerializedReader[] }) {
+export function ChatPage({ readers }: ChatPageProps) {
   const [messages, setMessages] = useState<Message[]>(mockMessages)
   const [newMessage, setNewMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [selectedConversation, setSelectedConversation] = useState(readers[0])
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const conversations = readers.filter(r => r.isOnline).slice(0, 4)
+  const conversations = readers.filter((r) => r.isOnline).slice(0, 4)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -107,11 +105,7 @@ function ChatClient({ readers }: { readers: SerializedReader[] }) {
 
     setMessages([...messages, message])
     setNewMessage('')
-
-    // Simulate typing indicator
     setTimeout(() => setIsTyping(true), 1000)
-    
-    // Simulate reply
     setTimeout(() => {
       setIsTyping(false)
       const reply: Message = {
@@ -122,13 +116,11 @@ function ChatClient({ readers }: { readers: SerializedReader[] }) {
         status: 'sent',
         type: 'text',
       }
-      setMessages(prev => [...prev, reply])
+      setMessages((prev) => [...prev, reply])
     }, 3000)
   }
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-  }
+  const formatTime = (date: Date) => date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
 
   return (
     <>
@@ -137,7 +129,6 @@ function ChatClient({ readers }: { readers: SerializedReader[] }) {
 
       <main className="relative min-h-screen pt-16 pb-20 lg:pb-0">
         <div className="max-w-7xl mx-auto h-[calc(100vh-4rem-5rem)] lg:h-[calc(100vh-5rem)] flex">
-          {/* Conversations List - Hidden on mobile when chat is open */}
           <div className="hidden lg:block w-80 border-r border-white/10 overflow-hidden">
             <div className="p-4 border-b border-white/10">
               <h2 className="text-lg font-semibold text-foreground">Tin nhắn</h2>
@@ -149,20 +140,12 @@ function ChatClient({ readers }: { readers: SerializedReader[] }) {
                   onClick={() => setSelectedConversation(reader)}
                   className={cn(
                     'w-full flex items-center gap-3 p-4 text-left transition-colors',
-                    selectedConversation.id === reader.id
-                      ? 'bg-purple-500/20'
-                      : 'hover:bg-white/5'
+                    selectedConversation.id === reader.id ? 'bg-purple-500/20' : 'hover:bg-white/5'
                   )}
                 >
                   <div className="relative shrink-0">
                     <div className="w-12 h-12 rounded-full overflow-hidden">
-                      <Image
-                        src={reader.avatar}
-                        alt={reader.name}
-                        width={48}
-                        height={48}
-                        className="w-full h-full object-cover"
-                      />
+                      <Image src={reader.avatar} alt={reader.name} width={48} height={48} className="w-full h-full object-cover" />
                     </div>
                     <div className="absolute -bottom-0.5 -right-0.5">
                       <OnlineIndicator isOnline={reader.isOnline} size="sm" />
@@ -173,21 +156,15 @@ function ChatClient({ readers }: { readers: SerializedReader[] }) {
                       <span className="font-medium text-foreground truncate">{reader.name}</span>
                       {reader.isVerified && <VerifiedBadge size="sm" />}
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">
-                      Đang sẵn sàng trả lời...
-                    </p>
+                    <p className="text-sm text-muted-foreground truncate">Đang sẵn sàng trả lời...</p>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    12:30
-                  </div>
+                  <div className="text-xs text-muted-foreground">12:30</div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Chat Area */}
           <div className="flex-1 flex flex-col">
-            {/* Chat Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10 bg-background/50 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <Link href="/dashboard" className="lg:hidden">
@@ -197,13 +174,7 @@ function ChatClient({ readers }: { readers: SerializedReader[] }) {
                 </Link>
                 <div className="relative">
                   <div className="w-10 h-10 rounded-full overflow-hidden">
-                    <Image
-                      src={selectedConversation.avatar}
-                      alt={selectedConversation.name}
-                      width={40}
-                      height={40}
-                      className="w-full h-full object-cover"
-                    />
+                    <Image src={selectedConversation.avatar} alt={selectedConversation.name} width={40} height={40} className="w-full h-full object-cover" />
                   </div>
                   <div className="absolute -bottom-0.5 -right-0.5">
                     <OnlineIndicator isOnline={selectedConversation.isOnline} size="sm" />
@@ -230,7 +201,6 @@ function ChatClient({ readers }: { readers: SerializedReader[] }) {
               </div>
             </div>
 
-            {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((message) => (
                 <motion.div
@@ -242,22 +212,18 @@ function ChatClient({ readers }: { readers: SerializedReader[] }) {
                     message.senderId === 'user' ? 'justify-end' : 'justify-start'
                   )}
                 >
-                  <div
-                    className={cn(
-                      'max-w-[75%] rounded-2xl px-4 py-2.5',
-                      message.senderId === 'user'
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-md'
-                        : 'bg-white/10 text-foreground rounded-bl-md'
-                    )}
-                  >
+                  <div className={cn(
+                    'max-w-[75%] rounded-2xl px-4 py-2.5',
+                    message.senderId === 'user'
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-md'
+                      : 'bg-white/10 text-foreground rounded-bl-md'
+                  )}>
                     <p className="text-sm leading-relaxed">{message.text}</p>
                     <div className={cn(
                       'flex items-center gap-1 mt-1',
                       message.senderId === 'user' ? 'justify-end' : 'justify-start'
                     )}>
-                      <span className="text-[10px] opacity-60">
-                        {formatTime(message.timestamp)}
-                      </span>
+                      <span className="text-[10px] opacity-60">{formatTime(message.timestamp)}</span>
                       {message.senderId === 'user' && (
                         message.status === 'read' ? (
                           <CheckCheck className="w-3 h-3 text-blue-400" />
@@ -269,74 +235,34 @@ function ChatClient({ readers }: { readers: SerializedReader[] }) {
                   </div>
                 </motion.div>
               ))}
-
-              {/* Typing Indicator */}
-              <AnimatePresence>
-                {isTyping && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="flex items-center gap-2"
-                  >
-                    <div className="w-8 h-8 rounded-full overflow-hidden">
-                      <Image
-                        src={selectedConversation.avatar}
-                        alt=""
-                        width={32}
-                        height={32}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="bg-white/10 rounded-2xl rounded-bl-md px-4 py-3">
-                      <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
+              {isTyping && (
+                <div className="text-sm text-muted-foreground">Reader đang trả lời...</div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <div className="p-4 border-t border-white/10 bg-background/50 backdrop-blur-sm">
+            <div className="p-4 border-t border-white/10 bg-background/70 backdrop-blur-sm">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="text-muted-foreground shrink-0">
-                  <Paperclip className="w-5 h-5" />
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Nhập tin nhắn..."
+                  className="flex-1 bg-white/5 border-white/10"
+                />
+                <Button onClick={handleSend}>
+                  <Send className="w-4 h-4" />
                 </Button>
-                <div className="flex-1 relative">
-                  <Input
-                    placeholder="Nhập tin nhắn..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    className="pr-10 bg-white/5 border-white/10 focus:border-purple-500/50"
-                  />
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    <Smile className="w-5 h-5" />
-                  </button>
-                </div>
-                <Button variant="ghost" size="icon" className="text-muted-foreground shrink-0">
-                  <Mic className="w-5 h-5" />
+                <Button variant="outline" size="icon">
+                  <Paperclip className="w-4 h-4" />
                 </Button>
-                <Button
-                  size="icon"
-                  onClick={handleSend}
-                  disabled={!newMessage.trim()}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0"
-                >
-                  <Send className="w-5 h-5" />
+                <Button variant="outline" size="icon">
+                  <Mic className="w-4 h-4" />
                 </Button>
               </div>
             </div>
           </div>
         </div>
       </main>
-
       <MobileNav />
     </>
   )

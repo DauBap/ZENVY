@@ -8,10 +8,15 @@ import { Button } from '@/components/ui/button'
 import { FloatingElements } from '@/components/ui/floating-elements'
 import { OnlineIndicator } from '@/components/ui/online-indicator'
 import { cn } from '@/lib/utils'
-import { readers, platformStats } from '@/lib/data'
+import type { SerializedReader, SerializedPlatformStat } from '@/lib/serializers'
 
-export function HeroSection() {
-  const onlineReaders = readers.filter(r => r.isOnline).slice(0, 4)
+interface HeroSectionProps {
+  readers: SerializedReader[]
+  platformStats: SerializedPlatformStat
+}
+
+export function HeroSection({ readers, platformStats }: HeroSectionProps) {
+  const onlineReaders = readers.filter((r) => r.isOnline).slice(0, 4)
 
   return (
     <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-16 lg:pt-20">

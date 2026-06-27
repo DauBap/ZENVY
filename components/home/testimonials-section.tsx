@@ -7,9 +7,13 @@ import { Quote } from 'lucide-react'
 import { GlassCard } from '@/components/ui/glass-card'
 import { StarRating } from '@/components/ui/star-rating'
 import { VerifiedBadge } from '@/components/ui/verified-badge'
-import { testimonials } from '@/lib/data'
+import type { SerializedTestimonial } from '@/lib/serializers'
 
-export function TestimonialsSection() {
+interface TestimonialsSectionProps {
+  testimonials: SerializedTestimonial[]
+}
+
+export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(containerRef, { once: true, margin: '-100px' })
 

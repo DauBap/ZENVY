@@ -1,0 +1,343 @@
+// Mock data for Tarot Booking Platform - ARCHIVED
+// This file is kept for reference but should not be imported in the application.
+// Data is now served from the database.
+
+// export interface Reader {
+//   id: string
+//   name: string
+//   avatar: string
+//   specialty: string[]
+//   rating: number
+//   totalSessions: number
+//   responseTime: string
+//   pricePerSession: number
+//   isOnline: boolean
+//   isVerified: boolean
+//   bio: string
+//   fullBio: string
+//   experience: string
+//   languages: string[]
+//   videoIntro?: string
+//   packages: Package[]
+//   reviews: Review[]
+//   availability: Availability[]
+// }
+
+// export interface Package {
+//   id: string
+//   name: string
+//   duration: number
+//   price: number
+//   description: string
+//   popular?: boolean
+// }
+
+// export interface Review {
+//   id: string
+//   userId: string
+//   userName: string
+//   userAvatar: string
+//   rating: number
+//   comment: string
+//   date: string
+//   verified: boolean
+// }
+
+// export interface Availability {
+//   date: string
+//   slots: string[]
+// }
+
+// export interface Testimonial {
+//   id: string
+//   userName: string
+//   userAvatar: string
+//   rating: number
+//   comment: string
+//   readerName: string
+//   verified: boolean
+// }
+
+// export interface TarotCard {
+//   id: string
+//   name: string
+  // image: string
+//   meaning: string
+//   reversedMeaning: string
+// }
+
+// export const readers: Reader[] = [
+//   {
+//     id: '1',
+//     name: 'Luna Minh Nguyệt',
+//     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
+//     specialty: ['Tình yêu', 'Sự nghiệp', 'Tài chính'],
+//     rating: 4.9,
+//     totalSessions: 2847,
+//     responseTime: '< 5 phút',
+//     pricePerSession: 150000,
+//     isOnline: true,
+//     isVerified: true,
+//     bio: 'Chuyên gia Tarot với 8 năm kinh nghiệm. Giúp bạn tìm thấy sự rõ ràng trong tình yêu và cuộc sống.',
+//     fullBio: 'Xin chào, mình là Luna! Với hơn 8 năm kinh nghiệm trong lĩnh vực Tarot và tâm linh, mình đã giúp hàng ngàn người tìm thấy câu trả lời cho những thắc mắc trong cuộc sống. Mình chuyên về các vấn đề tình cảm, mối quan hệ, và định hướng sự nghiệp. Mình tin rằng mỗi lá bài đều mang một thông điệp đặc biệt dành cho bạn.',
+//     experience: '8 năm',
+//     languages: ['Tiếng Việt', 'English'],
+//     packages: [
+//       { id: 'p1', name: 'Nhanh', duration: 15, price: 150000, description: '1 câu hỏi, 3 lá bài' },
+//       { id: 'p2', name: 'Tiêu chuẩn', duration: 30, price: 280000, description: '3 câu hỏi, trải bài đầy đủ', popular: true },
+//       { id: 'p3', name: 'Chuyên sâu', duration: 60, price: 500000, description: 'Không giới hạn câu hỏi, tư vấn chi tiết' },
+//     ],
+//     reviews: [
+//       { id: 'r1', userId: 'u1', userName: 'Thanh Hà', userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100', rating: 5, comment: 'Reader rất tận tâm và chính xác. Mình đã hiểu rõ hơn về mối quan hệ của mình!', date: '2024-01-15', verified: true },
+//       { id: 'r2', userId: 'u2', userName: 'Minh Tuấn', userAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100', rating: 5, comment: 'Lần đầu xem tarot mà thấy rất ấn tượng. Sẽ quay lại!', date: '2024-01-10', verified: true },
+//     ],
+//     availability: [
+//       { date: '2024-01-20', slots: ['09:00', '10:00', '14:00', '15:00', '19:00', '20:00'] },
+//       { date: '2024-01-21', slots: ['10:00', '11:00', '14:00', '16:00', '20:00'] },
+//     ],
+//   },
+//   {
+//     id: '2',
+//     name: 'Hoàng Thảo Linh',
+//     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop',
+//     specialty: ['Sức khỏe', 'Gia đình', 'Tâm linh'],
+//     rating: 4.8,
+//     totalSessions: 1956,
+//     responseTime: '< 10 phút',
+//     pricePerSession: 200000,
+//     isOnline: true,
+//     isVerified: true,
+//     bio: 'Tarot Reader chuyên về sức khỏe tinh thần và mối quan hệ gia đình. Lắng nghe và đồng hành cùng bạn.',
+//     fullBio: 'Mình là Thảo Linh, một Tarot Reader với đam mê giúp đỡ mọi người tìm thấy sự cân bằng trong cuộc sống. Mình chuyên về các vấn đề liên quan đến sức khỏe tinh thần, mối quan hệ gia đình, và phát triển tâm linh. Với mình, mỗi buổi đọc bài là một hành trình khám phá bản thân.',
+//     experience: '6 năm',
+//     languages: ['Tiếng Việt'],
+//     packages: [
+//       { id: 'p1', name: 'Cơ bản', duration: 20, price: 200000, description: '2 câu hỏi, 5 lá bài' },
+//       { id: 'p2', name: 'Nâng cao', duration: 45, price: 380000, description: 'Trải bài Celtic Cross', popular: true },
+//       { id: 'p3', name: 'VIP', duration: 90, price: 700000, description: 'Session đặc biệt + follow up' },
+//     ],
+//     reviews: [
+//       { id: 'r1', userId: 'u3', userName: 'Ngọc Anh', userAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100', rating: 5, comment: 'Chị Linh đọc bài rất sâu sắc và tận tâm. Highly recommend!', date: '2024-01-14', verified: true },
+//     ],
+//     availability: [
+//       { date: '2024-01-20', slots: ['08:00', '09:00', '13:00', '14:00', '18:00'] },
+//       { date: '2024-01-21', slots: ['09:00', '10:00', '15:00', '16:00', '19:00'] },
+//     ],
+//   },
+//   {
+//     id: '3',
+//     name: 'Đặng Mystic',
+//     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+//     specialty: ['Kinh doanh', 'Đầu tư', 'Quyết định'],
+//     rating: 4.9,
+//     totalSessions: 3241,
+//     responseTime: '< 3 phút',
+//     pricePerSession: 300000,
+//     isOnline: false,
+//     isVerified: true,
+//     bio: 'Tarot Reader cho doanh nhân. Chuyên tư vấn về quyết định kinh doanh, đầu tư và phát triển sự nghiệp.',
+//     fullBio: 'Chào bạn! Mình là Đặng Mystic, chuyên gia Tarot với hơn 10 năm kinh nghiệm. Mình tập trung vào việc hỗ trợ các doanh nhân, nhà đầu tư trong việc đưa ra quyết định quan trọng. Mình kết hợp Tarot với phân tích logic để mang đến góc nhìn toàn diện nhất.',
+//     experience: '10 năm',
+//     languages: ['Tiếng Việt', 'English', '中文'],
+//     packages: [
+//       { id: 'p1', name: 'Quick Insight', duration: 15, price: 300000, description: 'Một quyết định cụ thể' },
+//       { id: 'p2', name: 'Business Reading', duration: 45, price: 550000, description: 'Phân tích tổng quan kinh doanh', popular: true },
+//       { id: 'p3', name: 'Strategy Session', duration: 90, price: 1000000, description: 'Tư vấn chiến lược dài hạn' },
+//     ],
+//     reviews: [
+//       { id: 'r1', userId: 'u4', userName: 'CEO Startup', userAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100', rating: 5, comment: 'Insight rất valuable cho business decision của mình!', date: '2024-01-12', verified: true },
+//     ],
+//     availability: [
+//       { date: '2024-01-20', slots: ['10:00', '11:00', '15:00', '16:00'] },
+//       { date: '2024-01-21', slots: ['09:00', '14:00', '15:00', '20:00'] },
+//     ],
+//   },
+//   {
+//     id: '4',
+//     name: 'Thiên Nhi',
+//     avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop',
+//     specialty: ['Tình yêu', 'Hôn nhân', 'Healing'],
+//     rating: 4.7,
+//     totalSessions: 1523,
+//     responseTime: '< 15 phút',
+//     pricePerSession: 120000,
+//     isOnline: true,
+//     isVerified: true,
+//     bio: 'Tarot Reader trẻ với năng lượng tích cực. Chuyên về tình yêu, hôn nhân và chữa lành cảm xúc.',
+//     fullBio: 'Mình là Thiên Nhi, một Tarot Reader với đam mê giúp mọi người tìm thấy tình yêu đích thực và chữa lành những tổn thương trong quá khứ. Mình tin vào sức mạnh của sự đồng cảm và lắng nghe.',
+//     experience: '4 năm',
+//     languages: ['Tiếng Việt'],
+//     packages: [
+//       { id: 'p1', name: 'Love Check', duration: 15, price: 120000, description: 'Kiểm tra tình cảm nhanh' },
+//       { id: 'p2', name: 'Relationship Deep Dive', duration: 30, price: 220000, description: 'Phân tích mối quan hệ chi tiết', popular: true },
+//       { id: 'p3', name: 'Healing Session', duration: 60, price: 400000, description: 'Tarot + Healing năng lượng' },
+//     ],
+//     reviews: [],
+//     availability: [
+//       { date: '2024-01-20', slots: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '19:00', '20:00', '21:00'] },
+//       { date: '2024-01-21', slots: ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '20:00'] },
+//     ],
+//   },
+//   {
+//     id: '5',
+//     name: 'Master Phong',
+//     avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop',
+//     specialty: ['Phong thủy', 'Tarot', 'Tử vi'],
+//     rating: 5.0,
+//     totalSessions: 5678,
+//     responseTime: '< 5 phút',
+//     pricePerSession: 500000,
+//     isOnline: false,
+//     isVerified: true,
+//     bio: 'Đại sư Tarot & Phong thủy với hơn 20 năm kinh nghiệm. Kết hợp Đông - Tây trong tư vấn.',
+//     fullBio: 'Master Phong với hơn 20 năm nghiên cứu và thực hành Tarot, Phong thủy, và Tử vi. Đã tư vấn cho hàng nghìn khách hàng VIP, doanh nhân thành đạt. Phương pháp độc đáo kết hợp tinh hoa Đông - Tây.',
+//     experience: '20 năm',
+//     languages: ['Tiếng Việt', 'English', '中文', '日本語'],
+//     packages: [
+//       { id: 'p1', name: 'Tư vấn cơ bản', duration: 30, price: 500000, description: 'Tarot + Tử vi ngắn' },
+//       { id: 'p2', name: 'Tổng hợp', duration: 60, price: 900000, description: 'Tarot + Phong thủy + Tử vi', popular: true },
+//       { id: 'p3', name: 'VIP Private', duration: 120, price: 2000000, description: 'Session riêng tư, tư vấn toàn diện' },
+//     ],
+//     reviews: [
+//       { id: 'r1', userId: 'u5', userName: 'Doanh nhân P.H', userAvatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100', rating: 5, comment: 'Master Phong tư vấn cực kỳ chính xác. Đã giúp mình rất nhiều trong kinh doanh!', date: '2024-01-13', verified: true },
+//     ],
+//     availability: [
+//       { date: '2024-01-20', slots: ['10:00', '14:00', '19:00'] },
+//       { date: '2024-01-21', slots: ['10:00', '15:00'] },
+//     ],
+//   },
+//   {
+//     id: '6',
+//     name: 'Yến Linh',
+//     avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop',
+//     specialty: ['Lenormand', 'Oracle', 'Angel Cards'],
+//     rating: 4.8,
+//     totalSessions: 987,
+//     responseTime: '< 8 phút',
+//     pricePerSession: 180000,
+//     isOnline: true,
+//     isVerified: false,
+//     bio: 'Chuyên về Lenormand và Oracle Cards. Mang đến thông điệp từ thiên thần và vũ trụ.',
+//     fullBio: 'Mình là Yến Linh, chuyên về các loại bài Oracle, Lenormand, và Angel Cards. Mình tin rằng mỗi người đều có thiên thần hộ mệnh đang gửi thông điệp đến mình.',
+//     experience: '3 năm',
+//     languages: ['Tiếng Việt'],
+//     packages: [
+//       { id: 'p1', name: 'Angel Message', duration: 15, price: 180000, description: 'Thông điệp từ thiên thần' },
+//       { id: 'p2', name: 'Oracle Reading', duration: 30, price: 320000, description: 'Đọc bài Oracle chi tiết', popular: true },
+//       { id: 'p3', name: 'Full Spirit Session', duration: 60, price: 580000, description: 'Kết nối tâm linh sâu' },
+//     ],
+//     reviews: [],
+//     availability: [
+//       { date: '2024-01-20', slots: ['09:00', '10:00', '11:00', '14:00', '15:00', '20:00', '21:00'] },
+//       { date: '2024-01-21', slots: ['10:00', '11:00', '14:00', '15:00', '16:00', '19:00', '20:00'] },
+//     ],
+//   },
+// ]
+
+// export const testimonials: Testimonial[] = [
+//   {
+//     id: '1',
+//     userName: 'Nguyễn Thị Hương',
+//     userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
+//     rating: 5,
+//     comment: 'Lần đầu tiên xem tarot online mà thấy chính xác và tận tâm đến vậy! Reader Luna đã giúp mình hiểu rõ hơn về mối quan hệ và đưa ra quyết định đúng đắn.',
+//     readerName: 'Luna Minh Nguyệt',
+//     verified: true,
+//   },
+//   {
+//     id: '2',
+//     userName: 'Trần Minh Đức',
+//     userAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
+//     rating: 5,
+//     comment: 'Đã dùng nhiều app tarot nhưng ZENVY là tốt nhất. Các reader ở đây đều được verify và rất chuyên nghiệp. Booking nhanh, chat tiện lợi!',
+//     readerName: 'Đặng Mystic',
+//     verified: true,
+//   },
+//   {
+//     id: '3',
+//     userName: 'Phạm Thanh Tâm',
+//     userAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100',
+//     rating: 5,
+//     comment: 'AI Tarot free của app rất hay, nhưng khi book session với reader thật thì trải nghiệm còn tuyệt vời hơn nhiều. Highly recommend!',
+//     readerName: 'Thiên Nhi',
+//     verified: true,
+//   },
+//   {
+//     id: '4',
+//     userName: 'Lê Văn Khoa',
+//     userAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
+//     rating: 5,
+//     comment: 'Master Phong tư vấn cực kỳ chính xác về phong thủy và quyết định kinh doanh. Worth every penny!',
+//     readerName: 'Master Phong',
+//     verified: true,
+//   },
+// ]
+
+// export const platformStats = {
+//   totalSessions: 156789,
+//   averageRating: 4.9,
+//   verifiedReaders: 234,
+//   avgResponseTime: '< 5 phút',
+//   satisfactionRate: 98,
+//   onlineReaders: 47,
+// }
+
+// export const tarotCards: TarotCard[] = [
+//   { id: '0', name: 'The Fool', image: '/tarot/fool.jpg', meaning: 'Khởi đầu mới, tự do, sự ngây thơ', reversedMeaning: 'Thiếu suy nghĩ, rủi ro, liều lĩnh' },
+//   { id: '1', name: 'The Magician', image: '/tarot/magician.jpg', meaning: 'Kỹ năng, sức mạnh ý chí, sáng tạo', reversedMeaning: 'Lừa dối, thiếu tự tin, năng lượng bị lãng phí' },
+//   { id: '2', name: 'The High Priestess', image: '/tarot/priestess.jpg', meaning: 'Trực giác, bí ẩn, tiềm thức', reversedMeaning: 'Bí mật, rút lui, im lặng' },
+//   { id: '3', name: 'The Empress', image: '/tarot/empress.jpg', meaning: 'Sinh sôi, nuôi dưỡng, thiên nhiên', reversedMeaning: 'Phụ thuộc, nghèo nàn sáng tạo' },
+//   { id: '4', name: 'The Emperor', image: '/tarot/emperor.jpg', meaning: 'Quyền lực, cấu trúc, sự ổn định', reversedMeaning: 'Độc tài, cứng nhắc, mất kiểm soát' },
+//   { id: '5', name: 'The Lovers', image: '/tarot/lovers.jpg', meaning: 'Tình yêu, sự hài hòa, mối quan hệ', reversedMeaning: 'Mất cân bằng, xung đột giá trị' },
+//   { id: '6', name: 'The Chariot', image: '/tarot/chariot.jpg', meaning: 'Chiến thắng, ý chí, quyết tâm', reversedMeaning: 'Thiếu phương hướng, hung hăng' },
+//   { id: '7', name: 'Strength', image: '/tarot/strength.jpg', meaning: 'Sức mạnh nội tâm, dũng cảm, kiên nhẫn', reversedMeaning: 'Nghi ngờ bản thân, yếu đuối' },
+//   { id: '8', name: 'The Star', image: '/tarot/star.jpg', meaning: 'Hy vọng, cảm hứng, sự yên bình', reversedMeaning: 'Tuyệt vọng, thiếu niềm tin' },
+//   { id: '9', name: 'The Moon', image: '/tarot/moon.jpg', meaning: 'Ảo tưởng, trực giác, tiềm thức', reversedMeaning: 'Sợ hãi, nhầm lẫn, lo lắng' },
+//   { id: '10', name: 'The Sun', image: '/tarot/sun.jpg', meaning: 'Thành công, hạnh phúc, năng lượng tích cực', reversedMeaning: 'Tạm thời thất bại, tiêu cực' },
+//   { id: '11', name: 'The World', image: '/tarot/world.jpg', meaning: 'Hoàn thành, thành tựu, hành trình', reversedMeaning: 'Chưa hoàn thành, thiếu kết thúc' },
+// ]
+
+// export const faqData = [
+//   {
+//     question: 'Làm thế nào để đặt lịch với Tarot Reader?',
+//     answer: 'Bạn chỉ cần chọn Reader yêu thích, chọn gói dịch vụ và khung giờ phù hợp, sau đó thanh toán. Hệ thống sẽ tự động xác nhận và gửi thông báo cho bạn.',
+//   },
+//   {
+//     question: 'Thông tin của tôi có được bảo mật không?',
+//     answer: 'Tuyệt đối! Chúng tôi cam kết bảo mật 100% thông tin cá nhân và nội dung tư vấn của bạn. Mọi dữ liệu được mã hóa và không chia sẻ với bất kỳ bên thứ ba nào.',
+//   },
+//   {
+//     question: 'Tôi có thể hoàn tiền không?',
+//     answer: 'Có, nếu bạn không hài lòng với session đầu tiên, chúng tôi sẽ hoàn tiền 100% trong vòng 24 giờ sau session.',
+//   },
+//   {
+//     question: 'Reader được xác minh như thế nào?',
+//     answer: 'Tất cả Reader đều phải trải qua quy trình xác minh danh tính, kinh nghiệm và kỹ năng. Chúng tôi cũng theo dõi rating và feedback từ người dùng.',
+//   },
+//   {
+//     question: 'Thanh toán có an toàn không?',
+//     answer: 'Chúng tôi sử dụng các cổng thanh toán uy tín như Stripe, MoMo, VNPay với mã hóa SSL 256-bit để đảm bảo an toàn tuyệt đối.',
+//   },
+//   {
+//     question: 'AI Tarot hoạt động như thế nào?',
+//     answer: 'AI Tarot sử dụng công nghệ AI tiên tiến để đọc và diễn giải lá bài. Đây là tính năng miễn phí giúp bạn trải nghiệm tarot nhanh chóng.',
+//   },
+// ]
+
+// export const specialties = [
+//   'Tình yêu',
+//   'Sự nghiệp',
+//   'Tài chính',
+//   'Sức khỏe',
+//   'Gia đình',
+//   'Tâm linh',
+//   'Kinh doanh',
+//   'Đầu tư',
+//   'Quyết định',
+//   'Hôn nhân',
+//   'Healing',
+//   'Phong thủy',
+//   'Lenormand',
+//   'Oracle',
+//   'Angel Cards',
+// ]

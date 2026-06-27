@@ -3,54 +3,58 @@
 import { motion } from 'framer-motion'
 import { Users, Star, Shield, Clock, ThumbsUp, MessageSquare } from 'lucide-react'
 import { GlassCard } from '@/components/ui/glass-card'
-import { platformStats } from '@/lib/data'
+import type { SerializedPlatformStat } from '@/lib/serializers'
 
-const stats = [
-  {
-    icon: MessageSquare,
-    value: platformStats.totalSessions.toLocaleString(),
-    label: 'Sessions hoàn thành',
-    color: 'text-purple-400',
-    bgColor: 'bg-purple-500/20',
-  },
-  {
-    icon: Star,
-    value: platformStats.averageRating.toString(),
-    label: 'Rating trung bình',
-    color: 'text-yellow-400',
-    bgColor: 'bg-yellow-500/20',
-  },
-  {
-    icon: Shield,
-    value: platformStats.verifiedReaders.toString() + '+',
-    label: 'Verified Readers',
-    color: 'text-blue-400',
-    bgColor: 'bg-blue-500/20',
-  },
-  {
-    icon: Clock,
-    value: platformStats.avgResponseTime,
-    label: 'Thời gian phản hồi',
-    color: 'text-green-400',
-    bgColor: 'bg-green-500/20',
-  },
-  {
-    icon: ThumbsUp,
-    value: platformStats.satisfactionRate + '%',
-    label: 'Hài lòng',
-    color: 'text-pink-400',
-    bgColor: 'bg-pink-500/20',
-  },
-  {
-    icon: Users,
-    value: platformStats.onlineReaders.toString(),
-    label: 'Readers Online',
-    color: 'text-emerald-400',
-    bgColor: 'bg-emerald-500/20',
-  },
-]
+interface TrustSectionProps {
+  platformStats: SerializedPlatformStat
+}
 
-export function TrustSection() {
+export function TrustSection({ platformStats }: TrustSectionProps) {
+  const stats = [
+    {
+      icon: MessageSquare,
+      value: platformStats.totalSessions.toLocaleString(),
+      label: 'Sessions hoàn thành',
+      color: 'text-purple-400',
+      bgColor: 'bg-purple-500/20',
+    },
+    {
+      icon: Star,
+      value: platformStats.averageRating.toString(),
+      label: 'Rating trung bình',
+      color: 'text-yellow-400',
+      bgColor: 'bg-yellow-500/20',
+    },
+    {
+      icon: Shield,
+      value: platformStats.verifiedReaders.toString() + '+',
+      label: 'Verified Readers',
+      color: 'text-blue-400',
+      bgColor: 'bg-blue-500/20',
+    },
+    {
+      icon: Clock,
+      value: platformStats.avgResponseTime,
+      label: 'Thời gian phản hồi',
+      color: 'text-green-400',
+      bgColor: 'bg-green-500/20',
+    },
+    {
+      icon: ThumbsUp,
+      value: platformStats.satisfactionRate + '%',
+      label: 'Hài lòng',
+      color: 'text-pink-400',
+      bgColor: 'bg-pink-500/20',
+    },
+    {
+      icon: Users,
+      value: platformStats.onlineReaders.toString(),
+      label: 'Readers Online',
+      color: 'text-emerald-400',
+      bgColor: 'bg-emerald-500/20',
+    },
+  ]
+
   return (
     <section className="py-16 lg:py-24 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,0 +1,243 @@
+// =============================================================================
+// ZENVY – Tarot Booking Platform
+// Database Schema (PostgreSQL + Prisma ORM)
+// Author  : Principal Database Architect
+// Version : 1.0.0
+// =============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+// =============================================================================
+// ENUM
+// =============================================================================
+
+/// Trạng thái tài khoản người dùng
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+}
+
+// =============================================================================
+// BẢNG: roles
+// Danh sách vai trò hệ thống (CUSTOMER, READER, ADMIN)
+// =============================================================================
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(50)
+  description String?  @db.Text
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+
+  // ── Relations ──────────────────────────────────────────────────────────────
+  users User[]
+
+  @@map("roles")
+}
+
+// =============================================================================
+// BẢNG: users
+// Thông tin đăng nhập cơ bản – trung tâm của toàn bộ hệ thống
+// =============================================================================
+
+model User {
+  id            Int        @id @default(autoincrement())
+  role_id       Int
+  email         String     @unique @db.VarChar(255)
+  password_hash String     @db.Text
+  phone         String?    @db.VarChar(20)
+  status        UserStatus @default(ACTIVE)
+  created_at    DateTime   @default(now()) @db.Timestamp(6)
+  updated_at    DateTime   @updatedAt @db.Timestamp(6)
+
+  // ── Relations ──────────────────────────────────────────────────────────────
+
+  /// 1 role → N users
+  role Role @relation(fields: [role_id], references: [id])
+
+  /// 1 user → N refresh_tokens
+  refresh_tokens RefreshToken[]
+
+  /// 1 user → 1 customer_info  (chỉ tồn tại khi role = CUSTOMER)
+  customer_info CustomerInfo?
+
+  /// 1 user → 1 reader_info    (chỉ tồn tại khi role = READER)
+  reader_info ReaderInfo?
+
+  // ── Indexes ────────────────────────────────────────────────────────────────
+  @@index([email])
+  @@index([role_id])
+  @@index([status])
+
+  @@map("users")
+}
+
+// =============================================================================
+// BẢNG: refresh_tokens
+// Lưu refresh token để cấp lại access token khi hết hạn
+// =============================================================================
+
+model RefreshToken {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  token      String    @unique @db.Text
+  expired_at DateTime? @db.Timestamp(6)
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+
+  // ── Relations ──────────────────────────────────────────────────────────────
+
+  /// 1 user → N refresh_tokens  |  Cascade: xóa user → xóa hết token
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  // ── Indexes ────────────────────────────────────────────────────────────────
+  @@index([user_id])
+  @@index([expired_at])
+
+  @@map("refresh_tokens")
+}
+
+// =============================================================================
+// BẢNG: customer_info
+// Thông tin chi tiết của khách hàng (role = CUSTOMER)
+// =============================================================================
+
+model CustomerInfo {
+  id         Int       @id @default(autoincrement())
+  user_id    Int       @unique          // @unique → bảo đảm quan hệ 1-1
+  fullname   String?   @db.VarChar(100)
+  birthday   DateTime? @db.Date
+  gender     String?   @db.VarChar(20)
+  avatar_url String?   @db.Text
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  updated_at DateTime  @updatedAt @db.Timestamp(6)
+
+  // ── Relations ──────────────────────────────────────────────────────────────
+
+  /// 1 user → 1 customer_info  |  Cascade: xóa user → xóa profile
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("customer_info")
+}
+
+// =============================================================================
+// BẢNG: reader_info
+// Thông tin chi tiết của Tarot Reader (role = READER)
+// =============================================================================
+
+model ReaderInfo {
+  id                Int      @id @default(autoincrement())
+  user_id           Int      @unique          // @unique → bảo đảm quan hệ 1-1
+  display_name      String?  @db.VarChar(100)
+  description       String?  @db.Text
+  experience_year   Int      @default(0)
+  price_per_session Decimal  @default(0)    @db.Decimal(12, 2)
+  rating            Decimal  @default(0.0)  @db.Decimal(2, 1)
+  verified          Boolean  @default(false)
+  avatar_url        String?  @db.Text
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  updated_at        DateTime @updatedAt @db.Timestamp(6)
+
+  // ── Relations ──────────────────────────────────────────────────────────────
+
+  /// 1 user → 1 reader_info  |  Cascade: xóa user → xóa profile
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  packages     Package[]
+  reviews      Review[]
+  availability Availability[]
+
+  // ── Indexes ────────────────────────────────────────────────────────────────
+  @@index([verified])
+  @@index([rating])
+  @@index([price_per_session])
+
+  @@map("reader_info")
+}
+
+model Package {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  duration    Int
+  price       Int
+  description String   @db.Text
+  popular     Boolean  @default(false)
+  reader_id   Int
+  reader      ReaderInfo @relation(fields: [reader_id], references: [id], onDelete: Cascade)
+
+  @@index([reader_id])
+  @@map("packages")
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  userName   String   @db.VarChar(255)
+  userAvatar String   @db.Text
+  rating     Int
+  comment    String   @db.Text
+  date       DateTime @db.Date
+  verified   Boolean  @default(false)
+  reader_id  Int
+  reader     ReaderInfo @relation(fields: [reader_id], references: [id], onDelete: Cascade)
+
+  @@index([reader_id])
+  @@map("reviews")
+}
+
+model Availability {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @db.Date
+  slots     String[]
+  reader_id Int
+  reader    ReaderInfo @relation(fields: [reader_id], references: [id], onDelete: Cascade)
+
+  @@index([reader_id])
+  @@map("availability")
+}
+
+model Testimonial {
+  id         Int      @id @default(autoincrement())
+  userName   String   @db.VarChar(255)
+  userAvatar String   @db.Text
+  rating     Int
+  comment    String   @db.Text
+  readerName String   @db.VarChar(255)
+  verified   Boolean  @default(false)
+  @@map("testimonials")
+}
+
+model TarotCard {
+  id              Int    @id @default(autoincrement())
+  name            String @db.VarChar(255)
+  image           String @db.Text
+  meaning         String @db.Text
+  reversedMeaning String @db.Text
+
+  @@map("tarot_cards")
+}
+
+model FAQ {
+  id       Int    @id @default(autoincrement())
+  question String @db.Text
+  answer   String @db.Text
+
+  @@map("faqs")
+}
+
+model PlatformStat {
+  id               Int      @id @default(autoincrement())
+  totalSessions    Int      @default(0)
+  averageRating    Decimal  @default(0) @db.Decimal(2, 1)
+  verifiedReaders  Int      @default(0)
+  avgResponseTime  String   @db.VarChar(50)
+  satisfactionRate Int      @default(0)
+  onlineReaders    Int      @default(0)
+
+  @@map("platform_stats")
+}

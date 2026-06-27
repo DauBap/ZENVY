@@ -7,9 +7,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { faqData } from '@/lib/data'
+import type { SerializedFAQ } from '@/lib/serializers'
 
-export function FAQSection() {
+interface FAQSectionProps {
+  faqData: SerializedFAQ[]
+}
+
+export function FAQSection({ faqData }: FAQSectionProps) {
   return (
     <section id="faq" className="py-16 lg:py-24 relative">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">

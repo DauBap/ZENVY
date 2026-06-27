@@ -5,11 +5,15 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ReaderCard } from '@/components/reader-card'
-import { readers } from '@/lib/data'
 import { cn } from '@/lib/utils'
+import type { SerializedReader } from '@/lib/serializers'
 
-export function FeaturedReaders() {
-  const featuredReaders = readers.filter(r => r.isOnline).slice(0, 3)
+interface FeaturedReadersProps {
+  readers: SerializedReader[]
+}
+
+export function FeaturedReaders({ readers }: FeaturedReadersProps) {
+  const featuredReaders = readers.filter((r) => r.isOnline).slice(0, 3)
 
   return (
     <section className="py-16 lg:py-24 relative">
