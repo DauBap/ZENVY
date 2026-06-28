@@ -7,6 +7,9 @@ import { MobileNav } from '@/components/layout/mobile-nav'
 import { CosmicBackground } from '@/components/ui/floating-elements'
 import { ReadersPage } from '@/components/readers/readers-page'
 
+// Render on-demand so the build never depends on DB state
+export const dynamic = 'force-dynamic'
+
 export default async function ReadersRoutePage() {
   let readers: any[]
   let specialties: string[]
