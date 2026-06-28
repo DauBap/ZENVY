@@ -123,6 +123,8 @@ model CustomerInfo {
   /// 1 user → 1 customer_info  |  Cascade: xóa user → xóa profile
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  bookings Booking[]
+
   @@map("customer_info")
 }
 
@@ -152,6 +154,7 @@ model ReaderInfo {
   packages     Package[]
   reviews      Review[]
   availability Availability[]
+  bookings     Booking[]
 
   // ── Indexes ────────────────────────────────────────────────────────────────
   @@index([verified])
@@ -170,6 +173,7 @@ model Package {
   popular     Boolean  @default(false)
   reader_id   Int
   reader      ReaderInfo @relation(fields: [reader_id], references: [id], onDelete: Cascade)
+  bookings    Booking[]
 
   @@index([reader_id])
   @@map("packages")
@@ -199,6 +203,39 @@ model Availability {
 
   @@index([reader_id])
   @@map("availability")
+}
+
+// =============================================================================
+// BẢNG: bookings
+// Lịch hẹn giữa khách hàng và reader
+// =============================================================================
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model Booking {
+  id          Int           @id @default(autoincrement())
+  customer_id Int
+  reader_id   Int
+  package_id  Int
+  date        DateTime      @db.Date
+  time        String        @db.VarChar(10)
+  status      BookingStatus @default(PENDING)
+  created_at  DateTime      @default(now()) @db.Timestamp(6)
+  updated_at  DateTime      @updatedAt @db.Timestamp(6)
+
+  customer CustomerInfo @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  reader   ReaderInfo   @relation(fields: [reader_id], references: [id], onDelete: Cascade)
+  package  Package      @relation(fields: [package_id], references: [id], onDelete: Cascade)
+
+  @@index([customer_id])
+  @@index([reader_id])
+  @@index([status])
+  @@map("bookings")
 }
 
 model Testimonial {

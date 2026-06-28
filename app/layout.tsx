@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { AuthModalProvider } from '@/contexts/auth-modal-context'
+import { AuthModal } from '@/components/auth/auth-modal'
 import './globals.css'
 
 const inter = Inter({ 
@@ -48,9 +50,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="vi" className={`${inter.variable} ${playfair.variable} bg-background`}>
+    <html lang="vi" className={`${inter.variable} ${playfair.variable} bg-background`} suppressHydrationWarning>
       <body className="font-sans antialiased min-h-screen bg-background text-foreground">
-        {children}
+        <AuthModalProvider>
+          {children}
+          <AuthModal />
+        </AuthModalProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

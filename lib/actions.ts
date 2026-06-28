@@ -18,7 +18,6 @@ export async function getReaders(options: {
   const readers = await prisma.readerInfo.findMany({
     where: {
       user: { status: 'ACTIVE' },
-      ...(options.isOnline !== undefined && { isOnline: options.isOnline }),
     },
     include: {
       ...(options.include?.packages && { packages: true }),

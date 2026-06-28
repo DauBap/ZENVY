@@ -4,7 +4,7 @@ import type {
   Package,
   PlatformStat,
   Prisma,
-  Reader,
+  ReaderInfo,
   Review,
   TarotCard,
   Testimonial,
@@ -13,8 +13,19 @@ import type {
 export type SerializedPackage = Package
 export type SerializedReview = Omit<Review, 'date'> & { date: string }
 export type SerializedAvailability = Omit<Availability, 'date'> & { date: string }
-export type SerializedReader = Omit<Reader, 'rating'> & {
+export type SerializedReader = Omit<ReaderInfo, 'rating' | 'price_per_session'> & {
   rating: number
+  price_per_session: number
+  // Aliased fields for UI compatibility
+  name: string
+  avatar: string
+  specialty: string[]
+  bio: string
+  isOnline: boolean
+  isVerified: boolean
+  totalSessions: number
+  responseTime: string
+  pricePerSession: number
   packages?: SerializedPackage[]
   reviews?: SerializedReview[]
   availability?: SerializedAvailability[]
@@ -29,15 +40,27 @@ export type SerializedPlatformStat = Omit<PlatformStat, 'averageRating'> & {
 const toNumber = (value: Prisma.Decimal | number | string): number => Number(value)
 
 export function serializeReader(
-  reader: Reader & {
+  reader: ReaderInfo & {
     packages?: Package[]
     reviews?: Review[]
     availability?: Availability[]
   }
 ): SerializedReader {
+  const pricePerSession = toNumber(reader.price_per_session)
   return {
     ...reader,
     rating: toNumber(reader.rating),
+    price_per_session: pricePerSession,
+    // Map DB fields → UI field names
+    name: reader.display_name ?? 'Tarot Reader',
+    avatar: reader.avatar_url ?? '/placeholder-user.jpg',
+    specialty: [],
+    bio: reader.description ?? '',
+    isOnline: false,
+    isVerified: reader.verified,
+    totalSessions: 0,
+    responseTime: '< 5 phút',
+    pricePerSession,
     packages: reader.packages?.map((pkg) => ({ ...pkg })),
     reviews: reader.reviews?.map((review) => ({
       ...review,
@@ -52,7 +75,7 @@ export function serializeReader(
 
 export function serializeReaders(
   readers: Array<
-    Reader & {
+    ReaderInfo & {
       packages?: Package[]
       reviews?: Review[]
       availability?: Availability[]

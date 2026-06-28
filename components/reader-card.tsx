@@ -1,14 +1,9 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Clock, MessageCircle } from 'lucide-react'
-import { GlassCard } from '@/components/ui/glass-card'
-import { StarRating } from '@/components/ui/star-rating'
-import { OnlineIndicator } from '@/components/ui/online-indicator'
+import { Star, Heart } from 'lucide-react'
 import { VerifiedBadge } from '@/components/ui/verified-badge'
-import { Button } from '@/components/ui/button'
 import type { SerializedReader } from '@/lib/serializers'
 import { cn } from '@/lib/utils'
 
@@ -18,100 +13,97 @@ interface ReaderCardProps {
 }
 
 export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
+  const minPrice = reader.packages && reader.packages.length > 0
+    ? Math.min(...reader.packages.map((p) => p.price))
+    : reader.pricePerSession
+
+  const priceDisplay = minPrice >= 1000
+    ? `${(minPrice / 1000).toFixed(0)}K`
+    : `${minPrice}`
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.1 }}
+      transition={{ duration: 0.4, delay: index * 0.08 }}
+      whileHover={{ y: -4 }}
+      className="group"
     >
       <Link href={`/readers/${reader.id}`}>
-        <GlassCard className="p-4 cursor-pointer group" glow="purple">
-          <div className="flex gap-4">
-            <div className="relative shrink-0">
-              <div className="relative w-20 h-20 rounded-xl overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all">
-                <Image src={reader.avatar} alt={reader.name} fill className="object-cover" />
-              </div>
-              <div className="absolute -bottom-1 -right-1">
-                <OnlineIndicator isOnline={reader.isOnline} size="md" />
-              </div>
-            </div>
+        <div className={cn(
+          'relative rounded-[18px] overflow-hidden cursor-pointer',
+          'transition-all duration-300',
+          'bg-[#0f0a1a]'
+        )}>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-foreground truncate">{reader.name}</h3>
-                {reader.isVerified && <VerifiedBadge size="sm" />}
-              </div>
+          {/* ── Ảnh background ── */}
+          <div className="relative w-full aspect-[3/4]">
+            {/* bg layer — khớp chính xác element mẫu */}
+            <div
+              className="absolute z-0 rounded-t-[12px] md:rounded-b-[18px] md:inset-0.5"
+              style={{
+                inset: 0,
+                backgroundImage: `url("${reader.avatar}")`,
+                backgroundSize: 'cover',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+              }}
+            />
 
-              <div className="flex items-center gap-2 mt-1">
-                <StarRating rating={reader.rating} size="sm" showValue />
-                <span className="text-xs text-muted-foreground">({reader.totalSessions.toLocaleString()} sessions)</span>
-              </div>
+            {/* Gradient fade bottom */}
+            <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
 
-              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                <span>Phản hồi {reader.responseTime}</span>
+            {/* Online dot — chỉ hiển thị khi online */}
+            {reader.isOnline && (
+              <div className="absolute top-3 right-3 z-20">
+                <span className="relative flex w-3 h-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative flex w-3 h-3 rounded-full bg-green-400 ring-2 ring-[#0f0a1a]" />
+                </span>
+              </div>
+            )}
+
+            {/* Rating pill — góc dưới trái */}
+            <div className="absolute bottom-3 left-3 z-20">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-600/90 backdrop-blur-sm text-white text-xs font-semibold shadow-lg">
+                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                <span>{Number(reader.rating).toFixed(2)}</span>
+                <span className="text-white/70">({reader.totalSessions.toLocaleString()})</span>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            {reader.specialty.slice(0, 3).map((spec) => (
-              <span key={spec} className="px-2 py-0.5 text-xs rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                {spec}
-              </span>
-            ))}
-          </div>
-
-          <p className="mt-3 text-sm text-muted-foreground line-clamp-2">{reader.bio}</p>
-
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/10">
-            <div className="text-sm">
-              <span className="text-muted-foreground">Từ </span>
-              <span className="text-lg font-semibold gradient-text">{(reader.pricePerSession / 1000).toFixed(0)}k</span>
-              <span className="text-muted-foreground">/session</span>
+          {/* ── Info bên dưới ── */}
+          <div className="px-3 pt-2.5 pb-3 bg-white/[0.03]">
+            {/* Tên + verified */}
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="font-bold text-foreground text-sm truncate">{reader.name}</span>
+              {reader.isVerified && <VerifiedBadge size="sm" />}
             </div>
-            <Button
-              size="sm"
-              className={cn(
-                'bg-gradient-to-r from-purple-600 to-indigo-600',
-                'hover:from-purple-500 hover:to-indigo-500',
-                'text-white shadow-lg shadow-purple-500/25'
-              )}
-            >
-              <MessageCircle className="w-4 h-4 mr-1" />
-              Đặt lịch
-            </Button>
+
+            {/* Giá */}
+            <div className="flex items-center gap-1">
+              <Heart className="w-4 h-4 fill-purple-400 text-purple-400 shrink-0" />
+              <span className="text-lg font-bold text-foreground">{priceDisplay}</span>
+              <span className="text-xs text-muted-foreground">/H</span>
+            </div>
           </div>
-        </GlassCard>
+
+        </div>
       </Link>
     </motion.div>
   )
 }
 
+// ─── Skeleton ──────────────────────────────────────────────────────────────────
 export function ReaderCardSkeleton() {
   return (
-    <GlassCard className="p-4">
-      <div className="flex gap-4">
-        <div className="w-20 h-20 rounded-xl skeleton" />
-        <div className="flex-1 space-y-2">
-          <div className="h-5 w-32 skeleton rounded" />
-          <div className="h-4 w-24 skeleton rounded" />
-          <div className="h-3 w-20 skeleton rounded" />
-        </div>
+    <div className="rounded-[18px] overflow-hidden border border-white/10 bg-[#0f0a1a]">
+      <div className="w-full aspect-[3/4] skeleton" />
+      <div className="px-3 pt-2.5 pb-3 space-y-2">
+        <div className="h-4 w-2/3 skeleton rounded" />
+        <div className="h-6 w-16 skeleton rounded" />
       </div>
-      <div className="flex gap-2 mt-3">
-        <div className="h-5 w-16 skeleton rounded-full" />
-        <div className="h-5 w-16 skeleton rounded-full" />
-        <div className="h-5 w-16 skeleton rounded-full" />
-      </div>
-      <div className="space-y-2 mt-3">
-        <div className="h-4 w-full skeleton rounded" />
-        <div className="h-4 w-3/4 skeleton rounded" />
-      </div>
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/10">
-        <div className="h-6 w-20 skeleton rounded" />
-        <div className="h-8 w-24 skeleton rounded" />
-      </div>
-    </GlassCard>
+    </div>
   )
 }

@@ -1,69 +1,53 @@
 import 'dotenv/config'
 import { PrismaClient, Prisma } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { readers, tarotCards, faqData, platformStats } from '../lib/data'
+import { readers, tarotCards, faqData, platformStats, testimonials } from '../lib/data'
 
 const databaseUrl = process.env.DATABASE_URL
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL is not defined in the environment')
-}
+if (!databaseUrl) throw new Error('DATABASE_URL is not defined in the environment')
 
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({
-    connectionString: databaseUrl,
-  }),
+  adapter: new PrismaPg({ connectionString: databaseUrl }),
 })
 
 async function main() {
   console.log('Start seeding...')
 
-  // 1. Create Roles
-  const roles = ['CUSTOMER', 'READER', 'ADMIN']
-  for (const roleName of roles) {
+  // 1. Roles
+  for (const roleName of ['CUSTOMER', 'READER', 'ADMIN']) {
     await prisma.role.upsert({
       where: { name: roleName },
       update: {},
-      create: {
-        name: roleName,
-        description: `${roleName} role`,
-      },
+      create: { name: roleName, description: `${roleName} role` },
     })
   }
+  const readerRole = await prisma.role.findUniqueOrThrow({ where: { name: 'READER' } })
 
-  const readerRole = await prisma.role.findUnique({ where: { name: 'READER' } })
-  if (!readerRole) throw new Error('READER role not found')
-
-  // 2. Create Readers and related data
+  // 2. Readers
   for (const reader of readers) {
     const email = `reader_${reader.id}@zenvy.com`
+    const expYear = parseInt(reader.experience.match(/\d+/)?.[0] ?? '0', 10)
 
-    // Parse experience year (e.g., "8 năm" -> 8)
-    const expMatch = reader.experience.match(/\d+/)
-    const experienceYear = expMatch ? parseInt(expMatch[0], 10) : 0
-
-    // Upsert User
-    const user = await prisma.user.create({
+    // Upsert user
+    const user = await prisma.user.upsert({
       where: { email },
-      data: {
+      update: {},
+      create: {
         email,
-        password_hash: 'hashed_password_demo', // In real app, use bcrypt
+        password_hash: '$2b$10$placeholder_hash_for_demo_reader',
         role_id: readerRole.id,
         status: 'ACTIVE',
       },
-      skipDuplicates: true,
     })
 
-    const existingUser = await prisma.user.findUnique({ where: { email } })
-    const userId = existingUser!.id
-
-    // Upsert ReaderInfo
+    // Upsert reader info
     const readerInfo = await prisma.readerInfo.upsert({
-      where: { user_id: userId },
+      where: { user_id: user.id },
       create: {
-        user_id: userId,
+        user_id: user.id,
         display_name: reader.name,
         description: reader.fullBio,
-        experience_year: experienceYear,
+        experience_year: expYear,
         price_per_session: new Prisma.Decimal(reader.pricePerSession.toString()),
         rating: new Prisma.Decimal(reader.rating.toString()),
         verified: reader.isVerified,
@@ -72,7 +56,7 @@ async function main() {
       update: {
         display_name: reader.name,
         description: reader.fullBio,
-        experience_year: experienceYear,
+        experience_year: expYear,
         price_per_session: new Prisma.Decimal(reader.pricePerSession.toString()),
         rating: new Prisma.Decimal(reader.rating.toString()),
         verified: reader.isVerified,
@@ -80,27 +64,25 @@ async function main() {
       },
     })
 
-    // Seed Packages
-    for (const pkg of reader.packages) {
+    // Packages — bỏ id string, để DB tự tạo
+    for (const { id: _id, ...pkg } of reader.packages) {
       await prisma.package.create({
         data: { ...pkg, reader_id: readerInfo.id },
-        skipDuplicates: true,
       })
     }
 
-    // Seed Reviews
-    for (const review of reader.reviews) {
+    // Reviews — bỏ id string + userId không có trong schema
+    for (const { id: _id, userId: _uid, ...review } of reader.reviews) {
       await prisma.review.create({
         data: {
           ...review,
           date: new Date(review.date),
           reader_id: readerInfo.id,
         },
-        skipDuplicates: true,
       })
     }
 
-    // Seed Availability
+    // Availability
     for (const avail of reader.availability) {
       await prisma.availability.create({
         data: {
@@ -108,35 +90,52 @@ async function main() {
           slots: avail.slots,
           reader_id: readerInfo.id,
         },
-        skipDuplicates: true,
       })
     }
 
-    console.log(`Created reader: ${reader.name}`)
+    console.log(`✓ Reader: ${reader.name}`)
   }
 
-  // 3. Seed Tarot Cards
+  // 3. Tarot Cards
   await prisma.tarotCard.createMany({
-    data: tarotCards.map(({ id, ...card }) => card),
+    data: tarotCards.map(({ id: _id, ...card }) => card),
     skipDuplicates: true,
   })
-  console.log('Seeded Tarot Cards.')
+  console.log('✓ Tarot Cards')
 
-  // 4. Seed FAQs
+  // 4. FAQs
   await prisma.fAQ.createMany({
     data: faqData,
     skipDuplicates: true,
   })
-  console.log('Seeded FAQs.')
+  console.log('✓ FAQs')
 
-  console.log('Seeding finished.')
+  // 5. Platform Stats
+  const existing = await prisma.platformStat.findFirst()
+  if (!existing) {
+    await prisma.platformStat.create({
+      data: {
+        totalSessions: platformStats.totalSessions,
+        averageRating: new Prisma.Decimal(platformStats.averageRating.toString()),
+        verifiedReaders: platformStats.verifiedReaders,
+        avgResponseTime: platformStats.avgResponseTime,
+        satisfactionRate: platformStats.satisfactionRate,
+        onlineReaders: platformStats.onlineReaders,
+      },
+    })
+    console.log('✓ Platform Stats')
+  }
+
+  // 6. Testimonials
+  await prisma.testimonial.createMany({
+    data: testimonials.map(({ id: _id, ...t }) => t),
+    skipDuplicates: true,
+  })
+  console.log('✓ Testimonials')
+
+  console.log('\n🌙 Seeding finished.')
 }
 
 main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+  .catch((e) => { console.error(e); process.exit(1) })
+  .finally(() => prisma.$disconnect())

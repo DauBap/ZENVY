@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { serializeReaders } from '@/lib/serializers'
+import { readers as fallbackReaders, specialties as fallbackSpecialties } from '@/lib/data'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { MobileNav } from '@/components/layout/mobile-nav'
@@ -7,20 +8,32 @@ import { CosmicBackground } from '@/components/ui/floating-elements'
 import { ReadersPage } from '@/components/readers/readers-page'
 
 export default async function ReadersRoutePage() {
-  const readers = await prisma.reader.findMany({
-    orderBy: { rating: 'desc' },
-  })
+  let readers: any[]
+  let specialties: string[]
 
-  const serializedReaders = serializeReaders(readers)
-  const specialties = Array.from(
-    new Set(readers.flatMap((reader) => reader.specialty))
-  ).sort()
+  try {
+    const dbReaders = await prisma.readerInfo.findMany({
+      orderBy: { rating: 'desc' },
+      include: { packages: true },
+    })
+
+    if (dbReaders.length > 0) {
+      readers = serializeReaders(dbReaders)
+      specialties = fallbackSpecialties
+    } else {
+      readers = fallbackReaders as any
+      specialties = fallbackSpecialties
+    }
+  } catch {
+    readers = fallbackReaders as any
+    specialties = fallbackSpecialties
+  }
 
   return (
     <>
       <CosmicBackground />
       <Header />
-      <ReadersPage readers={serializedReaders} specialties={specialties} />
+      <ReadersPage readers={readers} specialties={specialties} />
       <Footer />
       <MobileNav />
     </>
