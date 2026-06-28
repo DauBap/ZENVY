@@ -14,3 +14,14 @@ node_modules
 .next/
 .DS_Store
 .env
+
+# Impeccable design tooling (skills, local config, caches)
+.claude/
+.agents/
+.impeccable/
+skills-lock.json
+
+# Temp / test files
+cookie.txt
+*.cookies.txt
+._*

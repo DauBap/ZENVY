@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthModalProvider } from '@/contexts/auth-modal-context'
 import { AuthModal } from '@/components/auth/auth-modal'
+import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
 const inter = Inter({ 
@@ -55,6 +56,7 @@ export default function RootLayout({
         <AuthModalProvider>
           {children}
           <AuthModal />
+          <Toaster />
         </AuthModalProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

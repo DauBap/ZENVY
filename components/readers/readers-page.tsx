@@ -117,7 +117,7 @@ function ReaderScrollSection({
         }}
       >
         {readers.map((reader, index) => (
-          <div key={reader.id} className="shrink-0 w-[200px] sm:w-[220px]">
+          <div key={reader.id} className="shrink-0 w-[150px] sm:w-[168px]">
             <ReaderCard reader={reader} index={index} />
           </div>
         ))}

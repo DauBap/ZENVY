@@ -17,5 +17,12 @@ export default async function BookingPage({
 
   if (!reader) return notFound()
 
-  return <BookingClient reader={serializeReader(reader)} />
+  // Các slot đã được xác nhận (CONFIRMED) → khách khác không còn thấy/đặt được
+  const confirmed = await prisma.booking.findMany({
+    where: { reader_id: Number(readerId), status: 'CONFIRMED' },
+    select: { date: true, time: true },
+  })
+  const takenSlots = confirmed.map((b) => `${b.date.toISOString().split('T')[0]} ${b.time}`)
+
+  return <BookingClient reader={serializeReader(reader)} takenSlots={takenSlots} />
 }

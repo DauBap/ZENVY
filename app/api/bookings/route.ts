@@ -25,6 +25,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Không tìm thấy thông tin khách hàng.' }, { status: 404 })
     }
 
+    // Chỉ cho đặt vào ngày + giờ reader đã bật (lịch trống)
+    const bookingDate = new Date(date)
+    if (isNaN(bookingDate.getTime())) {
+      return NextResponse.json({ error: 'Ngày đặt lịch không hợp lệ.' }, { status: 400 })
+    }
+    const avail = await prisma.availability.findFirst({
+      where: { reader_id: Number(readerId), date: bookingDate },
+      select: { slots: true },
+    })
+    if (!avail || !avail.slots.includes(time)) {
+      return NextResponse.json(
+        { error: 'Khung giờ này không còn trống. Vui lòng chọn lại.' },
+        { status: 409 }
+      )
+    }
+
+    // Chặn nếu slot (ngày + giờ) đã có booking CONFIRMED cho khách khác
+    const taken = await prisma.booking.findFirst({
+      where: { reader_id: Number(readerId), date: bookingDate, time, status: 'CONFIRMED' },
+      select: { id: true },
+    })
+    if (taken) {
+      return NextResponse.json(
+        { error: 'Khung giờ này đã có người đặt. Vui lòng chọn lại.' },
+        { status: 409 }
+      )
+    }
+
     const booking = await prisma.booking.create({
       data: {
         customer_id: customerInfo.id,

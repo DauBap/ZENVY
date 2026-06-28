@@ -54,7 +54,7 @@ export function serializeReader(
     // Map DB fields → UI field names
     name: reader.display_name ?? 'Tarot Reader',
     avatar: reader.avatar_url ?? '/placeholder-user.jpg',
-    specialty: [],
+    specialty: reader.specialty ?? [],
     bio: reader.description ?? '',
     isOnline: false,
     isVerified: reader.verified,

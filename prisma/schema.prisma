@@ -143,6 +143,7 @@ model ReaderInfo {
   rating            Decimal  @default(0.0)  @db.Decimal(2, 1)
   verified          Boolean  @default(false)
   avatar_url        String?  @db.Text
+  specialty         String[] @default([])
   created_at        DateTime @default(now()) @db.Timestamp(6)
   updated_at        DateTime @updatedAt @db.Timestamp(6)
 
@@ -225,6 +226,7 @@ model Booking {
   date        DateTime      @db.Date
   time        String        @db.VarChar(10)
   status      BookingStatus @default(PENDING)
+  cancel_reason String?     @db.Text
   created_at  DateTime      @default(now()) @db.Timestamp(6)
   updated_at  DateTime      @updatedAt @db.Timestamp(6)
 

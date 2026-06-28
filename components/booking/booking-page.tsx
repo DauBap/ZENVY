@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import {
   ChevronLeft, Check, Calendar, Clock, CreditCard,
@@ -16,8 +17,6 @@ import { cn } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { SerializedReader } from '@/lib/serializers'
 
-const TIME_SLOTS = ['09:00','10:00','11:00','13:00','14:00','15:00','16:00','19:00','20:00','21:00']
-
 const STEPS = [
   { id: 1, label: 'Chọn gói' },
   { id: 2, label: 'Chọn thời gian' },
@@ -25,7 +24,7 @@ const STEPS = [
   { id: 4, label: 'Xác nhận' },
 ]
 
-export function BookingClient({ reader }: { reader: SerializedReader }) {
+export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedReader; takenSlots?: string[] }) {
   const searchParams = useSearchParams()
   const { user, openLogin } = useAuthModal()
   const packageIdParam = searchParams.get('package') // number string từ DB
@@ -36,21 +35,33 @@ export function BookingClient({ reader }: { reader: SerializedReader }) {
   const [selectedPackageId, setSelectedPackageId] = useState<number | null>(initPkgId)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
-  const [dateOffset, setDateOffset] = useState(0)
 
   // Luôn tìm đúng package từ DB data
   const selectedPkg = reader.packages?.find((p) => p.id === selectedPackageId) ?? null
 
-  const dates = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date()
-    d.setDate(d.getDate() + dateOffset + i)
+  // Chỉ cho chọn ngày + giờ mà reader đã bật (lịch trống), từ hôm nay trở đi
+  // Loại bỏ slot đã có booking CONFIRMED (khách khác đã chiếm)
+  const today = new Date().toISOString().split('T')[0]
+  const taken = new Set(takenSlots)
+  const availByDate = (reader.availability ?? [])
+    .map((a) => {
+      const date = a.date.split('T')[0]
+      return { date, slots: a.slots.filter((s) => !taken.has(`${date} ${s}`)) }
+    })
+    .filter((a) => a.slots.length > 0 && a.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date))
+
+  const dates = availByDate.map((a) => {
+    const d = new Date(a.date)
     return {
-      value: d.toISOString().split('T')[0],
+      value: a.date,
       day: d.toLocaleDateString('vi-VN', { weekday: 'short' }),
       date: d.getDate(),
       month: d.toLocaleDateString('vi-VN', { month: 'numeric' }),
     }
   })
+
+  const slotsForSelected = availByDate.find((a) => a.date === selectedDate)?.slots ?? []
 
   const canProceed = () => {
     if (currentStep === 1) return selectedPackageId !== null
@@ -83,12 +94,12 @@ export function BookingClient({ reader }: { reader: SerializedReader }) {
           openLogin()
           return
         }
-        alert(data.error || 'Dat lich that bai.')
+        toast.error(data.error || 'Đặt lịch thất bại.')
         return
       }
       setCurrentStep(4)
     } catch {
-      alert('Da xay ra loi. Vui long thu lai.')
+      toast.error('Đã xảy ra lỗi. Vui lòng thử lại.')
     }
   }
 
@@ -178,55 +189,58 @@ export function BookingClient({ reader }: { reader: SerializedReader }) {
               {currentStep === 2 && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                   <GlassCard className="p-6">
-                    {/* Date header */}
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-semibold text-foreground">
-                        <Calendar className="w-5 h-5 inline mr-2" />Chọn ngày
-                      </h2>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setDateOffset(Math.max(0, dateOffset - 7))}
-                          disabled={dateOffset === 0}
-                          className={cn('w-8 h-8 rounded-full border flex items-center justify-center transition-all',
-                            dateOffset === 0
-                              ? 'border-white/5 text-white/20 cursor-not-allowed'
-                              : 'border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground')}>
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => setDateOffset(dateOffset + 7)}
-                          className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all">
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
+                    {dates.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Calendar className="w-12 h-12 text-purple-400/30 mx-auto mb-4" />
+                        <p className="text-muted-foreground">Reader chưa mở lịch trống. Vui lòng quay lại sau hoặc nhắn tin để hẹn lịch.</p>
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        {/* Date header */}
+                        <div className="flex items-center justify-between mb-4">
+                          <h2 className="text-xl font-semibold text-foreground">
+                            <Calendar className="w-5 h-5 inline mr-2" />Chọn ngày
+                          </h2>
+                        </div>
 
-                    <div className="flex gap-2 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none' }}>
-                      {dates.map((d) => (
-                        <button key={d.value} onClick={() => setSelectedDate(d.value)}
-                          className={cn('flex flex-col items-center p-3 rounded-xl min-w-[70px] transition-all border',
-                            selectedDate === d.value
-                              ? 'bg-purple-500/20 border-purple-500/50'
-                              : 'bg-white/5 border-white/10 hover:border-purple-500/30')}>
-                          <span className="text-xs text-muted-foreground">{d.day}</span>
-                          <span className="text-xl font-bold text-foreground">{d.date}</span>
-                          <span className="text-xs text-muted-foreground">Th.{d.month}</span>
-                        </button>
-                      ))}
-                    </div>
+                        <div className="flex gap-2 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none' }}>
+                          {dates.map((d) => (
+                            <button key={d.value} onClick={() => { setSelectedDate(d.value); setSelectedTime('') }}
+                              className={cn('flex flex-col items-center p-3 rounded-xl min-w-[70px] transition-all border',
+                                selectedDate === d.value
+                                  ? 'bg-purple-500/20 border-purple-500/50'
+                                  : 'bg-white/5 border-white/10 hover:border-purple-500/30')}>
+                              <span className="text-xs text-muted-foreground">{d.day}</span>
+                              <span className="text-xl font-bold text-foreground">{d.date}</span>
+                              <span className="text-xs text-muted-foreground">Th.{d.month}</span>
+                            </button>
+                          ))}
+                        </div>
 
-                    <h2 className="text-xl font-semibold text-foreground mb-4 mt-6">
-                      <Clock className="w-5 h-5 inline mr-2" />Chọn giờ
-                    </h2>
-                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                      {TIME_SLOTS.map((time) => (
-                        <button key={time} onClick={() => setSelectedTime(time)}
-                          className={cn('p-3 rounded-xl text-center transition-all border',
-                            selectedTime === time
-                              ? 'bg-purple-500/20 border-purple-500/50 text-foreground'
-                              : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30')}>
-                          {time}
-                        </button>
-                      ))}
-                    </div>
+                        <h2 className="text-xl font-semibold text-foreground mb-4 mt-6">
+                          <Clock className="w-5 h-5 inline mr-2" />Chọn giờ
+                        </h2>
+                        {selectedDate ? (
+                          slotsForSelected.length > 0 ? (
+                            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                              {slotsForSelected.map((time) => (
+                                <button key={time} onClick={() => setSelectedTime(time)}
+                                  className={cn('p-3 rounded-xl text-center transition-all border',
+                                    selectedTime === time
+                                      ? 'bg-purple-500/20 border-purple-500/50 text-foreground'
+                                      : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30')}>
+                                  {time}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground py-2">Ngày này không còn khung giờ trống.</p>
+                          )
+                        ) : (
+                          <p className="text-sm text-muted-foreground py-2">Vui lòng chọn ngày trước.</p>
+                        )}
+                      </>
+                    )}
                   </GlassCard>
                 </motion.div>
               )}

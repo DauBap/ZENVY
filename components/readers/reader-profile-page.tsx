@@ -217,16 +217,18 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                     </div>
 
                     {/* CTA */}
-                    <Link href={`/booking/${reader.id}`}>
-                      <Button className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
-                        <Calendar className="w-4 h-4 mr-2" /> Đặt lịch ngay
-                      </Button>
-                    </Link>
-                    <Link href={`/chat?reader=${reader.id}`}>
-                      <Button variant="outline" className="w-full border-white/10 hover:bg-white/5">
-                        <MessageCircle className="w-4 h-4 mr-2" /> Nhắn tin
-                      </Button>
-                    </Link>
+                    <div className="flex flex-col gap-2">
+                      <Link href={`/booking/${reader.id}`} className="block">
+                        <Button className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
+                          <Calendar className="w-4 h-4 mr-2" /> Đặt lịch ngay
+                        </Button>
+                      </Link>
+                      <Link href={`/chat?reader=${reader.id}`} className="block">
+                        <Button variant="outline" className="w-full border-white/10 hover:bg-white/5">
+                          <MessageCircle className="w-4 h-4 mr-2" /> Nhắn tin
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </GlassCard>
               </motion.div>

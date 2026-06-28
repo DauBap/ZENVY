@@ -23,33 +23,73 @@ export default async function DashboardRoutePage() {
   // Lấy bookings của user nếu đã đăng nhập
   let bookings: any[] = []
   let userName = 'Người dùng'
+  const viewerRole = session?.role ?? 'CUSTOMER'
 
   if (session) {
     try {
       userName = session.name || 'Người dùng'
-      const customerInfo = await prisma.customerInfo.findUnique({
-        where: { user_id: Number(session.sub) },
-      })
-      if (customerInfo) {
-        const raw = await prisma.booking.findMany({
-          where: { customer_id: customerInfo.id },
-          include: {
-            reader: { select: { id: true, display_name: true, avatar_url: true, verified: true } },
-            package: { select: { id: true, name: true, duration: true, price: true } },
-          },
-          orderBy: [{ date: 'asc' }, { time: 'asc' }],
+
+      if (viewerRole === 'READER') {
+        // Reader: xem các lịch khách đã đặt với mình → query theo reader_id
+        const readerInfo = await prisma.readerInfo.findUnique({
+          where: { user_id: Number(session.sub) },
         })
-        bookings = raw.map((b) => ({
-          ...b,
-          date: b.date.toISOString().split('T')[0],
-          created_at: b.created_at.toISOString(),
-          updated_at: b.updated_at.toISOString(),
-        }))
+        if (readerInfo) {
+          const raw = await prisma.booking.findMany({
+            where: { reader_id: readerInfo.id },
+            include: {
+              customer: { select: { id: true, fullname: true, avatar_url: true } },
+              package: { select: { id: true, name: true, duration: true, price: true } },
+            },
+            orderBy: [{ date: 'asc' }, { time: 'asc' }],
+          })
+          bookings = raw.map((b) => ({
+            ...b,
+            date: b.date.toISOString().split('T')[0],
+            created_at: b.created_at.toISOString(),
+            updated_at: b.updated_at.toISOString(),
+            // Đối tác của reader là khách hàng
+            counterparty: {
+              id: b.customer?.id,
+              name: b.customer?.fullname ?? 'Khách hàng',
+              avatar: b.customer?.avatar_url ?? '/placeholder-user.jpg',
+              verified: false,
+            },
+          }))
+        }
+      } else {
+        // Customer: xem các lịch mình đã đặt → query theo customer_id
+        const customerInfo = await prisma.customerInfo.findUnique({
+          where: { user_id: Number(session.sub) },
+        })
+        if (customerInfo) {
+          const raw = await prisma.booking.findMany({
+            where: { customer_id: customerInfo.id },
+            include: {
+              reader: { select: { id: true, display_name: true, avatar_url: true, verified: true } },
+              package: { select: { id: true, name: true, duration: true, price: true } },
+            },
+            orderBy: [{ date: 'asc' }, { time: 'asc' }],
+          })
+          bookings = raw.map((b) => ({
+            ...b,
+            date: b.date.toISOString().split('T')[0],
+            created_at: b.created_at.toISOString(),
+            updated_at: b.updated_at.toISOString(),
+            // Đối tác của khách hàng là reader
+            counterparty: {
+              id: b.reader?.id,
+              name: b.reader?.display_name ?? 'Reader',
+              avatar: b.reader?.avatar_url ?? '/placeholder-user.jpg',
+              verified: b.reader?.verified ?? false,
+            },
+          }))
+        }
       }
     } catch (e) {
       console.error('Dashboard bookings error:', e)
     }
   }
 
-  return <DashboardPage readers={readers} bookings={bookings} userName={userName} />
+  return <DashboardPage readers={readers} bookings={bookings} userName={userName} viewerRole={viewerRole} />
 }
