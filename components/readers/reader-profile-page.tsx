@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
@@ -26,6 +26,79 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
     reader.packages?.find((p) => p.popular)?.id ?? reader.packages?.[0]?.id ?? null
   )
   const [isFav, setIsFav] = useState(false)
+  const [favCount, setFavCount] = useState(0)
+  const [isTogglingFav, setIsTogglingFav] = useState(false)
+  const [stats, setStats] = useState<{
+    followCount: number
+    totalBookings: number
+    completedBookings: number
+    completionRate: number
+    avgRating: number
+    reviewCount: number
+  } | null>(null)
+
+  // Load stats thực từ DB
+  useEffect(() => {
+    fetch(`/api/reader/${reader.id}/stats`)
+      .then(r => r.json())
+      .then(d => {
+        if (!d.error) {
+          setStats(d)
+          setFavCount(d.followCount ?? 0)
+        }
+      })
+      .catch(() => {})
+  }, [reader.id])
+
+  // Load trạng thái theo dõi của user hiện tại + tổng số người theo dõi
+  useEffect(() => {
+    fetch(`/api/readers/${reader.id}/favorite`)
+      .then(r => r.json())
+      .then(d => {
+        if (!d.error) {
+          setIsFav(Boolean(d.favorited))
+          setFavCount(d.count ?? 0)
+        }
+      })
+      .catch(() => {})
+  }, [reader.id])
+
+  async function toggleFav() {
+    if (isTogglingFav) return
+
+    setIsTogglingFav(true)
+    try {
+      const res = await fetch(`/api/readers/${reader.id}/favorite`, { method: 'POST' })
+      if (res.status === 401) {
+        window.location.href = '/auth/login'
+        return
+      }
+      if (!res.ok) return
+
+      const data = await res.json()
+      setIsFav(Boolean(data.favorited))
+      setFavCount(data.count ?? 0)
+      setStats((current) => current ? { ...current, followCount: data.count ?? 0 } : current)
+    } finally {
+      setIsTogglingFav(false)
+    }
+  }
+
+  // Session reviews từ DB
+  const [sessionReviews, setSessionReviews] = useState<any[]>([])
+  const [reviewStats, setReviewStats] = useState<{ count: number; average: number; distribution: { star: number; count: number }[] } | null>(null)
+  const [loadingReviews, setLoadingReviews] = useState(false)
+
+  useEffect(() => {
+    if (activeTab !== 'Đánh giá') return
+    if (sessionReviews.length > 0) return // đã load
+    setLoadingReviews(true)
+    fetch(`/api/reader/${reader.id}/reviews`)
+      .then(r => r.json())
+      .then(d => { setSessionReviews(d.reviews ?? []); setReviewStats(d.stats ?? null) })
+      .catch(() => {})
+      .finally(() => setLoadingReviews(false))
+  }, [activeTab, reader.id, sessionReviews.length])
 
   const pkg = reader.packages?.find((p) => p.id === selectedPkg)
 
@@ -84,23 +157,17 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                       <span className="px-2 py-0.5 text-xs rounded bg-white/15 text-white/80">
                         ID {reader.id.toString().padStart(8, '0')}
                       </span>
-                      {reader.specialty.slice(0, 2).map((s) => (
-                        <span key={s} className="px-2 py-0.5 text-xs rounded-full bg-purple-300/20 text-purple-100 border border-purple-300/30">
-                          {s}
-                        </span>
-                      ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Stats */}
-                <div className="flex items-center gap-6 sm:gap-8 flex-1 justify-center sm:justify-center flex-wrap">
+                {/* Stats — 1 hàng ngang */}
+                <div className="flex items-center gap-6 sm:gap-10 flex-1 justify-center">
                   {[
-                    { value: reader.totalSessions > 0 ? Math.floor(reader.totalSessions / 100) : '—', label: 'Theo dõi' },
-                    { value: reader.totalSessions > 0 ? `${(reader.totalSessions / 1000).toFixed(1)}K` : '—', label: 'Người hâm mộ' },
-                    { value: reader.totalSessions > 0 ? `${(reader.totalSessions * 0.9 / 1000).toFixed(1)}K` : '—', label: 'Đặt lịch' },
-                    { value: '100%', label: 'Tỉ lệ hoàn thành' },
-                    { value: `⭐ ${Number(reader.rating).toFixed(2)}`, label: 'Điểm đánh giá' },
+                    { value: (stats?.followCount ?? favCount).toLocaleString(), label: 'Theo dõi' },
+                    { value: stats ? `${stats.completionRate}%` : '—', label: 'Tỉ lệ hoàn thành' },
+                    { value: stats ? `⭐ ${stats.avgRating.toFixed(2)}` : `⭐ ${Number(reader.rating).toFixed(2)}`, label: 'Điểm đánh giá' },
+                    { value: stats ? `${stats.reviewCount}` : '0', label: 'Lượt đánh giá' },
                   ].map((s) => (
                     <div key={s.label} className="text-center">
                       <div className="text-base font-bold text-white">{s.value}</div>
@@ -112,9 +179,10 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                 {/* Action buttons */}
                 <div className="flex items-center gap-3 shrink-0">
                   <button
-                    onClick={() => setIsFav(!isFav)}
+                    onClick={toggleFav}
+                    disabled={isTogglingFav}
                     className={cn(
-                      'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all',
+                      'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-60',
                       isFav
                         ? 'bg-red-500/80 text-white'
                         : 'bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm'
@@ -168,8 +236,9 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
 
                     {/* Fav button */}
                     <button
-                      onClick={() => setIsFav(!isFav)}
-                      className="absolute top-3 left-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-all"
+                      onClick={toggleFav}
+                      disabled={isTogglingFav}
+                      className="absolute top-3 left-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-all disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <Heart className={cn('w-4 h-4 transition-colors', isFav ? 'fill-red-500 text-red-500' : 'text-white')} />
                     </button>
@@ -179,7 +248,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-600/90 backdrop-blur-sm">
                         <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                         <span className="text-white text-xs font-bold">{Number(reader.rating).toFixed(2)}</span>
-                        <span className="text-white/60 text-xs">({reader.totalSessions.toLocaleString()})</span>
+                        <span className="text-white/60 text-xs">({stats ? stats.reviewCount : reader.totalSessions} đánh giá)</span>
                       </div>
                     </div>
                   </div>
@@ -205,9 +274,9 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                     {/* Stats row */}
                     <div className="grid grid-cols-3 gap-2 py-3 border-y border-white/10">
                       {[
-                        { label: 'Sessions', value: reader.totalSessions.toLocaleString() },
+                        { label: 'Sessions', value: stats ? stats.completedBookings.toLocaleString() : reader.totalSessions.toLocaleString() },
                         { label: 'Kinh nghiệm', value: `${reader.experience_year}n` },
-                        { label: 'Phản hồi', value: reader.responseTime },
+                        { label: 'Tỉ lệ HT', value: stats ? `${stats.completionRate}%` : '—' },
                       ].map((s) => (
                         <div key={s.label} className="text-center">
                           <div className="text-sm font-bold text-foreground">{s.value}</div>
@@ -366,27 +435,31 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                   <GlassCard className="p-5">
                     <div className="flex items-center gap-6">
                       <div className="text-center">
-                        <div className="text-5xl font-bold gradient-text">{Number(reader.rating).toFixed(1)}</div>
-                        <div className="flex gap-0.5 justify-center mt-1">
-                          {[1,2,3,4,5].map((s) => (
-                            <Star key={s} className={cn('w-4 h-4', s <= Math.round(Number(reader.rating)) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20')} />
-                          ))}
+                        <div className="text-5xl font-bold gradient-text">
+                          {reviewStats ? reviewStats.average.toFixed(1) : Number(reader.rating).toFixed(1)}
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1">{reader.totalSessions} sessions</div>
+                        <div className="flex gap-0.5 justify-center mt-1">
+                          {[1,2,3,4,5].map((s) => {
+                            const avg = reviewStats ? reviewStats.average : Number(reader.rating)
+                            return <Star key={s} className={cn('w-4 h-4', s <= Math.round(avg) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20')} />
+                          })}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {reviewStats ? reviewStats.count : 0} đánh giá
+                        </div>
                       </div>
                       <div className="flex-1 space-y-1.5">
                         {[5,4,3,2,1].map((s) => {
-                          const count = reader.reviews?.filter((r) => r.rating === s).length ?? 0
-                          const total = reader.reviews?.length ?? 1
+                          const dist = reviewStats?.distribution.find(d => d.star === s)
+                          const count = dist?.count ?? 0
+                          const total = reviewStats?.count ?? 0
                           return (
                             <div key={s} className="flex items-center gap-2 text-xs">
                               <span className="w-3 text-muted-foreground">{s}</span>
                               <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                               <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-gradient-to-r from-purple-500 to-yellow-400 transition-all"
-                                  style={{ width: total > 0 ? `${(count / total) * 100}%` : '0%' }}
-                                />
+                                <div className="h-full rounded-full bg-gradient-to-r from-purple-500 to-yellow-400 transition-all"
+                                  style={{ width: total > 0 ? `${(count / total) * 100}%` : '0%' }} />
                               </div>
                               <span className="w-4 text-muted-foreground">{count}</span>
                             </div>
@@ -397,26 +470,29 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                   </GlassCard>
 
                   {/* Review list */}
-                  {reader.reviews && reader.reviews.length > 0 ? (
+                  {loadingReviews ? (
+                    <div className="flex justify-center py-8">
+                      <div className="w-6 h-6 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                    </div>
+                  ) : sessionReviews.length > 0 ? (
                     <div className="space-y-3">
-                      {reader.reviews.map((review) => (
+                      {sessionReviews.map((review) => (
                         <GlassCard key={review.id} className="p-4">
                           <div className="flex items-start gap-3">
-                            <div
-                              className="w-9 h-9 rounded-full shrink-0 bg-purple-500/20 flex items-center justify-center text-sm font-bold text-purple-300"
-                              style={review.userAvatar ? {
-                                backgroundImage: `url("${review.userAvatar}")`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                              } : {}}
-                            >
-                              {!review.userAvatar && review.userName.charAt(0)}
+                            <div className="w-9 h-9 rounded-full shrink-0 bg-purple-500/20 flex items-center justify-center text-sm font-bold text-purple-300"
+                              style={review.customer.avatar ? {
+                                backgroundImage: `url("${review.customer.avatar}")`,
+                                backgroundSize: 'cover', backgroundPosition: 'center',
+                              } : {}}>
+                              {!review.customer.avatar && review.customer.name.charAt(0)}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center justify-between gap-2 mb-1">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="text-sm font-medium text-foreground">{review.userName}</span>
-                                  {review.verified && <Check className="w-3.5 h-3.5 text-green-400" />}
+                                  <span className="text-sm font-medium text-foreground">{review.customer.name}</span>
+                                  <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded bg-white/5">
+                                    {review.packageName} · {review.packageDuration} phút
+                                  </span>
                                 </div>
                                 <div className="flex gap-0.5 shrink-0">
                                   {[1,2,3,4,5].map((s) => (
@@ -425,9 +501,11 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                                 </div>
                               </div>
                               <div className="text-xs text-muted-foreground mb-2">
-                                {new Date(review.date).toLocaleDateString('vi-VN')}
+                                {new Date(review.createdAt).toLocaleDateString('vi-VN')}
                               </div>
-                              <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
+                              {review.comment && (
+                                <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
+                              )}
                             </div>
                           </div>
                         </GlassCard>
@@ -461,8 +539,8 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                     <div className="space-y-3">
                       {[
                         { icon: Shield, label: 'Kinh nghiệm', value: `${reader.experience_year} năm` },
-                        { icon: Clock, label: 'Phản hồi TB', value: reader.responseTime },
-                        { icon: Star, label: 'Đánh giá', value: `${Number(reader.rating).toFixed(1)} / 5.0` },
+                        { icon: Clock, label: 'Hoàn thành', value: stats ? `${stats.completedBookings} phiên` : '—' },
+                        { icon: Star, label: 'Đánh giá', value: stats ? `${stats.avgRating.toFixed(1)} / 5.0 (${stats.reviewCount})` : `${Number(reader.rating).toFixed(1)} / 5.0` },
                         { icon: Sparkles, label: 'Chuyên môn', value: reader.specialty.join(', ') || 'Tarot' },
                       ].map(({ icon: Icon, label, value }) => (
                         <div key={label} className="flex items-center gap-3 text-sm">

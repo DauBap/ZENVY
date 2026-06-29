@@ -23,6 +23,8 @@ export default async function DashboardRoutePage() {
   // Lấy bookings của user nếu đã đăng nhập
   let bookings: any[] = []
   let userName = 'Người dùng'
+  let readerPackages: any[] = []
+  let readerAvailability: any[] = []
   const viewerRole = session?.role ?? 'CUSTOMER'
 
   if (session) {
@@ -33,10 +35,31 @@ export default async function DashboardRoutePage() {
         // Reader: xem các lịch khách đã đặt với mình → query theo reader_id
         const readerInfo = await prisma.readerInfo.findUnique({
           where: { user_id: Number(session.sub) },
+          include: {
+            packages: { orderBy: { id: 'asc' } },
+            availability: { orderBy: { date: 'asc' } },
+          },
         })
         if (readerInfo) {
+          readerPackages = readerInfo.packages.map((p) => ({
+            id: p.id,
+            name: p.name,
+            duration: p.duration,
+            price: p.price,
+            description: p.description,
+            popular: p.popular,
+          }))
+          readerAvailability = readerInfo.availability.map((a) => ({
+            id: a.id,
+            date: a.date.toISOString().split('T')[0],
+            slots: a.slots,
+          }))
           const raw = await prisma.booking.findMany({
-            where: { reader_id: readerInfo.id },
+            where: {
+              reader_id: readerInfo.id,
+              // Ẩn lịch PENDING với reader — chỉ hiện sau khi admin xác nhận TT
+              status: { not: 'PENDING' },
+            },
             include: {
               customer: { select: { id: true, fullname: true, avatar_url: true } },
               package: { select: { id: true, name: true, duration: true, price: true } },
@@ -91,5 +114,5 @@ export default async function DashboardRoutePage() {
     }
   }
 
-  return <DashboardPage readers={readers} bookings={bookings} userName={userName} viewerRole={viewerRole} />
+  return <DashboardPage readers={readers} bookings={bookings} userName={userName} viewerRole={viewerRole} readerPackages={readerPackages} readerAvailability={readerAvailability} />
 }

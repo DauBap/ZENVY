@@ -16,8 +16,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { DatePicker } from '@/components/ui/date-picker'
 import { NumberInput } from '@/components/ui/number-input'
-import { ReaderPackagesTab, type PackageItem } from '@/components/profile/reader-packages-tab'
-import { ReaderAvailabilityTab, type AvailabilityItem } from '@/components/profile/reader-availability-tab'
+import type { PackageItem } from '@/components/profile/reader-packages-tab'
+import type { AvailabilityItem } from '@/components/profile/reader-availability-tab'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import { cn } from '@/lib/utils'
 
@@ -92,8 +92,7 @@ export function ProfilePage(props: Props) {
   const [avatar, setAvatar] = useState(initial.avatar_url)
   const [busy, setBusy] = useState(false)
 
-  // Reader: tab điều hướng + specialty tags
-  const [activeTab, setActiveTab] = useState<'info' | 'packages' | 'availability'>('info')
+  // Reader: specialty tags
   const [specialty, setSpecialty] = useState<string[]>(isReader ? (initial as ReaderInitial).specialty : [])
   const [specialtyInput, setSpecialtyInput] = useState('')
 
@@ -178,32 +177,6 @@ export function ProfilePage(props: Props) {
             <p className="text-muted-foreground">Cập nhật thông tin cá nhân của bạn</p>
           </motion.div>
 
-          {isReader && (
-            <div className="flex border-b border-white/10 mb-6">
-              {([
-                { id: 'info', label: 'Thông tin' },
-                { id: 'packages', label: 'Dịch vụ' },
-                { id: 'availability', label: 'Lịch trống' },
-              ] as const).map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setActiveTab(t.id)}
-                  className={cn(
-                    'px-5 py-3 text-sm font-medium relative transition-colors',
-                    activeTab === t.id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
-                  )}
-                >
-                  {t.label}
-                  {activeTab === t.id && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {(!isReader || activeTab === 'info') && (
           <form onSubmit={handleSubmit}>
             <GlassCard className="p-6 space-y-6">
               {/* Avatar */}
@@ -357,15 +330,6 @@ export function ProfilePage(props: Props) {
               </div>
             </GlassCard>
           </form>
-          )}
-
-          {isReader && activeTab === 'packages' && (
-            <ReaderPackagesTab initial={(initial as ReaderInitial).packages} />
-          )}
-
-          {isReader && activeTab === 'availability' && (
-            <ReaderAvailabilityTab initial={(initial as ReaderInitial).availability} />
-          )}
         </div>
       </main>
       <MobileNav />

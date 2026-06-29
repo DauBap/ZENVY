@@ -35,20 +35,32 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
   const [selectedPackageId, setSelectedPackageId] = useState<number | null>(initPkgId)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   // Luôn tìm đúng package từ DB data
   const selectedPkg = reader.packages?.find((p) => p.id === selectedPackageId) ?? null
 
-  // Chỉ cho chọn ngày + giờ mà reader đã bật (lịch trống), từ hôm nay trở đi
-  // Loại bỏ slot đã có booking CONFIRMED (khách khác đã chiếm)
-  const today = new Date().toISOString().split('T')[0]
+  // Chỉ cho chọn slot reader đã bật, CHƯA qua giờ (theo giờ VN UTC+7) và chưa bị chiếm
+  // Mốc bắt đầu slot = ngày + giờ (giờ địa phương VN) → so với hiện tại
+  const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
+  const nowMs = Date.now()
   const taken = new Set(takenSlots)
+  const slotStartMs = (date: string, slot: string) => {
+    const [y, m, d] = date.split('-').map(Number)
+    const [hh, mm] = slot.split(':').map(Number)
+    return Date.UTC(y, (m || 1) - 1, d || 1, hh || 0, mm || 0) - ICT_OFFSET_MS
+  }
   const availByDate = (reader.availability ?? [])
     .map((a) => {
       const date = a.date.split('T')[0]
-      return { date, slots: a.slots.filter((s) => !taken.has(`${date} ${s}`)) }
+      return {
+        date,
+        slots: a.slots.filter(
+          (s) => !taken.has(`${date} ${s}`) && slotStartMs(date, s) > nowMs
+        ),
+      }
     })
-    .filter((a) => a.slots.length > 0 && a.date >= today)
+    .filter((a) => a.slots.length > 0)
     .sort((a, b) => a.date.localeCompare(b.date))
 
   const dates = availByDate.map((a) => {
@@ -75,6 +87,9 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
       openLogin()
       return
     }
+    // Chống double-submit (nguyên nhân tạo booking trùng)
+    if (submitting) return
+    setSubmitting(true)
 
     try {
       const res = await fetch('/api/bookings', {
@@ -100,6 +115,8 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
       setCurrentStep(4)
     } catch {
       toast.error('Đã xảy ra lỗi. Vui lòng thử lại.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -311,9 +328,9 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                     <ChevronLeft className="w-4 h-4 mr-1" /> Quay lại
                   </Button>
                   <Button onClick={currentStep === 3 ? handleConfirmPayment : () => setCurrentStep(s => Math.min(4, s + 1))}
-                    disabled={!canProceed()}
+                    disabled={!canProceed() || (currentStep === 3 && submitting)}
                     className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-                    {currentStep === 3 ? 'Xác nhận thanh toán' : 'Tiếp tục'}
+                    {currentStep === 3 ? (submitting ? 'Đang xử lý…' : 'Xác nhận thanh toán') : 'Tiếp tục'}
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>

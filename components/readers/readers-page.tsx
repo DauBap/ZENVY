@@ -161,7 +161,10 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
 
   // Section previews
   const newReaders = [...readers].sort((a, b) => b.id - a.id).slice(0, 10)
-  const featuredReaders = [...readers].sort((a, b) => b.rating - a.rating).slice(0, 10)
+  const featuredReaders = [...readers]
+    .filter((reader) => reader.rating > 0)
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 20)
 
   // Scroll to all-readers section + apply sort
   const handleViewAll = (sort: SortBy) => {

@@ -43,20 +43,20 @@ export default async function HomePage() {
     prisma.fAQ.findMany(),
   ])
 
-  const readers = dbReaders.status === 'fulfilled' && dbReaders.value.length > 0
-    ? serializeReaders(dbReaders.value)
+  const readers = dbReaders.status === 'fulfilled' && (dbReaders as any).value.length > 0
+    ? serializeReaders((dbReaders as any).value)
     : fallbackReaders as any
 
-  const platformStat = dbStat.status === 'fulfilled' && dbStat.value
-    ? serializePlatformStat(dbStat.value)
+  const platformStat = dbStat.status === 'fulfilled' && (dbStat as any).value
+    ? serializePlatformStat((dbStat as any).value)
     : getFallbackPlatformStat()
 
-  const testimonials = dbTestimonials.status === 'fulfilled' && dbTestimonials.value.length > 0
-    ? serializeTestimonials(dbTestimonials.value)
+  const testimonials = dbTestimonials.status === 'fulfilled' && (dbTestimonials as any).value.length > 0
+    ? serializeTestimonials((dbTestimonials as any).value)
     : fallbackTestimonials as any
 
-  const faqData = dbFAQs.status === 'fulfilled' && dbFAQs.value.length > 0
-    ? serializeFAQ(dbFAQs.value)
+  const faqData = dbFAQs.status === 'fulfilled' && (dbFAQs as any).value.length > 0
+    ? serializeFAQ((dbFAQs as any).value)
     : fallbackFAQ.map((f, i) => ({ id: i + 1, ...f })) as any
 
   return (

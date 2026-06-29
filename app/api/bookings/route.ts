@@ -41,6 +41,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Chặn đặt slot đã qua giờ (theo giờ VN UTC+7)
+    const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
+    const [bhh, bmm] = String(time).split(':').map(Number)
+    const slotStartMs =
+      Date.UTC(bookingDate.getUTCFullYear(), bookingDate.getUTCMonth(), bookingDate.getUTCDate(), bhh || 0, bmm || 0) - ICT_OFFSET_MS
+    if (slotStartMs <= Date.now()) {
+      return NextResponse.json(
+        { error: 'Khung giờ này đã qua. Vui lòng chọn lại.' },
+        { status: 409 }
+      )
+    }
+
     // Chặn nếu slot (ngày + giờ) đã có booking CONFIRMED cho khách khác
     const taken = await prisma.booking.findFirst({
       where: { reader_id: Number(readerId), date: bookingDate, time, status: 'CONFIRMED' },
@@ -49,6 +61,24 @@ export async function POST(request: NextRequest) {
     if (taken) {
       return NextResponse.json(
         { error: 'Khung giờ này đã có người đặt. Vui lòng chọn lại.' },
+        { status: 409 }
+      )
+    }
+
+    // Chống trùng: khách này đã có booking đang chờ/đã xác nhận cho đúng slot này
+    const dup = await prisma.booking.findFirst({
+      where: {
+        customer_id: customerInfo.id,
+        reader_id: Number(readerId),
+        date: bookingDate,
+        time,
+        status: { in: ['PENDING', 'CONFIRMED'] },
+      },
+      select: { id: true },
+    })
+    if (dup) {
+      return NextResponse.json(
+        { error: 'Bạn đã đặt khung giờ này rồi.' },
         { status: 409 }
       )
     }

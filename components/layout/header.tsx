@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Search, Bell, Sparkles, LogOut, LayoutDashboard, User } from 'lucide-react'
+import { Menu, X, Search, Bell, Mail, Sparkles, LogOut, LayoutDashboard, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -89,6 +89,14 @@ export function Header() {
               <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
                 <Search className="w-5 h-5" />
               </Button>
+
+              {!isLoadingUser && user && (
+                <Link href="/chat">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                    <Mail className="w-5 h-5" />
+                  </Button>
+                </Link>
+              )}
 
               {!isLoadingUser && user && (
                 <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">

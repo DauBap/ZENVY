@@ -39,7 +39,7 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: `Ngày không hợp lệ: ${item.date}` }, { status: 400 })
       }
       const slots = Array.isArray(item.slots)
-        ? Array.from(new Set(item.slots.filter((s: unknown): s is string => typeof s === 'string' && VALID_SLOTS.has(s))))
+        ? (Array.from(new Set(item.slots.filter((s: unknown): s is string => typeof s === 'string' && VALID_SLOTS.has(s)))) as string[])
         : []
       // Bỏ qua ngày không có khung giờ nào
       if (slots.length === 0) continue

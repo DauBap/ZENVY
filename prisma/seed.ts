@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { PrismaClient, Prisma } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
+import bcrypt from 'bcryptjs'
 import { readers, tarotCards, faqData, platformStats, testimonials } from '../lib/data'
 
 const databaseUrl = process.env.DATABASE_URL
@@ -9,6 +10,8 @@ if (!databaseUrl) throw new Error('DATABASE_URL is not defined in the environmen
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: databaseUrl }),
 })
+
+const READER_PASSWORD = 'Reader@123456'
 
 async function main() {
   console.log('Start seeding...')
@@ -23,24 +26,25 @@ async function main() {
   }
   const readerRole = await prisma.role.findUniqueOrThrow({ where: { name: 'READER' } })
 
+  // Hash password một lần dùng chung cho tất cả demo reader
+  const hashedPassword = await bcrypt.hash(READER_PASSWORD, 10)
+
   // 2. Readers
   for (const reader of readers) {
     const email = `reader_${reader.id}@zenvy.com`
     const expYear = parseInt(reader.experience.match(/\d+/)?.[0] ?? '0', 10)
 
-    // Upsert user
     const user = await prisma.user.upsert({
       where: { email },
-      update: {},
+      update: { password_hash: hashedPassword }, // cập nhật hash nếu đã seed trước
       create: {
         email,
-        password_hash: '$2b$10$placeholder_hash_for_demo_reader',
+        password_hash: hashedPassword,
         role_id: readerRole.id,
         status: 'ACTIVE',
       },
     })
 
-    // Upsert reader info
     const readerInfo = await prisma.readerInfo.upsert({
       where: { user_id: user.id },
       create: {
@@ -64,55 +68,48 @@ async function main() {
       },
     })
 
-    // Packages — bỏ id string, để DB tự tạo
+    // Packages (xóa cũ rồi tạo lại để tránh duplicate)
+    await prisma.package.deleteMany({ where: { reader_id: readerInfo.id } })
     for (const { id: _id, ...pkg } of reader.packages) {
-      await prisma.package.create({
-        data: { ...pkg, reader_id: readerInfo.id },
-      })
+      await prisma.package.create({ data: { ...pkg, reader_id: readerInfo.id } })
     }
 
-    // Reviews — bỏ id string + userId không có trong schema
+    // Reviews
+    await prisma.review.deleteMany({ where: { reader_id: readerInfo.id } })
     for (const { id: _id, userId: _uid, ...review } of reader.reviews) {
       await prisma.review.create({
-        data: {
-          ...review,
-          date: new Date(review.date),
-          reader_id: readerInfo.id,
-        },
+        data: { ...review, date: new Date(review.date), reader_id: readerInfo.id },
       })
     }
 
     // Availability
+    await prisma.availability.deleteMany({ where: { reader_id: readerInfo.id } })
     for (const avail of reader.availability) {
       await prisma.availability.create({
-        data: {
-          date: new Date(avail.date),
-          slots: avail.slots,
-          reader_id: readerInfo.id,
-        },
+        data: { date: new Date(avail.date), slots: avail.slots, reader_id: readerInfo.id },
       })
     }
 
-    console.log(`✓ Reader: ${reader.name}`)
+    console.log(`✓ Reader: ${reader.name} (${email} / ${READER_PASSWORD})`)
   }
 
   // 3. Tarot Cards
   await prisma.tarotCard.createMany({
-    data: tarotCards.map(({ id: _id, ...card }) => card),
+    data: tarotCards.map(({ id: _id, ...card }) => ({ ...card })),
     skipDuplicates: true,
   })
   console.log('✓ Tarot Cards')
 
   // 4. FAQs
   await prisma.fAQ.createMany({
-    data: faqData,
+    data: faqData.map((f) => ({ question: f.question, answer: f.answer })),
     skipDuplicates: true,
   })
   console.log('✓ FAQs')
 
   // 5. Platform Stats
-  const existing = await prisma.platformStat.findFirst()
-  if (!existing) {
+  const existingStat = await prisma.platformStat.findFirst()
+  if (!existingStat) {
     await prisma.platformStat.create({
       data: {
         totalSessions: platformStats.totalSessions,
@@ -128,12 +125,14 @@ async function main() {
 
   // 6. Testimonials
   await prisma.testimonial.createMany({
-    data: testimonials.map(({ id: _id, ...t }) => t),
+    data: testimonials.map(({ id: _id, ...t }) => ({ ...t })),
     skipDuplicates: true,
   })
   console.log('✓ Testimonials')
 
   console.log('\n🌙 Seeding finished.')
+  console.log(`\nDemo reader accounts: reader_1@zenvy.com ... reader_6@zenvy.com`)
+  console.log(`Password: ${READER_PASSWORD}`)
 }
 
 main()

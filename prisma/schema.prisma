@@ -71,6 +71,18 @@ model User {
   /// 1 user → 1 reader_info    (chỉ tồn tại khi role = READER)
   reader_info ReaderInfo?
 
+  /// Nhắn tin
+  conversations_customer Conversation[] @relation("ConversationCustomer")
+  conversations_reader   Conversation[] @relation("ConversationReader")
+  messages_sent          Message[]      @relation("MessageSender")
+
+  /// Diễn đàn
+  forum_posts    ForumPost[]
+  forum_comments ForumComment[]
+  forum_likes    ForumLike[]
+  forum_saves    ForumSave[]
+  reader_favorites ReaderFavorite[]
+
   // ── Indexes ────────────────────────────────────────────────────────────────
   @@index([email])
   @@index([role_id])
@@ -156,6 +168,9 @@ model ReaderInfo {
   reviews      Review[]
   availability Availability[]
   bookings     Booking[]
+  earnings     ReaderEarning[]
+  session_reviews SessionReview[]
+  favorites       ReaderFavorite[]
 
   // ── Indexes ────────────────────────────────────────────────────────────────
   @@index([verified])
@@ -213,6 +228,7 @@ model Availability {
 
 enum BookingStatus {
   PENDING
+  PAYMENT_CONFIRMED
   CONFIRMED
   COMPLETED
   CANCELLED
@@ -233,11 +249,33 @@ model Booking {
   customer CustomerInfo @relation(fields: [customer_id], references: [id], onDelete: Cascade)
   reader   ReaderInfo   @relation(fields: [reader_id], references: [id], onDelete: Cascade)
   package  Package      @relation(fields: [package_id], references: [id], onDelete: Cascade)
+  messages Message[]
+  earning  ReaderEarning?
+  review   SessionReview?
 
   @@index([customer_id])
   @@index([reader_id])
   @@index([status])
   @@map("bookings")
+}
+
+// =============================================================================
+// BẢNG: session_reviews
+// User đánh giá sau mỗi phiên hoàn thành. 1 booking → 1 review (unique).
+// =============================================================================
+model SessionReview {
+  id          Int      @id @default(autoincrement())
+  booking_id  Int      @unique
+  reader_id   Int                      // ReaderInfo.id — để query nhanh
+  rating      Int                      // 1-5
+  comment     String?  @db.Text
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+
+  booking Booking    @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  reader  ReaderInfo @relation(fields: [reader_id],  references: [id], onDelete: Cascade)
+
+  @@index([reader_id])
+  @@map("session_reviews")
 }
 
 model Testimonial {
@@ -279,4 +317,166 @@ model PlatformStat {
   onlineReaders    Int      @default(0)
 
   @@map("platform_stats")
+}
+
+// =============================================================================
+// NHẮN TIN: conversations / messages
+// Một hội thoại duy nhất cho mỗi cặp (customer, reader). Tin nhắn gắn booking_id
+// khi thuộc phiên Q&A của một booking; null khi là DM tự do.
+// =============================================================================
+
+model Conversation {
+  id                    Int       @id @default(autoincrement())
+  customer_user_id      Int       // User.id phía khách
+  reader_user_id        Int       // User.id phía reader
+  last_message_at       DateTime? @db.Timestamp(6)
+  customer_last_read_at DateTime? @db.Timestamp(6)
+  reader_last_read_at   DateTime? @db.Timestamp(6)
+  created_at            DateTime  @default(now()) @db.Timestamp(6)
+  updated_at            DateTime  @updatedAt @db.Timestamp(6)
+
+  customer User      @relation("ConversationCustomer", fields: [customer_user_id], references: [id], onDelete: Cascade)
+  reader   User      @relation("ConversationReader", fields: [reader_user_id], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([customer_user_id, reader_user_id])
+  @@index([customer_user_id])
+  @@index([reader_user_id])
+  @@index([last_message_at])
+  @@map("conversations")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  AUDIO
+  STICKER
+  VIDEO
+}
+
+model Message {
+  id              Int         @id @default(autoincrement())
+  conversation_id Int
+  sender_user_id  Int          // User.id — đồng nhất mọi role
+  booking_id      Int?         // có → thuộc phiên Q&A của booking; null → DM tự do
+  type            MessageType @default(TEXT)
+  body            String      @default("") @db.Text  // TEXT/STICKER: nội dung; IMAGE/AUDIO: caption (có thể rỗng)
+  media_url       String?     @db.Text               // base64 cho IMAGE/AUDIO
+  created_at      DateTime    @default(now()) @db.Timestamp(6)
+
+  conversation Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessageSender", fields: [sender_user_id], references: [id], onDelete: Cascade)
+  booking      Booking?     @relation(fields: [booking_id], references: [id], onDelete: SetNull)
+
+  @@index([conversation_id, id])
+  @@index([booking_id])
+  @@index([sender_user_id])
+  @@map("messages")
+}
+
+// =============================================================================
+// SỔ THU CỦA READER
+// Mỗi booking hoàn thành ghi 1 khoản thu (idempotent qua booking_id @unique).
+// Chỉ ghi sổ — không xử lý thanh toán thật.
+// =============================================================================
+
+model ReaderEarning {
+  id         Int      @id @default(autoincrement())
+  booking_id Int      @unique
+  reader_id  Int      // ReaderInfo.id
+  amount     Int      // snapshot Package.price lúc hoàn thành
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  booking Booking    @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  reader  ReaderInfo @relation(fields: [reader_id], references: [id], onDelete: Cascade)
+
+  @@index([reader_id])
+  @@map("reader_earnings")
+}
+
+// =============================================================================
+// DIỄN ĐÀN: forum_posts / forum_comments / forum_likes
+// Mọi user đăng được. is_anonymous → ẩn danh tính với người khác (API không lộ).
+// author_user_id luôn lưu (để sở hữu/kiểm duyệt) kể cả khi ẩn danh.
+// =============================================================================
+
+model ForumPost {
+  id             Int      @id @default(autoincrement())
+  author_user_id Int
+  content        String   @db.Text
+  image_url      String?  @db.Text   // base64 hoặc URL
+  is_anonymous   Boolean  @default(false)
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  updated_at     DateTime @updatedAt @db.Timestamp(6)
+
+  author   User           @relation(fields: [author_user_id], references: [id], onDelete: Cascade)
+  comments ForumComment[]
+  likes    ForumLike[]
+  saves    ForumSave[]
+
+  @@index([created_at])
+  @@index([author_user_id])
+  @@map("forum_posts")
+}
+
+model ForumComment {
+  id             Int      @id @default(autoincrement())
+  post_id        Int
+  author_user_id Int
+  content        String   @db.Text
+  is_anonymous   Boolean  @default(false)
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+
+  post   ForumPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  author User      @relation(fields: [author_user_id], references: [id], onDelete: Cascade)
+
+  @@index([post_id])
+  @@map("forum_comments")
+}
+
+model ForumLike {
+  id         Int      @id @default(autoincrement())
+  post_id    Int
+  user_id    Int
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  post ForumPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([post_id, user_id])
+  @@index([post_id])
+  @@map("forum_likes")
+}
+
+model ForumSave {
+  id         Int      @id @default(autoincrement())
+  post_id    Int
+  user_id    Int
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  post ForumPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([post_id, user_id])
+  @@index([user_id])
+  @@map("forum_saves")
+}
+
+// =============================================================================
+// BẢNG: reader_favorites
+// User theo dõi / yêu thích reader
+// =============================================================================
+model ReaderFavorite {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  reader_id  Int
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  user   User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  reader ReaderInfo @relation(fields: [reader_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, reader_id])
+  @@index([user_id])
+  @@index([reader_id])
+  @@map("reader_favorites")
 }
