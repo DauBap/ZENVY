@@ -64,11 +64,21 @@ const tabs = [
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   PENDING:           { label: 'Chờ xác nhận',    className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-  PAYMENT_CONFIRMED: { label: 'Đã nhận tiền',    className: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
+  // PAYMENT_CONFIRMED (admin đã duyệt TT) vẫn hiển thị "Chờ xác nhận" cho tới khi reader xác nhận
+  PAYMENT_CONFIRMED: { label: 'Chờ xác nhận',    className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
   CONFIRMED:         { label: 'Đã xác nhận',     className: 'bg-blue-500/20   text-blue-400   border-blue-500/30'   },
   COMPLETED:         { label: 'Hoàn thành',       className: 'bg-green-500/20  text-green-400  border-green-500/30'  },
   CANCELLED:         { label: 'Đã hủy',           className: 'bg-red-500/20    text-red-400    border-red-500/30'    },
+  OVERDUE:           { label: 'Quá hạn',          className: 'bg-zinc-500/20   text-zinc-400   border-zinc-500/30'   },
 }
+
+// Bộ lọc trạng thái cho tab Lịch sử
+const HISTORY_FILTERS = [
+  { id: 'ALL',       label: 'Tất cả' },
+  { id: 'COMPLETED', label: 'Hoàn thành' },
+  { id: 'CANCELLED', label: 'Đã hủy' },
+  { id: 'OVERDUE',   label: 'Quá hạn' },
+]
 
 // Tab riêng cho reader (quản lý dịch vụ + lịch trống + thu nhập)
 const readerTabs = [
@@ -238,6 +248,7 @@ export function DashboardPage({
   readerEarnings = { total: 0, count: 0, items: [] },
 }: DashboardPageProps) {
   const [activeTab, setActiveTab] = useState('bookings')
+  const [historyFilter, setHistoryFilter] = useState('ALL')
   const { logout } = useAuthModal()
   const router = useRouter()
 
@@ -290,9 +301,10 @@ export function DashboardPage({
     return Date.UTC(y, (m || 1) - 1, d || 1, hh || 0, mm || 0) - ICT_OFFSET_MS
   }
   function customerCanCancel(b: any): boolean {
-    if (b.status === 'PENDING') return true
-    if (b.status === 'CONFIRMED') return apptInstant(b) - Date.now() > HOURS_24_MS
-    return false
+    // Mọi trạng thái còn hiệu lực, nhưng chỉ khi còn > 24h tới giờ hẹn
+    if (b.status === 'COMPLETED' || b.status === 'CANCELLED') return false
+    if (apptInstant(b) < Date.now()) return false // đã quá giờ
+    return apptInstant(b) - Date.now() > HOURS_24_MS
   }
 
   async function runAction(bookingId: number, action: 'confirm' | 'cancel' | 'complete', reasonText?: string) {
@@ -322,9 +334,30 @@ export function DashboardPage({
     }
   }
 
-  const today = new Date().toISOString().split('T')[0]
-  const upcomingBookings = bookings.filter((b) => b.date >= today && b.status !== 'CANCELLED')
-  const sessionHistory   = bookings.filter((b) => b.date <  today || b.status === 'COMPLETED' || b.status === 'CANCELLED')
+  const now = Date.now()
+  // Lịch "quá hạn": đã qua giờ hẹn nhưng chưa hoàn thành/hủy
+  function isOverdue(b: any): boolean {
+    return apptInstant(b) < now && ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED'].includes(b.status)
+  }
+  // Trạng thái hiển thị (quá hạn ghi đè trạng thái gốc)
+  function effectiveStatus(b: any): string {
+    return isOverdue(b) ? 'OVERDUE' : b.status
+  }
+
+  // Lịch sắp tới: còn hiệu lực, chưa quá giờ — sắp xếp gần nhất trước
+  const upcomingBookings = bookings
+    .filter((b) => b.status !== 'CANCELLED' && b.status !== 'COMPLETED' && !isOverdue(b))
+    .sort((a, b) => apptInstant(a) - apptInstant(b))
+
+  // Lịch sử: hoàn thành / đã hủy / quá hạn — mới nhất trước
+  const sessionHistoryAll = bookings
+    .filter((b) => b.status === 'COMPLETED' || b.status === 'CANCELLED' || isOverdue(b))
+    .sort((a, b) => apptInstant(b) - apptInstant(a))
+
+  // Áp bộ lọc trạng thái cho tab Lịch sử
+  const sessionHistory = historyFilter === 'ALL'
+    ? sessionHistoryAll
+    : sessionHistoryAll.filter((b) => effectiveStatus(b) === historyFilter)
 
   return (
     <>
@@ -401,6 +434,12 @@ export function DashboardPage({
                       </Link>
                     )}
                   </div>
+
+                  {!isReader && (
+                    <p className="text-sm italic text-muted-foreground flex items-center gap-1.5 mb-4">
+                      <span>*</span> Lịch hẹn trong vòng 24h không thể hủy.
+                    </p>
+                  )}
 
                   {upcomingBookings.length > 0 ? (
                     <div className="space-y-4">
@@ -490,11 +529,29 @@ export function DashboardPage({
               {/* Tab: Lich su */}
               {activeTab === 'history' && (
                 <GlassCard className="p-6">
-                  <h2 className="text-xl font-semibold text-foreground mb-6">Lịch sử session</h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                    <h2 className="text-xl font-semibold text-foreground">Lịch sử cuộc hẹn</h2>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {HISTORY_FILTERS.map((f) => (
+                        <button
+                          key={f.id}
+                          onClick={() => setHistoryFilter(f.id)}
+                          className={cn(
+                            'px-3 py-1.5 text-xs rounded-full border transition-colors',
+                            historyFilter === f.id
+                              ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
+                              : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30'
+                          )}
+                        >
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   {sessionHistory.length > 0 ? (
                     <div className="space-y-4">
                       {sessionHistory.map((b) => {
-                        const status = STATUS_MAP[b.status] ?? STATUS_MAP.PENDING
+                        const status = STATUS_MAP[effectiveStatus(b)] ?? STATUS_MAP.PENDING
                         const partnerName = b.counterparty?.name ?? partnerLabel
                         const partnerAvatar = b.counterparty?.avatar ?? '/placeholder-user.jpg'
                         const pkgLabel = b.package ? `${b.package.name} - ${b.package.duration} phút` : ''
@@ -535,7 +592,9 @@ export function DashboardPage({
                   ) : (
                     <div className="text-center py-12">
                       <History className="w-12 h-12 text-purple-400/30 mx-auto mb-4" />
-                      <p className="text-muted-foreground">Chưa có lịch sử session</p>
+                      <p className="text-muted-foreground">
+                        {historyFilter === 'ALL' ? 'Chưa có lịch sử cuộc hẹn' : 'Không có cuộc hẹn nào ở trạng thái này'}
+                      </p>
                     </div>
                   )}
                 </GlassCard>

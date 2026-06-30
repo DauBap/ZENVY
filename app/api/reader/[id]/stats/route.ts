@@ -14,7 +14,8 @@ export async function GET(
       followCount,
       totalBookings,
       completedBookings,
-      ratingAgg,
+      sessionReviewCount,
+      legacyReviewCount,
     ] = await Promise.all([
       // Số người theo dõi
       prisma.readerFavorite.count({ where: { reader_id: readerId } }),
@@ -29,21 +30,24 @@ export async function GET(
         where: { reader_id: readerId, status: 'COMPLETED' },
       }),
 
-      // Rating trung bình từ session reviews
-      prisma.sessionReview.aggregate({
-        where: { reader_id: readerId },
-        _avg: { rating: true },
-        _count: true,
-      }),
+      // Số review phiên
+      prisma.sessionReview.count({ where: { reader_id: readerId } }),
+
+      // Số review cũ (legacy)
+      prisma.review.count({ where: { reader_id: readerId } }),
     ])
 
     const completionRate = totalBookings > 0
       ? Math.round((completedBookings / totalBookings) * 100)
       : 0
 
-    const avgRating = ratingAgg._avg.rating
-      ? Math.round(ratingAgg._avg.rating * 100) / 100
-      : 0
+    // Lượt đánh giá = gộp cả 2 nguồn; điểm rating đọc thẳng từ cột reader_info.rating
+    const reviewCount = sessionReviewCount + legacyReviewCount
+    const reader = await prisma.readerInfo.findUnique({
+      where: { id: readerId },
+      select: { rating: true },
+    })
+    const avgRating = reader ? Number(reader.rating) : 0
 
     return NextResponse.json({
       followCount,
@@ -51,7 +55,7 @@ export async function GET(
       completedBookings,
       completionRate,
       avgRating,
-      reviewCount: ratingAgg._count,
+      reviewCount,
     })
   } catch (e) {
     console.error('Reader stats error:', e)

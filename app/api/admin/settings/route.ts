@@ -28,7 +28,7 @@ export async function PATCH(request: NextRequest) {
   await prisma.systemSetting.upsert({
     where: { key: 'commission_rate' },
     update: { value: String(rate) },
-    create: { key: 'commission_rate', value: String(rate), description: 'Phần trăm hoa hồng hệ thống (%)' },
+    create: { key: 'commission_rate', value: String(rate), description: 'Phí sàn (%)' },
   })
 
   return NextResponse.json({ success: true, commissionRate: rate })

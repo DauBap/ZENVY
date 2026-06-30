@@ -62,12 +62,10 @@ export async function PATCH(
       if (booking.status === 'COMPLETED')
         return NextResponse.json({ error: 'Không thể hủy lịch đã hoàn thành.' }, { status: 409 })
 
-      // CONFIRMED → phải trước 24h
-      if (booking.status === 'CONFIRMED') {
-        const appt = getAppointmentInstant(booking.date, booking.time)
-        if (appt.getTime() - Date.now() <= CANCEL_WINDOW_MS)
-          return NextResponse.json({ error: 'Lịch đã xác nhận chỉ hủy được trước 24 giờ.' }, { status: 422 })
-      }
+      // Mọi trạng thái còn hiệu lực đều chỉ hủy được khi còn > 24h tới giờ hẹn
+      const appt = getAppointmentInstant(booking.date, booking.time)
+      if (appt.getTime() - Date.now() <= CANCEL_WINDOW_MS)
+        return NextResponse.json({ error: 'Chỉ có thể hủy lịch trước giờ hẹn ít nhất 24 giờ.' }, { status: 422 })
 
       await prisma.booking.update({ where: { id: bookingId }, data: { status: 'CANCELLED', cancel_reason: null } })
       return NextResponse.json({ success: true, booking: { id: bookingId, status: 'CANCELLED' } })

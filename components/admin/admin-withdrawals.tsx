@@ -108,7 +108,7 @@ export function AdminWithdrawalsPage() {
       <GlassCard className="p-5">
         <div className="flex items-center gap-3 flex-wrap">
           <Settings2 className="w-4 h-4 text-purple-400 shrink-0" />
-          <span className="text-sm font-medium text-foreground">Hoa hồng hệ thống hiện tại:</span>
+          <span className="text-sm font-medium text-foreground">Phí sàn hiện tại:</span>
           <span className="text-lg font-bold text-purple-400">{commissionRate}%</span>
           <div className="flex items-center gap-2 ml-auto">
             <Input

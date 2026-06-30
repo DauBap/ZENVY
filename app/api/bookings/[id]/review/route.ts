@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { recomputeReaderRating } from '@/lib/rating'
 
 // POST /api/bookings/[id]/review — User gửi đánh giá sau phiên
 export async function POST(
@@ -44,17 +45,8 @@ export async function POST(
       },
     })
 
-    // Cập nhật rating trung bình của reader
-    const agg = await prisma.sessionReview.aggregate({
-      where: { reader_id: booking.reader_id },
-      _avg: { rating: true },
-      _count: true,
-    })
-    const newRating = agg._avg.rating ?? rating
-    await prisma.readerInfo.update({
-      where: { id: booking.reader_id },
-      data: { rating: Math.round(newRating * 10) / 10 }, // làm tròn 1 chữ số thập phân
-    })
+    // Cập nhật rating trung bình của reader (gộp cả 2 nguồn review)
+    await recomputeReaderRating(booking.reader_id)
 
     return NextResponse.json({ success: true, review }, { status: 201 })
   } catch (e) {

@@ -68,7 +68,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-600/90 backdrop-blur-sm text-white text-xs font-semibold shadow-lg">
                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                 <span>{Number(reader.rating).toFixed(2)}</span>
-                <span className="text-white/70">({reader.totalSessions.toLocaleString()})</span>
+                <span className="text-white/70">({(reader.reviewCount ?? 0).toLocaleString()})</span>
               </div>
             </div>
           </div>

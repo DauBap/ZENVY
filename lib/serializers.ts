@@ -25,6 +25,7 @@ export type SerializedReader = Omit<ReaderInfo, 'rating' | 'price_per_session' |
   isOnline: boolean
   isVerified: boolean
   totalSessions: number
+  reviewCount: number
   responseTime: string
   pricePerSession: number
   packages?: SerializedPackage[]
@@ -45,9 +46,11 @@ export function serializeReader(
     packages?: Package[]
     reviews?: Review[]
     availability?: Availability[]
+    _count?: { reviews?: number; session_reviews?: number }
   }
 ): SerializedReader {
   const pricePerSession = toNumber(reader.price_per_session)
+  const reviewCount = (reader._count?.reviews ?? 0) + (reader._count?.session_reviews ?? 0)
   return {
     ...reader,
     rating: toNumber(reader.rating),
@@ -61,6 +64,7 @@ export function serializeReader(
     isOnline: false,
     isVerified: reader.verified,
     totalSessions: 0,
+    reviewCount,
     responseTime: '< 5 phút',
     pricePerSession,
     packages: reader.packages?.map((pkg) => ({ ...pkg })),
@@ -81,6 +85,7 @@ export function serializeReaders(
       packages?: Package[]
       reviews?: Review[]
       availability?: Availability[]
+      _count?: { reviews?: number; session_reviews?: number }
     }
   >
 ): SerializedReader[] {

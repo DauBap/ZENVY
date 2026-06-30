@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
-  ChevronLeft, Star, Heart, MessageCircle, Calendar,
+  ChevronLeft, ChevronRight, Star, Heart, MessageCircle, Calendar,
   Clock, Shield, Check, Sparkles, Moon, BookOpen,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
@@ -30,6 +30,8 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
   const [favCount, setFavCount] = useState(0)
   const [isTogglingFav, setIsTogglingFav] = useState(false)
   const { user, openLogin } = useAuthModal()
+  // Reader không được đặt lịch / nhắn tin với reader khác
+  const isReaderViewer = user?.role === 'READER'
   const [stats, setStats] = useState<{
     followCount: number
     totalBookings: number
@@ -86,21 +88,26 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
     }
   }
 
-  // Session reviews từ DB
+  // Session reviews từ DB (có phân trang, 10/trang)
   const [sessionReviews, setSessionReviews] = useState<any[]>([])
   const [reviewStats, setReviewStats] = useState<{ count: number; average: number; distribution: { star: number; count: number }[] } | null>(null)
   const [loadingReviews, setLoadingReviews] = useState(false)
+  const [reviewPage, setReviewPage] = useState(1)
+  const [reviewTotalPages, setReviewTotalPages] = useState(1)
 
   useEffect(() => {
     if (activeTab !== 'Đánh giá') return
-    if (sessionReviews.length > 0) return // đã load
     setLoadingReviews(true)
-    fetch(`/api/reader/${reader.id}/reviews`)
+    fetch(`/api/reader/${reader.id}/reviews?page=${reviewPage}`)
       .then(r => r.json())
-      .then(d => { setSessionReviews(d.reviews ?? []); setReviewStats(d.stats ?? null) })
+      .then(d => {
+        setSessionReviews(d.reviews ?? [])
+        setReviewStats(d.stats ?? null)
+        setReviewTotalPages(d.totalPages ?? 1)
+      })
       .catch(() => {})
       .finally(() => setLoadingReviews(false))
-  }, [activeTab, reader.id, sessionReviews.length])
+  }, [activeTab, reader.id, reviewPage])
 
   const pkg = reader.packages?.find((p) => p.id === selectedPkg)
 
@@ -168,7 +175,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                   {[
                     { value: (stats?.followCount ?? favCount).toLocaleString(), label: 'Theo dõi' },
                     { value: stats ? `${stats.completionRate}%` : '—', label: 'Tỉ lệ hoàn thành' },
-                    { value: stats ? `⭐ ${stats.avgRating.toFixed(2)}` : `⭐ ${Number(reader.rating).toFixed(2)}`, label: 'Điểm đánh giá' },
+                    { value: `⭐ ${Number(reader.rating).toFixed(2)}`, label: 'Điểm đánh giá' },
                     { value: stats ? `${stats.reviewCount}` : '0', label: 'Lượt đánh giá' },
                   ].map((s) => (
                     <div key={s.label} className="text-center">
@@ -182,7 +189,8 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                 <div className="flex items-center gap-3 shrink-0">
                   <button
                     onClick={toggleFav}
-                    disabled={isTogglingFav}
+                    disabled={isTogglingFav || isReaderViewer}
+                    title={isReaderViewer ? 'Reader không thể theo dõi reader khác' : undefined}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-60',
                       isFav
@@ -193,12 +201,20 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                     <Heart className={cn('w-4 h-4', isFav && 'fill-white')} />
                     {isFav ? 'Đã theo dõi' : 'Theo dõi'}
                   </button>
-                  <Link href={`/chat?reader=${reader.id}`}>
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white/15 hover:bg-white/25 text-white backdrop-blur-sm transition-all border border-white/20">
+                  {isReaderViewer ? (
+                    <button disabled title="Reader không thể nhắn tin với reader khác"
+                      className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white/10 text-white/40 cursor-not-allowed border border-white/10">
                       <MessageCircle className="w-4 h-4" />
                       Trò chuyện
                     </button>
-                  </Link>
+                  ) : (
+                    <Link href={`/chat?reader=${reader.id}`}>
+                      <button className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white/15 hover:bg-white/25 text-white backdrop-blur-sm transition-all border border-white/20">
+                        <MessageCircle className="w-4 h-4" />
+                        Trò chuyện
+                      </button>
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -239,7 +255,8 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                     {/* Fav button */}
                     <button
                       onClick={toggleFav}
-                      disabled={isTogglingFav}
+                      disabled={isTogglingFav || isReaderViewer}
+                      title={isReaderViewer ? 'Reader không thể theo dõi reader khác' : undefined}
                       className="absolute top-3 left-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-all disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <Heart className={cn('w-4 h-4 transition-colors', isFav ? 'fill-red-500 text-red-500' : 'text-white')} />
@@ -289,27 +306,42 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
 
                     {/* CTA */}
                     <div className="flex flex-col gap-2">
-                      {user ? (
-                        <Link href={`/booking/${reader.id}`} className="block">
-                          <Button className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
+                      {isReaderViewer ? (
+                        <>
+                          <Button disabled title="Reader không thể đặt lịch với reader khác"
+                            className="w-full bg-white/10 text-white/40 cursor-not-allowed">
                             <Calendar className="w-4 h-4 mr-2" /> Đặt lịch ngay
                           </Button>
-                        </Link>
-                      ) : (
-                        <Button onClick={openLogin} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
-                          <Calendar className="w-4 h-4 mr-2" /> Đặt lịch ngay
-                        </Button>
-                      )}
-                      {user ? (
-                        <Link href={`/chat?reader=${reader.id}`} className="block">
-                          <Button variant="outline" className="w-full border-white/10 hover:bg-white/5">
+                          <Button disabled variant="outline" title="Reader không thể nhắn tin với reader khác"
+                            className="w-full border-white/10 text-white/40 cursor-not-allowed">
                             <MessageCircle className="w-4 h-4 mr-2" /> Nhắn tin
                           </Button>
-                        </Link>
+                        </>
                       ) : (
-                        <Button onClick={openLogin} variant="outline" className="w-full border-white/10 hover:bg-white/5">
-                          <MessageCircle className="w-4 h-4 mr-2" /> Nhắn tin
-                        </Button>
+                        <>
+                          {user ? (
+                            <Link href={`/booking/${reader.id}`} className="block">
+                              <Button className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
+                                <Calendar className="w-4 h-4 mr-2" /> Đặt lịch ngay
+                              </Button>
+                            </Link>
+                          ) : (
+                            <Button onClick={() => openLogin()} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
+                              <Calendar className="w-4 h-4 mr-2" /> Đặt lịch ngay
+                            </Button>
+                          )}
+                          {user ? (
+                            <Link href={`/chat?reader=${reader.id}`} className="block">
+                              <Button variant="outline" className="w-full border-white/10 hover:bg-white/5">
+                                <MessageCircle className="w-4 h-4 mr-2" /> Nhắn tin
+                              </Button>
+                            </Link>
+                          ) : (
+                            <Button onClick={() => openLogin()} variant="outline" className="w-full border-white/10 hover:bg-white/5">
+                              <MessageCircle className="w-4 h-4 mr-2" /> Nhắn tin
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -432,14 +464,19 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                       <div className="text-right">
                         <div className="text-2xl font-bold gradient-text">{(pkg.price / 1000).toFixed(0)}k</div>
                       </div>
-                      {user ? (
+                      {isReaderViewer ? (
+                        <Button disabled title="Reader không thể đặt lịch với reader khác"
+                          className="bg-white/10 text-white/40 cursor-not-allowed shrink-0">
+                          Đặt lịch
+                        </Button>
+                      ) : user ? (
                         <Link href={`/booking/${reader.id}?package=${pkg.id}`}>
                           <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
                             Đặt lịch
                           </Button>
                         </Link>
                       ) : (
-                        <Button onClick={openLogin} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
+                        <Button onClick={() => openLogin()} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
                           Đặt lịch
                         </Button>
                       )}                    </div>
@@ -455,13 +492,12 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                     <div className="flex items-center gap-6">
                       <div className="text-center">
                         <div className="text-5xl font-bold gradient-text">
-                          {reviewStats ? reviewStats.average.toFixed(1) : Number(reader.rating).toFixed(1)}
+                          {Number(reader.rating).toFixed(1)}
                         </div>
                         <div className="flex gap-0.5 justify-center mt-1">
-                          {[1,2,3,4,5].map((s) => {
-                            const avg = reviewStats ? reviewStats.average : Number(reader.rating)
-                            return <Star key={s} className={cn('w-4 h-4', s <= Math.round(avg) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20')} />
-                          })}
+                          {[1,2,3,4,5].map((s) => (
+                            <Star key={s} className={cn('w-4 h-4', s <= Math.round(Number(reader.rating)) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20')} />
+                          ))}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
                           {reviewStats ? reviewStats.count : 0} đánh giá
@@ -509,9 +545,11 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                               <div className="flex items-center justify-between gap-2 mb-1">
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-sm font-medium text-foreground">{review.customer.name}</span>
-                                  <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded bg-white/5">
-                                    {review.packageName} · {review.packageDuration} phút
-                                  </span>
+                                  {review.packageName && (
+                                    <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded bg-white/5">
+                                      {review.packageName} · {review.packageDuration} phút
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="flex gap-0.5 shrink-0">
                                   {[1,2,3,4,5].map((s) => (
@@ -529,6 +567,41 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                           </div>
                         </GlassCard>
                       ))}
+
+                      {/* Phân trang */}
+                      {reviewTotalPages > 1 && (
+                        <div className="flex items-center justify-center gap-3 pt-2">
+                          <button
+                            onClick={() => setReviewPage((p) => Math.max(1, p - 1))}
+                            disabled={reviewPage <= 1}
+                            className={cn(
+                              'w-9 h-9 rounded-full border flex items-center justify-center transition-all',
+                              reviewPage <= 1
+                                ? 'border-white/5 text-white/20 cursor-not-allowed'
+                                : 'border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground'
+                            )}
+                            aria-label="Trang trước"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <span className="text-sm text-muted-foreground">
+                            Trang {reviewPage} / {reviewTotalPages}
+                          </span>
+                          <button
+                            onClick={() => setReviewPage((p) => Math.min(reviewTotalPages, p + 1))}
+                            disabled={reviewPage >= reviewTotalPages}
+                            className={cn(
+                              'w-9 h-9 rounded-full border flex items-center justify-center transition-all',
+                              reviewPage >= reviewTotalPages
+                                ? 'border-white/5 text-white/20 cursor-not-allowed'
+                                : 'border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground'
+                            )}
+                            aria-label="Trang sau"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-12">
@@ -559,7 +632,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                       {[
                         { icon: Shield, label: 'Kinh nghiệm', value: `${reader.experience_year} năm` },
                         { icon: Clock, label: 'Hoàn thành', value: stats ? `${stats.completedBookings} phiên` : '—' },
-                        { icon: Star, label: 'Đánh giá', value: stats ? `${stats.avgRating.toFixed(1)} / 5.0 (${stats.reviewCount})` : `${Number(reader.rating).toFixed(1)} / 5.0` },
+                        { icon: Star, label: 'Đánh giá', value: `${Number(reader.rating).toFixed(1)} / 5.0${stats ? ` (${stats.reviewCount})` : ''}` },
                         { icon: Sparkles, label: 'Chuyên môn', value: reader.specialty.join(', ') || 'Tarot' },
                       ].map(({ icon: Icon, label, value }) => (
                         <div key={label} className="flex items-center gap-3 text-sm">

@@ -121,7 +121,7 @@ export function ReaderWithdrawalTab() {
         <GlassCard className="p-5">
           <div className="text-sm text-muted-foreground mb-1">Khả dụng (chưa khóa)</div>
           <div className="text-3xl font-bold text-green-400">{fmt(availableBalance)}</div>
-          <div className="text-xs text-muted-foreground mt-1">Hoa hồng hệ thống: {commissionRate}%</div>
+          <div className="text-xs text-muted-foreground mt-1">Phí sàn: {commissionRate}%</div>
         </GlassCard>
       </div>
 
@@ -131,6 +131,9 @@ export function ReaderWithdrawalTab() {
           <Building2 className="w-4 h-4 text-purple-400" />
           Thông tin ngân hàng ATM
         </h3>
+         <p className="text-sm italic text-white-400/90 flex items-center gap-1.5">
+          <span>*</span> Tên chủ tài khoản phải trùng với tên reader.
+        </p>
         <div className="grid sm:grid-cols-3 gap-3">
           <div className="space-y-1.5">
             <Label>Tên ngân hàng</Label>
@@ -160,13 +163,15 @@ export function ReaderWithdrawalTab() {
           <ArrowDownToLine className="w-4 h-4 text-purple-400" />
           Yêu cầu rút tiền
         </h3>
-
+        <p className="text-sm italic text-white-400/90 flex items-center gap-1.5">
+          <span>*</span> Nhập tối thiểu 100k.
+        </p>
         <div className="space-y-1.5">
-          <Label>Số tiền muốn rút (₫)</Label>
+          <Label>Số tiền muốn rút</Label>
           <Input
             value={amount}
             onChange={e => setAmount(e.target.value.replace(/\D/g, ''))}
-            placeholder="VD: 500000"
+            placeholder="VD: 100k"
             type="text"
             inputMode="numeric"
           />
@@ -180,7 +185,7 @@ export function ReaderWithdrawalTab() {
               <span className="text-foreground font-medium">{fmt(requestedAmt)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Hoa hồng hệ thống ({commissionRate}%)</span>
+              <span className="text-muted-foreground">Phí sàn ({commissionRate}%)</span>
               <span className="text-red-400">−{fmt(commission)}</span>
             </div>
             <div className="flex justify-between border-t border-white/10 pt-2">

@@ -17,7 +17,10 @@ export default async function ReadersRoutePage() {
   try {
     const dbReaders = await prisma.readerInfo.findMany({
       orderBy: { rating: 'desc' },
-      include: { packages: true },
+      include: {
+        packages: true,
+        _count: { select: { reviews: true, session_reviews: true } },
+      },
     })
 
     if (dbReaders.length > 0) {

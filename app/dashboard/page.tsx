@@ -15,7 +15,10 @@ export default async function DashboardRoutePage() {
     const dbReaders = await prisma.readerInfo.findMany({
       orderBy: { rating: 'desc' },
       take: 6,
-      include: { packages: true },
+      include: {
+        packages: true,
+        _count: { select: { reviews: true, session_reviews: true } },
+      },
     })
     readers = dbReaders.length > 0 ? serializeReaders(dbReaders) : fallbackReaders as any
   } catch {
@@ -93,9 +96,9 @@ export default async function DashboardRoutePage() {
           const raw = await prisma.booking.findMany({
             where: {
               reader_id: readerInfo.id,
-              // Reader thấy TẤT CẢ booking trừ CANCELLED
-              // (PENDING = khách vừa đặt, reader cần biết ngay)
-              status: { not: 'CANCELLED' },
+              // Reader chỉ thấy lịch SAU KHI admin duyệt thanh toán.
+              // PENDING (khách vừa đặt, admin chưa duyệt) bị ẩn.
+              status: { in: ['PAYMENT_CONFIRMED', 'CONFIRMED', 'COMPLETED'] },
             },
             include: {
               customer: { select: { id: true, fullname: true, avatar_url: true } },

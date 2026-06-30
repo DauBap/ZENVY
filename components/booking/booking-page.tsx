@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
@@ -13,6 +13,10 @@ import { Header } from '@/components/layout/header'
 import { CosmicBackground } from '@/components/ui/floating-elements'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
+} from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { SerializedReader } from '@/lib/serializers'
@@ -36,6 +40,12 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showPaymentConfirm, setShowPaymentConfirm] = useState(false)
+
+  // Hiển thị popup chính sách hủy ngay khi vừa vào bước Thanh toán
+  useEffect(() => {
+    if (currentStep === 3) setShowPaymentConfirm(true)
+  }, [currentStep])
 
   // Luôn tìm đúng package từ DB data
   const selectedPkg = reader.packages?.find((p) => p.id === selectedPackageId) ?? null
@@ -327,7 +337,9 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                     disabled={currentStep === 1} className="border-white/10">
                     <ChevronLeft className="w-4 h-4 mr-1" /> Quay lại
                   </Button>
-                  <Button onClick={currentStep === 3 ? handleConfirmPayment : () => setCurrentStep(s => Math.min(4, s + 1))}
+                  <Button onClick={currentStep === 3
+                      ? () => { if (!user) { openLogin() } else { handleConfirmPayment() } }
+                      : () => setCurrentStep(s => Math.min(4, s + 1))}
                     disabled={!canProceed() || (currentStep === 3 && submitting)}
                     className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
                     {currentStep === 3 ? (submitting ? 'Đang xử lý…' : 'Xác nhận thanh toán') : 'Tiếp tục'}
@@ -387,6 +399,37 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
           </div>
         </div>
       </main>
+
+      {/* Xác nhận trước khi thanh toán — nêu rõ chính sách hủy lịch */}
+      <AlertDialog open={showPaymentConfirm} onOpenChange={setShowPaymentConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận đặt lịch</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2 text-left">
+              <span className="block">
+                Trước khi xác nhận, bạn vui lòng lưu ý chính sách hủy lịch của ZENVY nhé:
+              </span>
+              <span className="block">
+                💜 Hủy <strong>trước 12 giờ</strong> so với giờ hẹn: hoàn tiền, chỉ giữ lại <strong>10%</strong> phí dịch vụ.
+              </span>
+              <span className="block">
+                ⏳ Hủy <strong>trong vòng 12 giờ</strong> trước giờ hẹn: không hủy được và cũng sẽ không được hoàn tiền, vì Reader đã sắp xếp thời gian cho bạn.
+              </span>
+              <span className="block text-muted-foreground">
+                Bạn đã sẵn sàng cho buổi xem bài chứ? ✨
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Để mình xem lại</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { setShowPaymentConfirm(false); handleConfirmPayment() }}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+              Đồng ý &amp; thanh toán
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
