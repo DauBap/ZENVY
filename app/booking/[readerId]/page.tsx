@@ -21,9 +21,13 @@ export default async function BookingPage({
 
   if (!reader) return notFound()
 
-  // Các slot đã được xác nhận (CONFIRMED) → khách khác không còn thấy/đặt được
+  // Các slot đã bị chiếm bởi booking ở mọi trạng thái trừ CANCELLED
+  // → ngăn double-booking ở mọi giai đoạn thanh toán
   const confirmed = await prisma.booking.findMany({
-    where: { reader_id: Number(readerId), status: 'CONFIRMED' },
+    where: {
+      reader_id: Number(readerId),
+      status: { in: ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED'] },
+    },
     select: { date: true, time: true },
   })
   const takenSlots = confirmed.map((b) => `${b.date.toISOString().split('T')[0]} ${b.time}`)

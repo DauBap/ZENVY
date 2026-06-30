@@ -40,27 +40,27 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
   // Luôn tìm đúng package từ DB data
   const selectedPkg = reader.packages?.find((p) => p.id === selectedPackageId) ?? null
 
-  // Chỉ cho chọn slot reader đã bật, CHƯA qua giờ (theo giờ VN UTC+7) và chưa bị chiếm
-  // Mốc bắt đầu slot = ngày + giờ (giờ địa phương VN) → so với hiện tại
+  // Chỉ cho chọn slot reader đã bật và chưa bị chiếm
+  // Filter theo NGÀY (bỏ qua ngày đã qua hoàn toàn), KHÔNG filter theo giờ
+  // để tránh ẩn slot của ngày hôm nay vì chênh lệch timezone
   const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
-  const nowMs = Date.now()
+  const nowUtcMs = Date.now()
+  // "Hôm nay" theo giờ VN (YYYY-MM-DD)
+  const todayVN = new Date(nowUtcMs + ICT_OFFSET_MS).toISOString().split('T')[0]
+
   const taken = new Set(takenSlots)
-  const slotStartMs = (date: string, slot: string) => {
-    const [y, m, d] = date.split('-').map(Number)
-    const [hh, mm] = slot.split(':').map(Number)
-    return Date.UTC(y, (m || 1) - 1, d || 1, hh || 0, mm || 0) - ICT_OFFSET_MS
-  }
+
   const availByDate = (reader.availability ?? [])
     .map((a) => {
       const date = a.date.split('T')[0]
       return {
         date,
-        slots: a.slots.filter(
-          (s) => !taken.has(`${date} ${s}`) && slotStartMs(date, s) > nowMs
-        ),
+        // Chỉ loại slot đã bị chiếm bởi booking khác
+        slots: a.slots.filter((s) => !taken.has(`${date} ${s}`)),
       }
     })
-    .filter((a) => a.slots.length > 0)
+    // Chỉ bỏ ngày TRƯỚC hôm nay — ngày hôm nay và tương lai đều hiện
+    .filter((a) => a.date >= todayVN && a.slots.length > 0)
     .sort((a, b) => a.date.localeCompare(b.date))
 
   const dates = availByDate.map((a) => {
