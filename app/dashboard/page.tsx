@@ -6,6 +6,7 @@ import { readers as fallbackReaders } from '@/lib/data'
 
 export default async function DashboardRoutePage() {
   const session = await getSession()
+  if (!session) redirect('/readers?login=1')
 
   // Lấy danh sách readers gợi ý
   let readers: any[]

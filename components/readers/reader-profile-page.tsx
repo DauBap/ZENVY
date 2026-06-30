@@ -15,6 +15,7 @@ import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { VerifiedBadge } from '@/components/ui/verified-badge'
 import { cn } from '@/lib/utils'
+import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { SerializedReader } from '@/lib/serializers'
 
 const TABS = ['Dịch vụ', 'Đánh giá', 'Giới thiệu'] as const
@@ -28,6 +29,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
   const [isFav, setIsFav] = useState(false)
   const [favCount, setFavCount] = useState(0)
   const [isTogglingFav, setIsTogglingFav] = useState(false)
+  const { user, openLogin } = useAuthModal()
   const [stats, setStats] = useState<{
     followCount: number
     totalBookings: number
@@ -287,16 +289,28 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
 
                     {/* CTA */}
                     <div className="flex flex-col gap-2">
-                      <Link href={`/booking/${reader.id}`} className="block">
-                        <Button className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
+                      {user ? (
+                        <Link href={`/booking/${reader.id}`} className="block">
+                          <Button className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
+                            <Calendar className="w-4 h-4 mr-2" /> Đặt lịch ngay
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button onClick={openLogin} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
                           <Calendar className="w-4 h-4 mr-2" /> Đặt lịch ngay
                         </Button>
-                      </Link>
-                      <Link href={`/chat?reader=${reader.id}`} className="block">
-                        <Button variant="outline" className="w-full border-white/10 hover:bg-white/5">
+                      )}
+                      {user ? (
+                        <Link href={`/chat?reader=${reader.id}`} className="block">
+                          <Button variant="outline" className="w-full border-white/10 hover:bg-white/5">
+                            <MessageCircle className="w-4 h-4 mr-2" /> Nhắn tin
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button onClick={openLogin} variant="outline" className="w-full border-white/10 hover:bg-white/5">
                           <MessageCircle className="w-4 h-4 mr-2" /> Nhắn tin
                         </Button>
-                      </Link>
+                      )}
                     </div>
                   </div>
                 </GlassCard>
@@ -418,12 +432,17 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                       <div className="text-right">
                         <div className="text-2xl font-bold gradient-text">{(pkg.price / 1000).toFixed(0)}k</div>
                       </div>
-                      <Link href={`/booking/${reader.id}?package=${pkg.id}`}>
-                        <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
+                      {user ? (
+                        <Link href={`/booking/${reader.id}?package=${pkg.id}`}>
+                          <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
+                            Đặt lịch
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button onClick={openLogin} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
                           Đặt lịch
                         </Button>
-                      </Link>
-                    </div>
+                      )}                    </div>
                   )}
                 </div>
               )}

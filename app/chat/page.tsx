@@ -10,9 +10,7 @@ export default async function ChatPage({
   searchParams: Promise<{ reader?: string; customer?: string; booking?: string }>
 }) {
   const session = await getSession()
-  if (!session) {
-    redirect('/')
-  }
+  if (!session) redirect('/readers?login=1')
 
   const sp = await searchParams
   const initialReaderId = sp.reader ? Number(sp.reader) : null

@@ -1,18 +1,16 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   Search, SlidersHorizontal, X, Star, Sparkles,
   ChevronLeft, ChevronRight, ArrowRight, ArrowUpDown,
 } from 'lucide-react'
-import { Header } from '@/components/layout/header'
-import { Footer } from '@/components/layout/footer'
-import { MobileNav } from '@/components/layout/mobile-nav'
-import { CosmicBackground } from '@/components/ui/floating-elements'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useAuthModal } from '@/contexts/auth-modal-context'
 import { ReaderCard } from '@/components/reader-card'
 import { cn } from '@/lib/utils'
 import type { SerializedReader } from '@/lib/serializers'
@@ -152,6 +150,15 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
 export function ReadersPage({ readers, specialties }: ReadersPageProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([])
+  const searchParams = useSearchParams()
+  const { openLogin, user } = useAuthModal()
+
+  // Tự mở login modal khi redirect từ trang protected (?login=1)
+  useEffect(() => {
+    if (searchParams.get('login') === '1' && !user) {
+      openLogin()
+    }
+  }, [searchParams, user, openLogin])
   const [showOnlineOnly, setShowOnlineOnly] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [sortBy, setSortBy] = useState<SortBy>('newest')
@@ -212,9 +219,6 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
 
   return (
     <>
-      <CosmicBackground />
-      <Header />
-
       <main className="relative min-h-screen pt-20 lg:pt-24 pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -377,9 +381,6 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
           )}
         </div>
       </main>
-
-      <Footer />
-      <MobileNav />
     </>
   )
 }

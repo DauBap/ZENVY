@@ -25,3 +25,7 @@ skills-lock.json
 cookie.txt
 *.cookies.txt
 ._*
+
+# Unrelated projects / IDE dirs
+OmniRoute-main/
+.codex/

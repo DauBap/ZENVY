@@ -1,13 +1,17 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { serializeReader } from '@/lib/serializers'
 import { BookingClient } from '@/components/booking/booking-page'
+import { getSession } from '@/lib/auth'
 
 export default async function BookingPage({
   params,
 }: {
   params: Promise<{ readerId: string }>
 }) {
+  const session = await getSession()
+  if (!session) redirect('/readers?login=1')
+
   const { readerId } = await params
 
   const reader = await prisma.readerInfo.findUnique({

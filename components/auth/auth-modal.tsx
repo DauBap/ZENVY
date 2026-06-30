@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import {
   X, Mail, Lock, Eye, EyeOff, User, ArrowRight,
-  Check, ShieldCheck, Sparkles, LogIn,
+  Check, ShieldCheck, Sparkles, LogIn, ChevronLeft, KeyRound,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,7 +53,7 @@ function ModalContent() {
   const { tab, close } = useAuthModal()
   const [successEmail, setSuccessEmail] = useState('')
   const [successName, setSuccessName] = useState('')
-  const [screen, setScreen] = useState<'form' | 'success'>('form')
+  const [screen, setScreen] = useState<'form' | 'success' | 'forgot'>('form')
 
   // reset screen when tab changes
   useEffect(() => { setScreen('form') }, [tab])
@@ -65,6 +65,12 @@ function ModalContent() {
         email={successEmail}
         onClose={close}
       />
+    )
+  }
+
+  if (screen === 'forgot') {
+    return (
+      <ForgotPasswordScreen onBack={() => setScreen('form')} onClose={close} />
     )
   }
 
@@ -95,7 +101,7 @@ function ModalContent() {
             <motion.div key="login"
               initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>
-              <LoginForm />
+              <LoginForm onForgot={() => setScreen('forgot')} />
             </motion.div>
           ) : (
             <motion.div key="register"
@@ -142,14 +148,19 @@ function TabButton({ value }: { value: 'login' | 'register' }) {
 }
 
 // ─── Login form ───────────────────────────────────────────────────────────────
-function LoginForm() {
+function LoginForm({ onForgot }: { onForgot?: () => void }) {
   const { prefillEmail, close, switchTab, setUser } = useAuthModal()
-  const [email, setEmail] = useState(prefillEmail)
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPwd, setShowPwd] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Sync prefillEmail → state khi modal mở lại với email mới
+  useEffect(() => {
+    if (typeof prefillEmail === 'string') setEmail(prefillEmail)
+  }, [prefillEmail])
 
   // focus password if email pre-filled, else focus email
   useEffect(() => {
@@ -199,7 +210,7 @@ function LoginForm() {
       <div className="space-y-1.5">
         <div className="flex justify-between items-center">
           <label className="text-sm font-medium text-foreground">Mật khẩu</label>
-          <Link href="/auth/forgot-password" onClick={close} className="text-xs text-purple-400 hover:text-purple-300">Quên mật khẩu?</Link>
+          <button type="button" onClick={onForgot} className="text-xs text-purple-400 hover:text-purple-300 transition-colors">Quên mật khẩu?</button>
         </div>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -464,6 +475,114 @@ function SuccessScreen({ name, email, onClose }: { name: string; email: string; 
           <Sparkles className="w-4 h-4 mr-2" />Khám phá ngay
         </Button>
       </motion.div>
+    </div>
+  )
+}
+
+
+// ─── Forgot Password Screen ───────────────────────────────────────────────────
+function ForgotPasswordScreen({ onBack, onClose }: { onBack: () => void; onClose: () => void }) {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [resetUrl, setResetUrl] = useState('')
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim()) return
+    setLoading(true); setError('')
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Lỗi.'); return }
+      setSent(true)
+      if (data.resetUrl) setResetUrl(data.resetUrl) // chỉ có trong dev
+    } catch { setError('Lỗi kết nối.') }
+    finally { setLoading(false) }
+  }
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl bg-[#0f0a1a]/95 backdrop-blur-xl border border-white/10 shadow-[0_0_80px_rgba(168,85,247,0.2)]">
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/8 via-transparent to-indigo-500/8 pointer-events-none" />
+      <button onClick={onClose} className="absolute top-4 right-4 z-10 text-muted-foreground hover:text-foreground transition-colors">
+        <X className="w-5 h-5" />
+      </button>
+
+      <div className="p-6 sm:p-8">
+        <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-5 transition-colors">
+          <ChevronLeft className="w-4 h-4" /> Quay lại
+        </button>
+
+        {sent ? (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="text-center py-4">
+            <div className="w-14 h-14 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto mb-4">
+              <Check className="w-7 h-7 text-green-400" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground mb-2">Kiểm tra email của bạn</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Nếu email tồn tại, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.
+            </p>
+            {/* Dev mode: hiển thị link trực tiếp */}
+            {resetUrl && (
+              <div className="mt-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-left">
+                <p className="text-xs text-yellow-400 font-medium mb-1">🛠 Dev mode — Link reset:</p>
+                <a href={resetUrl} onClick={onClose}
+                  className="text-xs text-purple-400 hover:text-purple-300 break-all underline">
+                  {resetUrl}
+                </a>
+              </div>
+            )}
+            <button onClick={onBack} className="mt-4 text-sm text-purple-400 hover:text-purple-300">
+              Quay lại đăng nhập
+            </button>
+          </motion.div>
+        ) : (
+          <>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                <KeyRound className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Quên mật khẩu</h2>
+                <p className="text-xs text-muted-foreground">Nhập email để lấy link đặt lại</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              <AnimatePresence mode="wait">
+                {error && (
+                  <motion.div key="err" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                    <X className="w-4 h-4 shrink-0" /> {error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input type="email" placeholder="email@example.com" value={email}
+                    onChange={e => setEmail(e.target.value)} autoFocus
+                    className="pl-10 bg-white/5 border-white/10 focus:border-purple-500/50" required />
+                </div>
+              </div>
+
+              <Button type="submit" disabled={loading || !email.trim()}
+                className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
+                {loading
+                  ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  : <><Mail className="w-4 h-4 mr-2" />Gửi link đặt lại</>}
+              </Button>
+            </form>
+          </>
+        )}
+      </div>
     </div>
   )
 }
