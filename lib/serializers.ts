@@ -13,9 +13,10 @@ import type {
 export type SerializedPackage = Package
 export type SerializedReview = Omit<Review, 'date'> & { date: string }
 export type SerializedAvailability = Omit<Availability, 'date'> & { date: string }
-export type SerializedReader = Omit<ReaderInfo, 'rating' | 'price_per_session'> & {
+export type SerializedReader = Omit<ReaderInfo, 'rating' | 'price_per_session' | 'balance'> & {
   rating: number
   price_per_session: number
+  balance: number
   // Aliased fields for UI compatibility
   name: string
   avatar: string
@@ -51,6 +52,7 @@ export function serializeReader(
     ...reader,
     rating: toNumber(reader.rating),
     price_per_session: pricePerSession,
+    balance: toNumber(reader.balance),
     // Map DB fields → UI field names
     name: reader.display_name ?? 'Tarot Reader',
     avatar: reader.avatar_url ?? '/placeholder-user.jpg',

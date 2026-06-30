@@ -166,7 +166,7 @@ model CustomerInfo {
 
 model ReaderInfo {
   id                Int      @id @default(autoincrement())
-  user_id           Int      @unique          // @unique → bảo đảm quan hệ 1-1
+  user_id           Int      @unique
   display_name      String?  @db.VarChar(100)
   description       String?  @db.Text
   experience_year   Int      @default(0)
@@ -175,6 +175,12 @@ model ReaderInfo {
   verified          Boolean  @default(false)
   avatar_url        String?  @db.Text
   specialty         String[] @default([])
+  /// Số dư tích lũy — cộng khi booking COMPLETED, trừ khi withdrawal APPROVED
+  balance           Decimal  @default(0)    @db.Decimal(14, 2)
+  /// Thông tin ngân hàng để rút tiền
+  bank_name         String?  @db.VarChar(100)
+  bank_account      String?  @db.VarChar(50)
+  bank_owner_name   String?  @db.VarChar(100)
   created_at        DateTime @default(now()) @db.Timestamp(6)
   updated_at        DateTime @updatedAt @db.Timestamp(6)
 
@@ -183,13 +189,14 @@ model ReaderInfo {
   /// 1 user → 1 reader_info  |  Cascade: xóa user → xóa profile
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  packages     Package[]
-  reviews      Review[]
-  availability Availability[]
-  bookings     Booking[]
-  earnings     ReaderEarning[]
-  session_reviews SessionReview[]
-  favorites       ReaderFavorite[]
+  packages         Package[]
+  reviews          Review[]
+  availability     Availability[]
+  bookings         Booking[]
+  earnings         ReaderEarning[]
+  session_reviews  SessionReview[]
+  favorites        ReaderFavorite[]
+  withdrawals      WithdrawalRequest[]
 
   // ── Indexes ────────────────────────────────────────────────────────────────
   @@index([verified])
@@ -498,4 +505,50 @@ model ReaderFavorite {
   @@index([user_id])
   @@index([reader_id])
   @@map("reader_favorites")
+}
+
+// =============================================================================
+// YÊU CẦU RÚT TIỀN
+// Reader tạo yêu cầu, Admin duyệt/từ chối. Balance bị khóa khi PENDING.
+// =============================================================================
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model WithdrawalRequest {
+  id                Int              @id @default(autoincrement())
+  reader_id         Int
+  amount_requested  Decimal          @db.Decimal(14, 2)   // Số tiền reader muốn rút
+  commission_rate   Decimal          @db.Decimal(5, 2)    // % hoa hồng snapshot tại thời điểm tạo
+  amount_to_pay     Decimal          @db.Decimal(14, 2)   // Số tiền thực nhận = requested * (1 - rate/100)
+  bank_name         String           @db.VarChar(100)
+  bank_account      String           @db.VarChar(50)
+  bank_owner_name   String           @db.VarChar(100)
+  status            WithdrawalStatus @default(PENDING)
+  admin_note        String?          @db.Text
+  created_at        DateTime         @default(now()) @db.Timestamp(6)
+  updated_at        DateTime         @updatedAt      @db.Timestamp(6)
+
+  reader ReaderInfo @relation(fields: [reader_id], references: [id], onDelete: Cascade)
+
+  @@index([reader_id])
+  @@index([status])
+  @@map("withdrawal_requests")
+}
+
+// =============================================================================
+// CẤU HÌNH HỆ THỐNG
+// Lưu các tham số toàn cục Admin có thể chỉnh (commission rate, v.v.)
+// =============================================================================
+
+model SystemSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique @db.VarChar(100)
+  value String @db.Text
+  description String? @db.VarChar(255)
+
+  @@map("system_settings")
 }

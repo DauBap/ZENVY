@@ -151,6 +151,12 @@ export async function PATCH(
                 amount,
               },
             })
+
+            // 3. Cộng tiền vào balance của reader (atomic increment)
+            await tx.readerInfo.update({
+              where: { id: booking.reader_id },
+              data: { balance: { increment: amount } },
+            })
           })
         } catch (e) {
           // P2002 = unique constraint → earnings đã ghi rồi (idempotent)

@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { Star as StarIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import {
-  Calendar, Clock, Heart, Bell, History, CreditCard,
+  Calendar, Clock, Heart, Bell, History, CreditCard, Banknote,
   Sparkles, MessageSquare, Settings, LogOut, Moon, Star,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
@@ -25,6 +25,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { ReaderPackagesTab, type PackageItem } from '@/components/profile/reader-packages-tab'
 import { ReaderAvailabilityTab, type AvailabilityItem } from '@/components/profile/reader-availability-tab'
+import { ReaderWithdrawalTab } from '@/components/profile/reader-withdrawal-tab'
 import { cn } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { SerializedReader } from '@/lib/serializers'
@@ -71,9 +72,10 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
 
 // Tab riêng cho reader (quản lý dịch vụ + lịch trống + thu nhập)
 const readerTabs = [
-  { id: 'earnings', label: 'Thu nhập', icon: CreditCard },
-  { id: 'services', label: 'Dịch vụ', icon: Sparkles },
-  { id: 'availability', label: 'Lịch trống', icon: Calendar },
+  { id: 'earnings',    label: 'Thu nhập',   icon: CreditCard },
+  { id: 'withdrawal',  label: 'Rút tiền',   icon: Banknote   },
+  { id: 'services',    label: 'Dịch vụ',    icon: Sparkles   },
+  { id: 'availability',label: 'Lịch trống', icon: Calendar   },
 ]
 
 // ─── ReaderEarningsWidget ──────────────────────────────────────────────────────
@@ -607,6 +609,11 @@ export function DashboardPage({
                   count={readerEarnings.count}
                   items={readerEarnings.items}
                 />
+              )}
+
+              {/* Tab: Rút tiền (reader) */}
+              {isReader && activeTab === 'withdrawal' && (
+                <ReaderWithdrawalTab />
               )}
 
             </motion.div>
