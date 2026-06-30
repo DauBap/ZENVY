@@ -93,8 +93,9 @@ export default async function DashboardRoutePage() {
           const raw = await prisma.booking.findMany({
             where: {
               reader_id: readerInfo.id,
-              // Ẩn lịch PENDING với reader — chỉ hiện sau khi admin xác nhận TT
-              status: { not: 'PENDING' },
+              // Reader thấy TẤT CẢ booking trừ CANCELLED
+              // (PENDING = khách vừa đặt, reader cần biết ngay)
+              status: { not: 'CANCELLED' },
             },
             include: {
               customer: { select: { id: true, fullname: true, avatar_url: true } },

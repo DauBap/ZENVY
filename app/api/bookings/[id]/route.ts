@@ -111,12 +111,11 @@ export async function PATCH(
         return NextResponse.json({ error: 'Không có quyền.' }, { status: 403 })
 
       if (action === 'confirm') {
-        // Reader chỉ xác nhận sau khi admin đã PAYMENT_CONFIRMED
-        if (booking.status !== 'PAYMENT_CONFIRMED')
+        // Reader xác nhận booking — chấp nhận cả PENDING (khách vừa đặt)
+        // và PAYMENT_CONFIRMED (admin đã duyệt TT) → CONFIRMED
+        if (booking.status !== 'PENDING' && booking.status !== 'PAYMENT_CONFIRMED')
           return NextResponse.json({
-            error: booking.status === 'PENDING'
-              ? 'Lịch hẹn đang chờ admin xác nhận thanh toán.'
-              : 'Chỉ xác nhận được lịch đã được admin duyệt thanh toán.',
+            error: 'Chỉ xác nhận được lịch đang chờ hoặc đã duyệt thanh toán.',
           }, { status: 409 })
 
         await prisma.booking.update({ where: { id: bookingId }, data: { status: 'CONFIRMED' } })
@@ -165,8 +164,8 @@ export async function PATCH(
       }
 
       if (action === 'cancel') {
-        if (!['PAYMENT_CONFIRMED', 'CONFIRMED'].includes(booking.status))
-          return NextResponse.json({ error: 'Chỉ hủy được lịch đã được duyệt hoặc đã xác nhận.' }, { status: 409 })
+        if (!['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED'].includes(booking.status))
+          return NextResponse.json({ error: 'Chỉ hủy được lịch chưa hoàn thành.' }, { status: 409 })
         if (!reasonRaw)
           return NextResponse.json({ error: 'Vui lòng nhập lý do hủy.' }, { status: 400 })
         await prisma.booking.update({ where: { id: bookingId }, data: { status: 'CANCELLED', cancel_reason: reasonRaw } })

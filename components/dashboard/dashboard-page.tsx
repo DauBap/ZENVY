@@ -62,9 +62,9 @@ const tabs = [
 ]
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  PENDING:           { label: 'Chờ xác nhận TT', className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
+  PENDING:           { label: 'Chờ xác nhận',    className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
   PAYMENT_CONFIRMED: { label: 'Đã nhận tiền',    className: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
-  CONFIRMED:         { label: 'Reader xác nhận',  className: 'bg-blue-500/20   text-blue-400   border-blue-500/30'   },
+  CONFIRMED:         { label: 'Đã xác nhận',     className: 'bg-blue-500/20   text-blue-400   border-blue-500/30'   },
   COMPLETED:         { label: 'Hoàn thành',       className: 'bg-green-500/20  text-green-400  border-green-500/30'  },
   CANCELLED:         { label: 'Đã hủy',           className: 'bg-red-500/20    text-red-400    border-red-500/30'    },
 }
@@ -433,9 +433,11 @@ export function DashboardPage({
                                 </Button>
                               </Link>
                               {isReader && b.status === 'PENDING' && (
-                                <span className="text-xs text-yellow-400 px-2 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20">
-                                  Chờ admin duyệt TT
-                                </span>
+                                <Button size="sm" disabled={busyId === b.id}
+                                  onClick={() => runAction(b.id, 'confirm')}
+                                  className="bg-green-600 hover:bg-green-500 text-white">
+                                  {busyId === b.id ? 'Đang xử lý…' : 'Xác nhận'}
+                                </Button>
                               )}
                               {isReader && b.status === 'PAYMENT_CONFIRMED' && (
                                 <Button size="sm" disabled={busyId === b.id}
@@ -451,7 +453,7 @@ export function DashboardPage({
                                   {busyId === b.id ? 'Đang xử lý…' : 'Hoàn thành'}
                                 </Button>
                               )}
-                              {isReader && (b.status === 'PAYMENT_CONFIRMED' || b.status === 'CONFIRMED') && (
+                              {isReader && (b.status === 'PENDING' || b.status === 'PAYMENT_CONFIRMED' || b.status === 'CONFIRMED') && (
                                 <Button size="sm" variant="destructive" disabled={busyId === b.id}
                                   onClick={() => { setReason(''); setReaderCancelTarget(b) }}>
                                   Hủy lịch
