@@ -11,24 +11,41 @@ export async function GET() {
 
   const reader = await prisma.readerInfo.findUnique({
     where: { user_id: Number(session.sub) },
-    select: { id: true, balance: true, bank_name: true, bank_account: true, bank_owner_name: true },
+    select: { id: true, bank_name: true, bank_account: true, bank_owner_name: true },
   })
   if (!reader) return NextResponse.json({ withdrawals: [], balance: 0 })
 
-  const withdrawals = await prisma.withdrawalRequest.findMany({
-    where: { reader_id: reader.id },
-    orderBy: { created_at: 'desc' },
-    take: 50,
-  })
+  // Tính balance động: tổng earnings - tổng đã approved rút
+  const [earningsAgg, approvedAgg, withdrawals] = await Promise.all([
+    prisma.readerEarning.aggregate({
+      where: { reader_id: reader.id },
+      _sum: { amount: true },
+    }),
+    prisma.withdrawalRequest.aggregate({
+      where: { reader_id: reader.id, status: 'APPROVED' },
+      _sum: { amount_requested: true },
+    }),
+    prisma.withdrawalRequest.findMany({
+      where: { reader_id: reader.id },
+      orderBy: { created_at: 'desc' },
+      take: 50,
+    }),
+  ])
 
-  // Tổng đang pending (đã khóa)
+  const totalEarned = Number(earningsAgg._sum.amount ?? 0)
+  const totalWithdrawn = Number(approvedAgg._sum.amount_requested ?? 0)
+  const balance = totalEarned - totalWithdrawn
+
+  // Tổng đang pending (đã khóa, chưa duyệt)
   const pendingTotal = withdrawals
     .filter(w => w.status === 'PENDING')
     .reduce((s, w) => s + Number(w.amount_requested), 0)
 
+  const availableBalance = balance - pendingTotal
+
   return NextResponse.json({
-    balance: Number(reader.balance),
-    availableBalance: Number(reader.balance) - pendingTotal,
+    balance,
+    availableBalance,
     bankName: reader.bank_name ?? '',
     bankAccount: reader.bank_account ?? '',
     bankOwnerName: reader.bank_owner_name ?? '',
@@ -63,7 +80,7 @@ export async function POST(request: NextRequest) {
 
   const reader = await prisma.readerInfo.findUnique({
     where: { user_id: Number(session.sub) },
-    select: { id: true, balance: true, bank_name: true, bank_account: true, bank_owner_name: true },
+    select: { id: true, bank_name: true, bank_account: true, bank_owner_name: true },
   })
   if (!reader) return NextResponse.json({ error: 'Không tìm thấy reader.' }, { status: 404 })
 
@@ -79,13 +96,26 @@ export async function POST(request: NextRequest) {
   // Tính số tiền thực nhận
   const amountToPay = Math.floor(amount * (1 - commissionRate / 100))
 
-  // Kiểm tra balance khả dụng (balance - tổng pending)
-  const pendingSum = await prisma.withdrawalRequest.aggregate({
-    where: { reader_id: reader.id, status: 'PENDING' },
-    _sum: { amount_requested: true },
-  })
-  const locked = Number(pendingSum._sum.amount_requested ?? 0)
-  const available = Number(reader.balance) - locked
+  // Tính balance động: earnings - approved withdrawals - pending withdrawals
+  const [earningsAgg, approvedAgg, pendingAgg] = await Promise.all([
+    prisma.readerEarning.aggregate({
+      where: { reader_id: reader.id },
+      _sum: { amount: true },
+    }),
+    prisma.withdrawalRequest.aggregate({
+      where: { reader_id: reader.id, status: 'APPROVED' },
+      _sum: { amount_requested: true },
+    }),
+    prisma.withdrawalRequest.aggregate({
+      where: { reader_id: reader.id, status: 'PENDING' },
+      _sum: { amount_requested: true },
+    }),
+  ])
+
+  const totalEarned = Number(earningsAgg._sum.amount ?? 0)
+  const totalWithdrawn = Number(approvedAgg._sum.amount_requested ?? 0)
+  const locked = Number(pendingAgg._sum.amount_requested ?? 0)
+  const available = totalEarned - totalWithdrawn - locked
 
   if (amount > available) {
     return NextResponse.json({

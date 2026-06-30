@@ -3,9 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 
 // GET /api/admin/settings — lấy cài đặt hệ thống
+// Admin: xem toàn bộ | Reader/User: chỉ xem commission_rate
 export async function GET() {
   const session = await getSession()
-  if (!session || session.role !== 'ADMIN')
+  if (!session)
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const settings = await prisma.systemSetting.findMany()
