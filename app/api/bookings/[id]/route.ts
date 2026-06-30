@@ -127,21 +127,41 @@ export async function PATCH(
         if (booking.status !== 'CONFIRMED')
           return NextResponse.json({ error: 'Chỉ hoàn thành được lịch đã xác nhận.' }, { status: 409 })
 
-        const pkg = await prisma.package.findUnique({ where: { id: booking.package_id }, select: { price: true } })
+        // Lấy giá gói — snapshot tại thời điểm hoàn thành (không dùng giá hiện tại)
+        const pkg = await prisma.package.findUnique({
+          where: { id: booking.package_id },
+          select: { price: true },
+        })
+        const amount = pkg?.price ?? 0
+
         try {
           await prisma.$transaction(async (tx) => {
-            const r = await tx.booking.updateMany({ where: { id: bookingId, status: 'CONFIRMED' }, data: { status: 'COMPLETED' } })
+            // 1. Cập nhật booking → COMPLETED với optimistic lock (tránh double-complete)
+            const r = await tx.booking.updateMany({
+              where: { id: bookingId, status: 'CONFIRMED' },
+              data: { status: 'COMPLETED' },
+            })
             if (r.count === 0) throw new Error('STATUS_CHANGED')
-            await tx.readerEarning.create({ data: { booking_id: bookingId, reader_id: booking.reader_id, amount: pkg?.price ?? 0 } })
+
+            // 2. Ghi sổ thu nhập — idempotent qua booking_id @unique
+            //    amount là snapshot Package.price lúc hoàn thành
+            await tx.readerEarning.create({
+              data: {
+                booking_id: bookingId,
+                reader_id: booking.reader_id,
+                amount,
+              },
+            })
           })
         } catch (e) {
+          // P2002 = unique constraint → earnings đã ghi rồi (idempotent)
           if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002')
             return NextResponse.json({ success: true, booking: { id: bookingId, status: 'COMPLETED' } })
           if (e instanceof Error && e.message === 'STATUS_CHANGED')
             return NextResponse.json({ error: 'Trạng thái đã thay đổi. Tải lại trang.' }, { status: 409 })
           throw e
         }
-        return NextResponse.json({ success: true, booking: { id: bookingId, status: 'COMPLETED' } })
+        return NextResponse.json({ success: true, booking: { id: bookingId, status: 'COMPLETED' }, amount })
       }
 
       if (action === 'cancel') {

@@ -36,6 +36,21 @@ interface DashboardPageProps {
   viewerRole?: string
   readerPackages?: PackageItem[]
   readerAvailability?: AvailabilityItem[]
+  /** Thu nhập tích lũy của reader — tính từ SUM(reader_earnings), truyền từ server */
+  readerEarnings?: {
+    total: number
+    count: number
+    items: Array<{
+      id: number
+      amount: number
+      createdAt: string
+      bookingId: number
+      date: string | null
+      time: string | null
+      customerName: string
+      packageName: string
+    }>
+  }
 }
 
 const tabs = [
@@ -54,11 +69,110 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
   CANCELLED:         { label: 'Đã hủy',           className: 'bg-red-500/20    text-red-400    border-red-500/30'    },
 }
 
-// Tab riêng cho reader (quản lý dịch vụ + lịch trống)
+// Tab riêng cho reader (quản lý dịch vụ + lịch trống + thu nhập)
 const readerTabs = [
+  { id: 'earnings', label: 'Thu nhập', icon: CreditCard },
   { id: 'services', label: 'Dịch vụ', icon: Sparkles },
   { id: 'availability', label: 'Lịch trống', icon: Calendar },
 ]
+
+// ─── ReaderEarningsWidget ──────────────────────────────────────────────────────
+// Hiển thị tổng thu nhập + lịch sử giao dịch cho Reader
+// Dữ liệu tính từ SUM(reader_earnings.amount) — không cần cột balance trên DB
+interface EarningItem {
+  id: number
+  amount: number
+  createdAt: string
+  bookingId: number
+  date: string | null
+  time: string | null
+  customerName: string
+  packageName: string
+}
+interface ReaderEarningsWidgetProps {
+  total: number
+  count: number
+  items: EarningItem[]
+}
+
+function ReaderEarningsWidget({ total, count, items }: ReaderEarningsWidgetProps) {
+  const [showAll, setShowAll] = useState(false)
+
+  const formatVnd = (n: number) => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2).replace('.00', '')} triệu ₫`
+    if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k ₫`
+    return `${n.toLocaleString('vi-VN')} ₫`
+  }
+
+  const displayItems = showAll ? items : items.slice(0, 5)
+
+  return (
+    <GlassCard className="p-6 space-y-6">
+      {/* Tổng quan */}
+      <div>
+        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 mb-4">
+          <CreditCard className="w-5 h-5 text-purple-400" />
+          Thu nhập tích lũy
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+            <div className="text-sm text-muted-foreground mb-1">Tổng thu nhập</div>
+            <div className="text-3xl font-bold gradient-text">{formatVnd(total)}</div>
+          </div>
+          <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+            <div className="text-sm text-muted-foreground mb-1">Phiên đã hoàn thành</div>
+            <div className="text-3xl font-bold text-green-400">{count}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Lịch sử giao dịch */}
+      <div>
+        <h3 className="text-base font-semibold text-foreground mb-3">Lịch sử giao dịch</h3>
+        {items.length === 0 ? (
+          <div className="text-center py-8">
+            <CreditCard className="w-10 h-10 text-purple-400/30 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">Chưa có giao dịch nào. Hoàn thành phiên đầu tiên để bắt đầu thu nhập!</p>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2">
+              {displayItems.map((e) => (
+                <div key={e.id}
+                  className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/20 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center shrink-0">
+                      <CreditCard className="w-4 h-4 text-green-400" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-foreground">{e.customerName}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {e.packageName}{e.date ? ` · ${e.date}` : ''}{e.time ? ` ${e.time}` : ''}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-semibold text-green-400">+{formatVnd(e.amount)}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(e.createdAt).toLocaleDateString('vi-VN')}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {items.length > 5 && (
+              <button
+                onClick={() => setShowAll(v => !v)}
+                className="mt-3 w-full text-sm text-purple-400 hover:text-purple-300 transition-colors py-2">
+                {showAll ? 'Thu gọn ▲' : `Xem thêm ${items.length - 5} giao dịch ▼`}
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </GlassCard>
+  )
+}
 
 // ─── FavoritesTab ─────────────────────────────────────────────────────────────
 function FavoritesTab() {
@@ -113,7 +227,14 @@ function FavoritesTab() {
   )
 }
 
-export function DashboardPage({ readers, bookings, userName, viewerRole = 'CUSTOMER', readerPackages = [], readerAvailability = [] }: DashboardPageProps) {
+export function DashboardPage({
+  bookings,
+  userName,
+  viewerRole = 'CUSTOMER',
+  readerPackages = [],
+  readerAvailability = [],
+  readerEarnings = { total: 0, count: 0, items: [] },
+}: DashboardPageProps) {
   const [activeTab, setActiveTab] = useState('bookings')
   const { logout } = useAuthModal()
   const router = useRouter()
@@ -475,6 +596,15 @@ export function DashboardPage({ readers, bookings, userName, viewerRole = 'CUSTO
               {/* Tab: Lịch trống (reader) */}
               {isReader && activeTab === 'availability' && (
                 <ReaderAvailabilityTab initial={readerAvailability} />
+              )}
+
+              {/* Tab: Thu nhập (reader) */}
+              {isReader && activeTab === 'earnings' && (
+                <ReaderEarningsWidget
+                  total={readerEarnings.total}
+                  count={readerEarnings.count}
+                  items={readerEarnings.items}
+                />
               )}
 
             </motion.div>
