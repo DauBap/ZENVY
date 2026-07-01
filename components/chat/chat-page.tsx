@@ -29,6 +29,7 @@ interface ConversationItem {
   counterpartUserId: number
   name: string
   avatar: string | null
+  isOnline?: boolean
   lastMessage: string
   lastMessageAt: string | null
   unread: number
@@ -100,12 +101,6 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
   const [sessions, setSessions] = useState<SessionItem[]>([])
   // Ghi âm
   const [recording, setRecording] = useState(false)
-  // voice sample (reader profile) states
-  const [sampleRecording, setSampleRecording] = useState(false)
-  const sampleRecorderRef = useRef<MediaRecorder | null>(null)
-  const sampleChunksRef = useRef<Blob[]>([])
-  const [samplePreviewUrl, setSamplePreviewUrl] = useState<string | null>(null)
-  const [sampleSaving, setSampleSaving] = useState(false)
 
   const maxIdRef = useRef(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -417,7 +412,12 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-foreground truncate">{c.name}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-medium text-foreground truncate">{c.name}</span>
+                        {c.isOnline && (
+                          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-sm" aria-label="Online" />
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         {c.hasOngoingSession && (
                           <span className="shrink-0 rounded-full bg-green-500/10 text-green-300 text-[10px] uppercase px-2 py-1">
@@ -450,7 +450,15 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                       style={active.avatar ? { backgroundImage: `url("${active.avatar}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
                       {!active.avatar && active.name.charAt(0).toUpperCase()}
                     </div>
-                    <span className="font-medium text-foreground truncate">{active.name}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-medium text-foreground truncate">{active.name}</span>
+                      {active.isOnline && (
+                        <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-emerald-300">
+                          <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                          Online
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {/* Reader hoàn thành session khi đang diễn ra */}
@@ -684,74 +692,6 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                           className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
                           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         </Button>
-                      </div>
-                      {/* Sample voice row: readers can record & save; normal users see play button if exists */}
-                      <div className="mt-2 flex items-center gap-2">
-                        {currentRole === 'READER' && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (sampleRecording) { sampleRecorderRef.current?.stop(); return }
-                                try {
-                                  const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-                                  sampleChunksRef.current = []
-                                  const rec = new MediaRecorder(stream)
-                                  sampleRecorderRef.current = rec
-                                  rec.ondataavailable = (e) => { if (e.data.size > 0) sampleChunksRef.current.push(e.data) }
-                                  rec.onstop = () => {
-                                    stream.getTracks().forEach((t) => t.stop())
-                                    setSampleRecording(false)
-                                    const blob = new Blob(sampleChunksRef.current, { type: rec.mimeType || 'audio/webm' })
-                                    const url = URL.createObjectURL(blob)
-                                    setSamplePreviewUrl(url)
-                                  }
-                                  rec.start()
-                                  setSampleRecording(true)
-                                  // auto stop after 10s
-                                  setTimeout(() => { if (rec.state === 'recording') rec.stop() }, 10000)
-                                } catch {
-                                  toast.error('Không thể truy cập micro.')
-                                }
-                              }}
-                              className={cn('px-3 py-1 rounded bg-purple-600 text-white text-sm', sampleRecording && 'bg-red-600')}
-                            >
-                              {sampleRecording ? 'Đang ghi...' : 'Ghi mẫu giọng (10s)'}
-                            </button>
-                            {samplePreviewUrl && (
-                              <audio controls src={samplePreviewUrl} className="max-w-xs" />
-                            )}
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (!samplePreviewUrl) return
-                                setSampleSaving(true)
-                                try {
-                                  const resp = await fetch(samplePreviewUrl)
-                                  const blob = await resp.blob()
-                                  const fr = new FileReader()
-                                  fr.onloadend = async () => {
-                                    const dataUrl = fr.result as string
-                                    const res = await fetch('/api/reader/voice', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: dataUrl }) })
-                                    const d = await res.json()
-                                    if (!res.ok) toast.error(d?.error || 'Lưu thất bại')
-                                    else { toast.success('Lưu mẫu thành công'); setSamplePreviewUrl(null) }
-                                    setSampleSaving(false)
-                                  }
-                                  fr.readAsDataURL(blob)
-                                } catch (err) {
-                                  console.error(err)
-                                  toast.error('Lỗi khi lưu mẫu')
-                                  setSampleSaving(false)
-                                }
-                              }}
-                              className="px-3 py-1 rounded bg-green-600 text-white text-sm"
-                              disabled={!samplePreviewUrl}
-                            >
-                              {sampleSaving ? 'Đang lưu...' : 'Lưu mẫu'}
-                            </button>
-                          </>
-                        )}
                       </div>
                     </div>
                   )}

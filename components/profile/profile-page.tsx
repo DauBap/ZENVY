@@ -40,6 +40,7 @@ interface ReaderInitial {
   specialty: string[]
   packages: PackageItem[]
   availability: AvailabilityItem[]
+  voiceSample?: string | null
 }
 
 type Props =
@@ -102,7 +103,9 @@ export function ProfilePage(props: Props) {
   const [recordingTime, setRecordingTime] = useState(0)
   const timerRef = useRef<number | null>(null)
   const [savingVoice, setSavingVoice] = useState(false)
-  const [serverVoiceSample, setServerVoiceSample] = useState<string | null>(null)
+  const [serverVoiceSample, setServerVoiceSample] = useState<string | null>(
+    isReader ? (initial as ReaderInitial).voiceSample ?? null : null
+  )
 
   // Reader: specialty tags — chọn từ danh sách cố định
   const [specialty, setSpecialty] = useState<string[]>(isReader ? (initial as ReaderInitial).specialty : [])
@@ -238,12 +241,22 @@ export function ProfilePage(props: Props) {
 
   useEffect(() => {
     if (!isReader || !user) return
-    fetch(`/api/users/${user.id}/voice`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.voiceSample) setServerVoiceSample(data.voiceSample)
+    const controller = new AbortController()
+
+    fetch(`/api/users/${user.id}/voice`, {
+      signal: controller.signal,
+      cache: 'no-store',
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => null)
+        if (!res.ok) return
+        if (data && Object.prototype.hasOwnProperty.call(data, 'voiceSample')) {
+          setServerVoiceSample(data.voiceSample)
+        }
       })
       .catch(() => {})
+
+    return () => controller.abort()
   }, [isReader, user])
 
   async function handleSubmit(e: React.FormEvent) {

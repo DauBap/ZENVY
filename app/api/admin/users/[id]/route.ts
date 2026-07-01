@@ -35,6 +35,7 @@ export async function GET(
       role: user.role.name,
       status: user.status,
       createdAt: user.created_at.toISOString(),
+      avatar: user.reader_info?.avatar_url ?? user.customer_info?.avatar_url ?? null,
       customerInfo: user.customer_info,
       readerInfo: user.reader_info ? {
         ...user.reader_info,
@@ -60,17 +61,24 @@ export async function PATCH(
 
     const { id } = await params
     const body = await request.json()
-    const { status, verified } = body
+    const { status, verified, approve } = body
 
     const updates: any = {}
-    if (status && ['ACTIVE', 'INACTIVE', 'BANNED'].includes(status)) {
+    if (approve) {
+      updates.status = 'ACTIVE'
+    } else if (status && ['ACTIVE', 'INACTIVE', 'BANNED'].includes(status)) {
       updates.status = status
     }
 
     const user = await prisma.user.update({ where: { id: Number(id) }, data: updates })
 
-    // Toggle reader verified
-    if (typeof verified === 'boolean') {
+    // Toggle reader verified or approve pending reader
+    if (approve) {
+      await prisma.readerInfo.updateMany({
+        where: { user_id: Number(id) },
+        data: { verified: true },
+      })
+    } else if (typeof verified === 'boolean') {
       await prisma.readerInfo.updateMany({
         where: { user_id: Number(id) },
         data: { verified },

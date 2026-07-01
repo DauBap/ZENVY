@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { useHeartbeat } from '@/hooks/use-heartbeat'
 
 type AuthTab = 'login' | 'register'
 
@@ -45,6 +46,8 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {})
       .finally(() => setIsLoadingUser(false))
   }, [])
+
+  useHeartbeat(user?.role === 'READER')
 
   const openLogin = useCallback((email = '') => {
     setPrefillEmail(email)

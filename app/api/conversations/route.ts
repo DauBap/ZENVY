@@ -56,6 +56,7 @@ export async function GET() {
           counterpartUserId: counterpartId,
           name: display.name,
           avatar: display.avatar,
+          isOnline: display.isOnline,
           lastMessage: last?.body ?? '',
           lastMessageAt: c.last_message_at?.toISOString() ?? null,
           unread,

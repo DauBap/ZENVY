@@ -7,13 +7,6 @@ import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn, formatAmountK } from '@/lib/utils'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
 
 const STATUS_OPTS = [
   { value: '',         label: 'Tất cả' },
@@ -95,9 +88,6 @@ export function AdminWithdrawalsPage() {
   const items: any[] = data?.withdrawals ?? []
   const totalPages: number = data?.totalPages ?? 1
 
-  const [modalImage, setModalImage] = useState<string | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
-
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -122,7 +112,7 @@ export function AdminWithdrawalsPage() {
               value={editRate}
               onChange={e => setEditRate(e.target.value)}
               className="w-24 bg-white/5 border-white/10 text-center"
-              placeholder="VD: 10"
+              placeholder="VD: 10"c
               type="number"
               min={0}
               max={100}
@@ -156,17 +146,6 @@ export function AdminWithdrawalsPage() {
 
       {/* Table */}
       <GlassCard className="overflow-hidden">
-        <Dialog open={modalOpen} onOpenChange={(o) => { if (!o) setModalImage(null); setModalOpen(o) }}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>QR ngân hàng</DialogTitle>
-              <DialogDescription>Ảnh mã QR (nhấn Esc hoặc nút đóng để thoát)</DialogDescription>
-            </DialogHeader>
-            <div className="w-full">
-              {modalImage && <img src={modalImage} alt="QR full" className="w-full h-auto object-contain max-h-[80vh]" />}
-            </div>
-          </DialogContent>
-        </Dialog>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -193,13 +172,7 @@ export function AdminWithdrawalsPage() {
                     <div className="text-xs text-muted-foreground">{w.bankAccount} · {w.bankOwnerName}</div>
                     {w.bankQrCode && (
                       <div className="mt-2 max-w-[120px] overflow-hidden rounded-xl border border-white/10 bg-black/10">
-                        <button
-                          type="button"
-                          onClick={() => { setModalImage(w.bankQrCode); setModalOpen(true) }}
-                          className="w-full"
-                        >
-                          <img src={w.bankQrCode} alt="QR reader" className="w-full h-auto object-contain cursor-pointer" />
-                        </button>
+                        <img src={w.bankQrCode} alt="QR reader" className="w-full h-auto object-contain" />
                       </div>
                     )}
                   </td>

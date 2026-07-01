@@ -5,17 +5,18 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, Calendar, CreditCard, Banknote,
-  Settings, LogOut, Menu, X, ChevronRight, Bell,
+  Settings, LogOut, Menu, X, ChevronRight, Bell, UserCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { JWTPayload } from '@/lib/auth'
 
 const NAV = [
-  { href: '/admin/dashboard',   label: 'Dashboard',          icon: LayoutDashboard },
-  { href: '/admin/users',       label: 'Người dùng',         icon: Users },
-  { href: '/admin/bookings',    label: 'Lịch hẹn',           icon: Calendar },
-  { href: '/admin/payments',    label: 'Thanh toán',         icon: CreditCard },
+  { href: '/admin/dashboard',   label: 'Dashboard',            icon: LayoutDashboard },
+  { href: '/admin/users',       label: 'Người dùng',           icon: Users },
+  { href: '/admin/readers',     label: 'Duyệt Reader',         icon: UserCheck },
+  { href: '/admin/bookings',    label: 'Lịch hẹn',             icon: Calendar },
+  { href: '/admin/payments',    label: 'Thanh toán',           icon: CreditCard },
   { href: '/admin/withdrawals', label: 'Giải ngân & Rút tiền', icon: Banknote },
 ]
 
