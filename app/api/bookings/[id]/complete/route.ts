@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { createNotification } from '@/lib/notifications'
 
 // POST /api/bookings/[id]/complete — Reader đánh dấu hoàn thành phiên
 export async function POST(
@@ -17,7 +18,10 @@ export async function POST(
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
-      include: { reader: { select: { user_id: true } } },
+      include: {
+        customer: { select: { user_id: true } },
+        reader: { select: { user_id: true } },
+      },
     })
 
     if (!booking) return NextResponse.json({ error: 'Không tìm thấy lịch hẹn.' }, { status: 404 })
@@ -44,6 +48,22 @@ export async function POST(
         amount: booking.package_id, // sẽ override bên dưới
       },
     }).catch(() => {}) // ignore nếu đã có
+
+    createNotification({
+      userId: booking.customer.user_id,
+      title: 'Phiên tarot đã hoàn thành 🌙',
+      content: 'Phiên hẹn của bạn đã được đánh dấu hoàn thành. Hãy để lại đánh giá cho reader nhé!',
+      type: 'BOOKING_COMPLETED',
+      link: '/dashboard',
+    }).catch(() => {})
+
+    createNotification({
+      userId: booking.reader.user_id,
+      title: 'Thu nhập đã được cộng 💰',
+      content: 'Phiên hẹn đã hoàn thành và số dư của bạn đã được cập nhật.',
+      type: 'BOOKING_COMPLETED',
+      link: '/dashboard',
+    }).catch(() => {})
 
     return NextResponse.json({
       success: true,

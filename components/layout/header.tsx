@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Search, Bell, Mail, Sparkles, LogOut, LayoutDashboard, User } from 'lucide-react'
+import { Menu, X, Search, Mail, Sparkles, LogOut, LayoutDashboard, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import { cn } from '@/lib/utils'
+import { NotificationBell } from '@/components/layout/notification-bell'
 
 const navLinks = [
   { href: '/readers', label: 'Readers' },
@@ -27,6 +28,7 @@ const navLinks = [
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [messageUnreadCount, setMessageUnreadCount] = useState(0)
   const { openLogin, openRegister, user, isLoadingUser, logout } = useAuthModal()
   const pathname = usePathname()
 
@@ -35,6 +37,33 @@ export function Header() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (!user) {
+      setMessageUnreadCount(0)
+      return
+    }
+
+    let isActive = true
+
+    async function fetchUnreadCount() {
+      try {
+        const res = await fetch('/api/conversations/unread-count')
+        if (!res.ok) return
+        const data = await res.json()
+        if (isActive) setMessageUnreadCount(data.count ?? 0)
+      } catch {
+        // Ignore optional fetch failures.
+      }
+    }
+
+    fetchUnreadCount()
+    const interval = window.setInterval(fetchUnreadCount, 30_000)
+    return () => {
+      isActive = false
+      window.clearInterval(interval)
+    }
+  }, [user])
 
   return (
     <>
@@ -91,18 +120,20 @@ export function Header() {
               </Button>
 
               {!isLoadingUser && user && (
-                <Link href="/chat">
+                <Link href="/chat" className="relative">
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
                     <Mail className="w-5 h-5" />
+                    {messageUnreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 leading-none">
+                        {messageUnreadCount > 99 ? '99+' : messageUnreadCount}
+                      </span>
+                    )}
                   </Button>
                 </Link>
               )}
 
               {!isLoadingUser && user && (
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-                </Button>
+                <NotificationBell />
               )}
 
               {isLoadingUser ? (

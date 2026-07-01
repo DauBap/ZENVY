@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { createNotification } from '@/lib/notifications'
 
 // ===========================================================================
 // FLOW:
@@ -97,6 +98,35 @@ export async function PATCH(
           where: { id: bookingId },
           data: { status: body.status, ...(body.cancel_reason && { cancel_reason: body.cancel_reason }) },
         })
+
+        if (body.status === 'CONFIRMED') {
+          createNotification({
+            userId: booking.customer.user_id,
+            title: 'Lịch hẹn đã được xác nhận ✅',
+            content: `Lịch hẹn của bạn đã được cập nhật sang trạng thái đã xác nhận.`,
+            type: 'BOOKING_CONFIRMED',
+            link: '/dashboard',
+          }).catch(() => {})
+        }
+
+        if (body.status === 'COMPLETED') {
+          createNotification({
+            userId: booking.customer.user_id,
+            title: 'Phiên tarot đã hoàn thành 🌙',
+            content: `Phiên hẹn đã được đánh dấu hoàn thành. Hãy để lại đánh giá cho reader nhé!`,
+            type: 'BOOKING_COMPLETED',
+            link: '/dashboard',
+          }).catch(() => {})
+
+          createNotification({
+            userId: booking.reader.user_id,
+            title: 'Thu nhập đã được cộng 💰',
+            content: `Phiên hẹn đã được hoàn thành và số dư của bạn đã được cập nhật.`,
+            type: 'BOOKING_COMPLETED',
+            link: '/dashboard',
+          }).catch(() => {})
+        }
+
         return NextResponse.json({ success: true, booking: { id: bookingId, status: body.status } })
       }
 
@@ -117,6 +147,16 @@ export async function PATCH(
           }, { status: 409 })
 
         await prisma.booking.update({ where: { id: bookingId }, data: { status: 'CONFIRMED' } })
+
+        // Thông báo cho customer
+        createNotification({
+          userId: booking.customer.user_id,
+          title: 'Lịch hẹn đã được xác nhận ✅',
+          content: `Reader đã xác nhận lịch hẹn của bạn vào ${booking.date.toISOString().split('T')[0]} lúc ${booking.time}.`,
+          type: 'BOOKING_CONFIRMED',
+          link: '/dashboard',
+        }).catch(() => {})
+
         return NextResponse.json({ success: true, booking: { id: bookingId, status: 'CONFIRMED' } })
       }
 
@@ -164,6 +204,25 @@ export async function PATCH(
             return NextResponse.json({ error: 'Trạng thái đã thay đổi. Tải lại trang.' }, { status: 409 })
           throw e
         }
+
+        // Thông báo cho customer: phiên đã hoàn thành
+        createNotification({
+          userId: booking.customer.user_id,
+          title: 'Phiên tarot đã hoàn thành 🌙',
+          content: `Phiên hẹn ngày ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} đã hoàn thành. Hãy để lại đánh giá nhé!`,
+          type: 'BOOKING_COMPLETED',
+          link: '/dashboard',
+        }).catch(() => {})
+
+        // Thông báo cho reader: đã ghi nhận thu nhập
+        createNotification({
+          userId: booking.reader.user_id,
+          title: 'Thu nhập đã được cộng 💰',
+          content: `Phiên hẹn ngày ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} hoàn thành. ${(amount / 1000).toFixed(0)}k₫ đã được cộng vào số dư.`,
+          type: 'BOOKING_COMPLETED',
+          link: '/dashboard',
+        }).catch(() => {})
+
         return NextResponse.json({ success: true, booking: { id: bookingId, status: 'COMPLETED' }, amount })
       }
 
@@ -173,6 +232,16 @@ export async function PATCH(
         if (!reasonRaw)
           return NextResponse.json({ error: 'Vui lòng nhập lý do hủy.' }, { status: 400 })
         await prisma.booking.update({ where: { id: bookingId }, data: { status: 'CANCELLED', cancel_reason: reasonRaw } })
+
+        // Thông báo cho customer khi reader hủy
+        createNotification({
+          userId: booking.customer.user_id,
+          title: 'Lịch hẹn đã bị hủy ❌',
+          content: `Lịch hẹn ngày ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} đã bị hủy. Lý do: ${reasonRaw}`,
+          type: 'BOOKING_CANCELLED',
+          link: '/dashboard',
+        }).catch(() => {})
+
         return NextResponse.json({ success: true, booking: { id: bookingId, status: 'CANCELLED' } })
       }
 

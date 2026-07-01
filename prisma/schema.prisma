@@ -35,6 +35,8 @@ model User {
   messages_sent          Message[]            @relation("MessageSender")
   password_reset_tokens  PasswordResetToken[]
   reader_favorites       ReaderFavorite[]
+  notifications          Notification[]
+  push_subscriptions     PushSubscription[]
   reader_info            ReaderInfo?
   refresh_tokens         RefreshToken[]
   role                   Role                 @relation(fields: [role_id], references: [id])
@@ -425,4 +427,54 @@ enum WithdrawalStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+// =============================================================================
+// THÔNG BÁO IN-APP
+// =============================================================================
+
+enum NotificationType {
+  BOOKING_CONFIRMED
+  BOOKING_COMPLETED
+  BOOKING_CANCELLED
+  NEW_MESSAGE
+  WITHDRAWAL_APPROVED
+  WITHDRAWAL_REJECTED
+  SYSTEM
+}
+
+model Notification {
+  id         Int              @id @default(autoincrement())
+  user_id    Int
+  title      String           @db.VarChar(255)
+  content    String           @db.Text
+  type       NotificationType
+  is_read    Boolean          @default(false)
+  link       String?          @db.VarChar(500)  // URL để navigate khi click
+  created_at DateTime         @default(now()) @db.Timestamp(6)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, is_read])
+  @@index([user_id, created_at])
+  @@map("notifications")
+}
+
+// =============================================================================
+// WEB PUSH SUBSCRIPTIONS
+// Lưu token thiết bị để gửi Push Notification ngoài màn hình
+// =============================================================================
+
+model PushSubscription {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  endpoint   String   @unique @db.Text
+  p256dh     String   @db.Text   // public key
+  auth       String   @db.Text   // auth secret
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("push_subscriptions")
 }
