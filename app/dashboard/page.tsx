@@ -3,14 +3,33 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import { serializeReaders } from '@/lib/serializers'
-import { readers as fallbackReaders } from '@/lib/data'
 
 export default async function DashboardRoutePage() {
   const session = await getSession()
   if (!session) redirect('/readers?login=1')
 
   // Lấy danh sách readers gợi ý (chỉ dùng cho customer sidebar gợi ý)
-  let readers: any[]
+  let readers: any[] = []
+  let bookings: any[] = []
+  let userName = 'Người dùng'
+  let viewerRole = session.role || 'CUSTOMER'
+  let readerPackages: any[] = []
+  let readerAvailability: any[] = []
+  let readerEarnings: {
+    total: number
+    count: number
+    items: Array<{
+      id: number
+      amount: number
+      createdAt: string
+      bookingId: number
+      date: string | null
+      time: string | null
+      customerName: string
+      packageName: string
+    }>
+  } | undefined = undefined
+
   try {
     const dbReaders = await prisma.readerInfo.findMany({
       orderBy: { rating: 'desc' },
@@ -20,23 +39,15 @@ export default async function DashboardRoutePage() {
         _count: { select: { reviews: true, session_reviews: true } },
       },
     })
-    readers = dbReaders.length > 0 ? serializeReaders(dbReaders) : fallbackReaders as any
+    readers = dbReaders.length > 0 ? serializeReaders(dbReaders) : []
   } catch {
-    readers = fallbackReaders as any
+    readers = []
   }
-
-  // Lấy bookings của user nếu đã đăng nhập
-  let bookings: any[] = []
-  let userName = 'Người dùng'
-  let readerPackages: any[] = []
-  let readerAvailability: any[] = []
-  // Earnings snapshot cho Reader — tính từ SUM(reader_earnings) không cần cột balance
-  let readerEarnings: { total: number; count: number; items: any[] } = { total: 0, count: 0, items: [] }
-  const viewerRole = session?.role ?? 'CUSTOMER'
 
   if (session) {
     try {
       userName = session.name || 'Người dùng'
+      viewerRole = session.role || 'CUSTOMER'
 
       if (viewerRole === 'READER') {
         // Reader: xem các lịch khách đã đặt với mình → query theo reader_id

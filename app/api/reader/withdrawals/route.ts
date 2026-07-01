@@ -49,6 +49,7 @@ export async function GET() {
     bankName: reader.bank_name ?? '',
     bankAccount: reader.bank_account ?? '',
     bankOwnerName: reader.bank_owner_name ?? '',
+    bankQrCode: reader.bank_qr_code ?? null,
     withdrawals: withdrawals.map(w => ({
       id: w.id,
       amountRequested: Number(w.amount_requested),
@@ -74,8 +75,8 @@ export async function POST(request: NextRequest) {
   if (!body) return NextResponse.json({ error: 'Dữ liệu không hợp lệ.' }, { status: 400 })
 
   const amount = Number(body.amount)
-  if (!Number.isFinite(amount) || amount < 10000) {
-    return NextResponse.json({ error: 'Số tiền tối thiểu là 10,000₫.' }, { status: 400 })
+  if (!Number.isFinite(amount) || amount < 100000) {
+    return NextResponse.json({ error: 'Số tiền tối thiểu là 100k.' }, { status: 400 })
   }
 
   const reader = await prisma.readerInfo.findUnique({
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
 
   if (amount > available) {
     return NextResponse.json({
-      error: `Số dư khả dụng không đủ. Khả dụng: ${available.toLocaleString('vi-VN')}₫`,
+      error: `Số dư khả dụng không đủ. Khả dụng: ${available.toLocaleString('vi-VN')}k`,
     }, { status: 422 })
   }
 

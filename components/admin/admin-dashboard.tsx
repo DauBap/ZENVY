@@ -7,7 +7,7 @@ import {
   CheckCircle, XCircle, Clock, DollarSign, ChevronRight,
 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/glass-card'
-import { cn } from '@/lib/utils'
+import { cn, formatAmountK } from '@/lib/utils'
 
 const STATUS_COLOR: Record<string, string> = {
   COMPLETED: 'text-green-400 bg-green-500/10',
@@ -25,7 +25,7 @@ export function AdminDashboard({ stats, recentBookings }: { stats: any; recentBo
     { label: 'Người dùng', value: stats.totalUsers.toLocaleString(), sub: `${stats.totalReaders} readers`, icon: Users, color: 'text-purple-400', bg: 'bg-purple-500/10' },
     { label: 'Lịch hẹn hôm nay', value: stats.todayBookings.toLocaleString(), sub: `${stats.totalBookings} tổng`, icon: Calendar, color: 'text-blue-400', bg: 'bg-blue-500/10' },
     { label: 'Hoàn thành', value: `${stats.completionRate}%`, sub: `${stats.completedBookings} phiên`, icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/10' },
-    { label: 'Doanh thu', value: `${(stats.totalRevenue / 1_000_000).toFixed(1)}M₫`, sub: `${stats.totalReviews} đánh giá`, icon: DollarSign, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+    { label: 'Doanh thu', value: `${(stats.totalRevenue / 1_000_000).toFixed(1)}k`, sub: `${stats.totalReviews} đánh giá`, icon: DollarSign, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
     { label: 'Đánh giá TB', value: stats.avgRating.toFixed(1), sub: `/ 5.0`, icon: Star, color: 'text-amber-400', bg: 'bg-amber-500/10' },
     { label: 'Chờ xác nhận', value: stats.pendingBookings.toLocaleString(), sub: `${stats.cancelledBookings} đã hủy`, icon: Clock, color: 'text-orange-400', bg: 'bg-orange-500/10' },
   ]
@@ -78,7 +78,7 @@ export function AdminDashboard({ stats, recentBookings }: { stats: any; recentBo
                     <td className="px-4 py-3 text-foreground font-medium">{b.customer}</td>
                     <td className="px-4 py-3 text-muted-foreground">{b.reader}</td>
                     <td className="px-4 py-3 text-muted-foreground">{b.packageName}</td>
-                    <td className="px-4 py-3 text-foreground">{(b.amount / 1000).toFixed(0)}k₫</td>
+                    <td className="px-4 py-3 text-foreground">{formatAmountK(b.amount)}</td>
                     <td className="px-4 py-3 text-muted-foreground">{b.date}</td>
                     <td className="px-4 py-3">
                       <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_COLOR[b.status] ?? '')}>

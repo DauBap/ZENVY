@@ -5,13 +5,12 @@ import type {
   PlatformStat,
   Prisma,
   ReaderInfo,
-  Review,
   TarotCard,
   Testimonial,
 } from '@prisma/client'
+import { isReaderOnline } from '@/lib/online'
 
 export type SerializedPackage = Package
-export type SerializedReview = Omit<Review, 'date'> & { date: string }
 export type SerializedAvailability = Omit<Availability, 'date'> & { date: string }
 export type SerializedReader = Omit<ReaderInfo, 'rating' | 'price_per_session' | 'balance'> & {
   rating: number
@@ -29,8 +28,8 @@ export type SerializedReader = Omit<ReaderInfo, 'rating' | 'price_per_session' |
   responseTime: string
   pricePerSession: number
   packages?: SerializedPackage[]
-  reviews?: SerializedReview[]
   availability?: SerializedAvailability[]
+  voiceSample?: string | null
 }
 export type SerializedTarotCard = TarotCard
 export type SerializedTestimonial = Testimonial
@@ -44,38 +43,35 @@ const toNumber = (value: Prisma.Decimal | number | string): number => Number(val
 export function serializeReader(
   reader: ReaderInfo & {
     packages?: Package[]
-    reviews?: Review[]
     availability?: Availability[]
-    _count?: { reviews?: number; session_reviews?: number }
+    _count?: { session_reviews?: number }
   }
 ): SerializedReader {
   const pricePerSession = toNumber(reader.price_per_session)
-  const reviewCount = (reader._count?.reviews ?? 0) + (reader._count?.session_reviews ?? 0)
+  const reviewCount = reader._count?.session_reviews ?? 0
+
   return {
     ...reader,
     rating: toNumber(reader.rating),
     price_per_session: pricePerSession,
     balance: toNumber(reader.balance),
-    // Map DB fields → UI field names
     name: reader.display_name ?? 'Tarot Reader',
     avatar: reader.avatar_url ?? '/placeholder-user.jpg',
     specialty: reader.specialty ?? [],
     bio: reader.description ?? '',
-    isOnline: false,
+    isOnline: isReaderOnline(reader.last_seen_at),
     isVerified: reader.verified,
     totalSessions: 0,
     reviewCount,
     responseTime: '< 5 phút',
     pricePerSession,
     packages: reader.packages?.map((pkg) => ({ ...pkg })),
-    reviews: reader.reviews?.map((review) => ({
-      ...review,
-      date: review.date.toISOString(),
+    availability: reader.availability?.map((a) => ({
+      ...a,
+      date: a.date.toISOString(),
     })),
-    availability: reader.availability?.map((availability) => ({
-      ...availability,
-      date: availability.date.toISOString(),
-    })),
+    // voice_sample may not exist in schema in all environments; read dynamically
+    voiceSample: (reader as any).voice_sample ?? null,
   }
 }
 
@@ -83,9 +79,8 @@ export function serializeReaders(
   readers: Array<
     ReaderInfo & {
       packages?: Package[]
-      reviews?: Review[]
       availability?: Availability[]
-      _count?: { reviews?: number; session_reviews?: number }
+      _count?: { session_reviews?: number }
     }
   >
 ): SerializedReader[] {
@@ -93,10 +88,7 @@ export function serializeReaders(
 }
 
 export function serializePlatformStat(stat: PlatformStat): SerializedPlatformStat {
-  return {
-    ...stat,
-    averageRating: toNumber(stat.averageRating),
-  }
+  return { ...stat, averageRating: toNumber(stat.averageRating) }
 }
 
 export function serializeTarotCards(cards: TarotCard[]): SerializedTarotCard[] {

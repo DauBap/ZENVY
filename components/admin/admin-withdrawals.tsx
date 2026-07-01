@@ -6,7 +6,14 @@ import { ChevronLeft, ChevronRight, RefreshCw, CheckCircle, XCircle, Clock, Sett
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import { cn, formatAmountK } from '@/lib/utils'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 const STATUS_OPTS = [
   { value: '',         label: 'Tất cả' },
@@ -22,9 +29,6 @@ const STATUS_STYLE: Record<string, string> = {
 const STATUS_LABEL: Record<string, string> = {
   PENDING: 'Chờ duyệt', APPROVED: 'Đã duyệt', REJECTED: 'Từ chối',
 }
-
-const fmt = (n: number) =>
-  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(2)}M₫` : `${n.toLocaleString('vi-VN')}₫`
 
 export function AdminWithdrawalsPage() {
   const [data, setData] = useState<any>(null)
@@ -81,7 +85,7 @@ export function AdminWithdrawalsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ commissionRate: rate }),
       })
-      if (res.ok) { toast.success(`Đã cập nhật hoa hồng thành ${rate}%.`); setCommissionRate(rate) }
+      if (res.ok) { toast.success(`Đã cập nhật Phí sàn thành ${rate}%.`); setCommissionRate(rate) }
       else toast.error('Lưu thất bại.')
     } finally {
       setSavingRate(false)
@@ -90,6 +94,9 @@ export function AdminWithdrawalsPage() {
 
   const items: any[] = data?.withdrawals ?? []
   const totalPages: number = data?.totalPages ?? 1
+
+  const [modalImage, setModalImage] = useState<string | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
 
   return (
     <div className="space-y-5">
@@ -149,11 +156,22 @@ export function AdminWithdrawalsPage() {
 
       {/* Table */}
       <GlassCard className="overflow-hidden">
+        <Dialog open={modalOpen} onOpenChange={(o) => { if (!o) setModalImage(null); setModalOpen(o) }}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>QR ngân hàng</DialogTitle>
+              <DialogDescription>Ảnh mã QR (nhấn Esc hoặc nút đóng để thoát)</DialogDescription>
+            </DialogHeader>
+            <div className="w-full">
+              {modalImage && <img src={modalImage} alt="QR full" className="w-full h-auto object-contain max-h-[80vh]" />}
+            </div>
+          </DialogContent>
+        </Dialog>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/10">
-                {['ID', 'Reader', 'ATM', 'Số tiền yêu cầu', 'Hoa hồng', 'Thực trả', 'Trạng thái', 'Ngày', 'Ghi chú / Hành động'].map(h => (
+                {['ID', 'Reader', 'ATM', 'Số tiền yêu cầu', 'Phí sàn', 'Thực trả', 'Trạng thái', 'Ngày', 'Ghi chú / Hành động'].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -173,10 +191,21 @@ export function AdminWithdrawalsPage() {
                   <td className="px-4 py-3">
                     <div className="text-foreground">{w.bankName}</div>
                     <div className="text-xs text-muted-foreground">{w.bankAccount} · {w.bankOwnerName}</div>
+                    {w.bankQrCode && (
+                      <div className="mt-2 max-w-[120px] overflow-hidden rounded-xl border border-white/10 bg-black/10">
+                        <button
+                          type="button"
+                          onClick={() => { setModalImage(w.bankQrCode); setModalOpen(true) }}
+                          className="w-full"
+                        >
+                          <img src={w.bankQrCode} alt="QR reader" className="w-full h-auto object-contain cursor-pointer" />
+                        </button>
+                      </div>
+                    )}
                   </td>
-                  <td className="px-4 py-3 font-semibold text-foreground">{fmt(w.amountRequested)}</td>
+                  <td className="px-4 py-3 font-semibold text-foreground">{formatAmountK(w.amountRequested)}</td>
                   <td className="px-4 py-3 text-red-400">−{w.commissionRate}%</td>
-                  <td className="px-4 py-3 font-bold text-green-400">{fmt(w.amountToPay)}</td>
+                  <td className="px-4 py-3 font-bold text-green-400">{formatAmountK(w.amountToPay)}</td>
                   <td className="px-4 py-3">
                     <span className={cn('flex items-center gap-1 w-fit px-2 py-0.5 rounded-full text-xs border', STATUS_STYLE[w.status] ?? '')}>
                       {w.status === 'PENDING' && <Clock className="w-3 h-3" />}

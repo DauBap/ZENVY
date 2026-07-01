@@ -5,7 +5,20 @@ import { signToken, cookieOptions } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    const body = await request.json().catch((err) => {
+      console.error('Login body parse error:', err)
+      return null
+    })
+
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json(
+        { error: 'Yêu cầu đăng nhập không hợp lệ.' },
+        { status: 400 }
+      )
+    }
+
+    let email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
+    let password = typeof body.password === 'string' ? body.password : ''
 
     if (!email || !password) {
       return NextResponse.json(
@@ -15,8 +28,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Tìm user kèm role + customer_info
-    const user = await prisma.user.findUnique({
-      where: { email: email.trim().toLowerCase() },
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
       include: {
         role: true,
         customer_info: true,
@@ -24,7 +37,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    if (!user) {
+    if (!user || !user.role || !user.password_hash) {
       return NextResponse.json(
         { error: 'Email hoặc mật khẩu không đúng.' },
         { status: 401 }

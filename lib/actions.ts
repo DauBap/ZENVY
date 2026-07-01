@@ -2,18 +2,10 @@
 
 import { prisma } from '@/lib/prisma'
 import {
-  serializeReader,
   serializeReaders,
   serializeTarotCards,
-  serializeTestimonials,
   serializeFAQ,
-  serializePlatformStat,
 } from '@/lib/serializers'
-import {
-  readers as fallbackReaders,
-  tarotCards as fallbackTarotCards,
-  faqData as fallbackFAQ,
-} from '@/lib/data'
 
 export async function getReaders(options: {
   include?: { packages?: boolean; reviews?: boolean; availability?: boolean }
@@ -34,10 +26,9 @@ export async function getReaders(options: {
     })
     if (readers.length > 0) return serializeReaders(readers)
   } catch (error) {
-    console.error('getReaders failed, using fallback:', error)
+    console.error('getReaders failed:', error)
   }
-  const limited = options.limit ? fallbackReaders.slice(0, options.limit) : fallbackReaders
-  return limited as any
+  return []
 }
 
 export async function getTarotCards() {
@@ -45,9 +36,9 @@ export async function getTarotCards() {
     const cards = await prisma.tarotCard.findMany()
     if (cards.length > 0) return serializeTarotCards(cards)
   } catch (error) {
-    console.error('getTarotCards failed, using fallback:', error)
+    console.error('getTarotCards failed:', error)
   }
-  return fallbackTarotCards as any
+  return []
 }
 
 export async function getFAQs() {
@@ -55,7 +46,7 @@ export async function getFAQs() {
     const faqs = await prisma.fAQ.findMany()
     if (faqs.length > 0) return serializeFAQ(faqs)
   } catch (error) {
-    console.error('getFAQs failed, using fallback:', error)
+    console.error('getFAQs failed:', error)
   }
-  return fallbackFAQ.map((f, i) => ({ id: i + 1, ...f })) as any
+  return []
 }

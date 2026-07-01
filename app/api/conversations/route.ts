@@ -33,6 +33,24 @@ export async function GET() {
           },
         })
         const last = c.messages[0]
+
+        const bookings = await prisma.booking.findMany({
+          where: {
+            customer: { user_id: c.customer_user_id },
+            reader: { user_id: c.reader_user_id },
+            status: 'CONFIRMED',
+          },
+          select: { id: true, date: true, time: true },
+        })
+        const now = Date.now()
+        const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
+        const hasOngoingSession = bookings.some((b) => {
+          const [hh, mm] = b.time.split(':').map(Number)
+          const startMs =
+            Date.UTC(b.date.getUTCFullYear(), b.date.getUTCMonth(), b.date.getUTCDate(), hh || 0, mm || 0) - ICT_OFFSET_MS
+          return now >= startMs
+        })
+
         return {
           id: c.id,
           counterpartUserId: counterpartId,
@@ -41,6 +59,7 @@ export async function GET() {
           lastMessage: last?.body ?? '',
           lastMessageAt: c.last_message_at?.toISOString() ?? null,
           unread,
+          hasOngoingSession,
         }
       })
     )

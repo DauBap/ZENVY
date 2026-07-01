@@ -58,6 +58,7 @@ export async function GET(
         phase = 'pending'
       }
 
+      const completedAt = b.status === 'COMPLETED' ? b.updated_at : null
       return {
         bookingId: b.id,
         status: b.status,
@@ -66,6 +67,8 @@ export async function GET(
         time: b.time,
         packageName: b.package?.name ?? '',
         duration: b.package?.duration ?? 0,
+        completedAt: completedAt?.toISOString() ?? null,
+        graceEndsAt: completedAt ? new Date(completedAt.getTime() + 30 * 60 * 1000).toISOString() : null,
       }
     })
 

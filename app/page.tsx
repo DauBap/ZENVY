@@ -12,27 +12,13 @@ import { HowItWorks } from '@/components/home/how-it-works'
 import { AITarotSection } from '@/components/home/ai-tarot-section'
 import { TestimonialsSection } from '@/components/home/testimonials-section'
 import { FAQSection } from '@/components/home/faq-section'
-import { platformStats as fallbackStats, readers as fallbackReaders, testimonials as fallbackTestimonials, faqData as fallbackFAQ } from '@/lib/data'
 
-// Fallback platform stat shape for serializer
 import type { SerializedPlatformStat } from '@/lib/serializers'
-
-function getFallbackPlatformStat(): SerializedPlatformStat {
-  return {
-    id: 1,
-    totalSessions: fallbackStats.totalSessions,
-    averageRating: fallbackStats.averageRating,
-    verifiedReaders: fallbackStats.verifiedReaders,
-    avgResponseTime: fallbackStats.avgResponseTime,
-    satisfactionRate: fallbackStats.satisfactionRate,
-    onlineReaders: fallbackStats.onlineReaders,
-  }
-}
 
 export default async function HomePage() {
   redirect('/readers')
 
-  // Fetch all data in parallel, fall back to mock data on DB error
+  // Fetch all data in parallel from the database
   const [dbReaders, dbStat, dbTestimonials, dbFAQs] = await Promise.allSettled([
     prisma.readerInfo.findMany({
       orderBy: { rating: 'desc' },
@@ -43,21 +29,29 @@ export default async function HomePage() {
     prisma.fAQ.findMany(),
   ])
 
-  const readers = dbReaders.status === 'fulfilled' && (dbReaders as any).value.length > 0
+  const readers = dbReaders.status === 'fulfilled'
     ? serializeReaders((dbReaders as any).value)
-    : fallbackReaders as any
+    : []
 
   const platformStat = dbStat.status === 'fulfilled' && (dbStat as any).value
     ? serializePlatformStat((dbStat as any).value)
-    : getFallbackPlatformStat()
+    : {
+        id: 1,
+        totalSessions: 0,
+        averageRating: 0,
+        verifiedReaders: 0,
+        avgResponseTime: '0s',
+        satisfactionRate: 0,
+        onlineReaders: 0,
+      }
 
-  const testimonials = dbTestimonials.status === 'fulfilled' && (dbTestimonials as any).value.length > 0
+  const testimonials = dbTestimonials.status === 'fulfilled'
     ? serializeTestimonials((dbTestimonials as any).value)
-    : fallbackTestimonials as any
+    : []
 
-  const faqData = dbFAQs.status === 'fulfilled' && (dbFAQs as any).value.length > 0
+  const faqData = dbFAQs.status === 'fulfilled'
     ? serializeFAQ((dbFAQs as any).value)
-    : fallbackFAQ.map((f, i) => ({ id: i + 1, ...f })) as any
+    : []
 
   return (
     <>

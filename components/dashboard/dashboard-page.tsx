@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Star as StarIcon } from 'lucide-react'
+import { useHeartbeat } from '@/hooks/use-heartbeat'
 import { motion } from 'framer-motion'
 import {
   Calendar, Clock, Heart, Bell, History, CreditCard, Banknote,
@@ -84,7 +85,7 @@ const HISTORY_FILTERS = [
 const readerTabs = [
   { id: 'earnings',    label: 'Thu nhập',   icon: CreditCard },
   { id: 'withdrawal',  label: 'Rút tiền',   icon: Banknote   },
-  { id: 'services',    label: 'Dịch vụ',    icon: Sparkles   },
+  { id: 'services',    label: 'Các gói',    icon: Sparkles   },
   { id: 'availability',label: 'Lịch trống', icon: Calendar   },
 ]
 
@@ -111,9 +112,9 @@ function ReaderEarningsWidget({ total, count, items }: ReaderEarningsWidgetProps
   const [showAll, setShowAll] = useState(false)
 
   const formatVnd = (n: number) => {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2).replace('.00', '')} triệu ₫`
-    if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k ₫`
-    return `${n.toLocaleString('vi-VN')} ₫`
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2).replace('.00', '')} triệu k`
+    if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`
+    return `${n.toLocaleString('vi-VN')} k`
   }
 
   const displayItems = showAll ? items : items.slice(0, 5)
@@ -256,6 +257,9 @@ export function DashboardPage({
   const partnerLabel = isReader ? 'Khách hàng' : 'Reader'
   // Reader thấy thêm tab Dịch vụ + Lịch trống
   const navTabs = isReader ? [...tabs, ...readerTabs] : tabs
+
+  // Ping heartbeat mỗi 30s khi reader đang online
+  useHeartbeat(isReader)
 
   // Trạng thái cho các thao tác hủy / xác nhận
   const [busyId, setBusyId] = useState<number | null>(null)

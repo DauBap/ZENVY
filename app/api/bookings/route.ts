@@ -83,20 +83,42 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const booking = await prisma.booking.create({
+    const bookingCreatePayload = {
       data: {
         customer_id: customerInfo.id,
         reader_id: Number(readerId),
         package_id: Number(packageId),
         date: new Date(date),
         time,
-        status: 'PENDING',
+        status: 'PENDING' as const,
       },
       include: {
         reader: { select: { display_name: true, avatar_url: true } },
         package: { select: { name: true, duration: true, price: true } },
       },
-    })
+    }
+
+    let booking
+    try {
+      booking = await prisma.booking.create(bookingCreatePayload)
+    } catch (error) {
+      const errorCode = (error as { code?: string }).code
+      const metaTarget = (error as { meta?: { target?: unknown } }).meta?.target
+      const isIdConflict =
+        errorCode === 'P2002' &&
+        ((Array.isArray(metaTarget) && metaTarget.includes('id')) ||
+          (typeof metaTarget === 'string' && metaTarget.includes('id')) ||
+          (error instanceof Error && error.message.includes('Unique constraint failed on the fields: (`id`)')))
+
+      if (!isIdConflict) {
+        throw error
+      }
+
+      await prisma.$executeRawUnsafe(
+        `SELECT setval(pg_get_serial_sequence('"bookings"', 'id'), COALESCE((SELECT MAX(id) + 1 FROM "bookings"), 1), false)`
+      )
+      booking = await prisma.booking.create(bookingCreatePayload)
+    }
 
     return NextResponse.json({ success: true, booking }, { status: 201 })
   } catch (error) {

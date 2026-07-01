@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       take: limit,
       orderBy: { created_at: 'desc' },
       include: {
-        reader: { select: { display_name: true, avatar_url: true, user: { select: { email: true } } } },
+        reader: { select: { display_name: true, avatar_url: true, bank_qr_code: true, user: { select: { email: true } } } },
       },
     }),
     prisma.withdrawalRequest.count({ where }),
@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       bankName: w.bank_name,
       bankAccount: w.bank_account,
       bankOwnerName: w.bank_owner_name,
+      bankQrCode: w.reader.bank_qr_code ?? null,
       status: w.status,
       adminNote: w.admin_note ?? '',
       createdAt: w.created_at.toISOString(),

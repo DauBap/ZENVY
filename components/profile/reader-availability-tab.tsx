@@ -21,6 +21,18 @@ export function ReaderAvailabilityTab({ initial }: { initial: AvailabilityItem[]
   const [items, setItems] = useState<AvailabilityItem[]>(initial)
   const [newDate, setNewDate] = useState('')
   const [busy, setBusy] = useState(false)
+  
+  const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
+  
+  function isSlotPast(dateStr: string, slot: string) {
+    const nowUtcMs = Date.now()
+    const [y, m, d] = dateStr.split('-').map(Number)
+    const [hh, mm] = slot.split(':').map(Number)
+    // VN local time -> UTC ms: Date.UTC(year,month-1,day,hh,mm) gives UTC ms for that time
+    // subtract ICT offset to convert VN local to actual UTC instant
+    const slotUtcMs = Date.UTC(y, m - 1, d, hh, mm) - ICT_OFFSET_MS
+    return slotUtcMs <= nowUtcMs
+  }
 
   function addDate() {
     if (!newDate) { toast.error('Vui lòng chọn ngày.'); return }
@@ -36,6 +48,11 @@ export function ReaderAvailabilityTab({ initial }: { initial: AvailabilityItem[]
     setItems((prev) => prev.map((it, i) => {
       if (i !== idx) return it
       const has = it.slots.includes(slot)
+      // Prevent enabling a past slot
+      if (!has && isSlotPast(it.date, slot)) {
+        toast.error('Khung giờ này đã qua. Không thể bật.')
+        return it
+      }
       return { ...it, slots: has ? it.slots.filter((s) => s !== slot) : [...it.slots, slot].sort() }
     }))
   }
@@ -103,13 +120,17 @@ export function ReaderAvailabilityTab({ initial }: { initial: AvailabilityItem[]
             <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
               {TIME_SLOTS.map((slot) => {
                 const active = it.slots.includes(slot)
+                const disabled = isSlotPast(it.date, slot)
                 return (
-                  <button key={slot} type="button" onClick={() => toggleSlot(idx, slot)}
+                  <button key={slot} type="button" onClick={() => toggleSlot(idx, slot)} disabled={disabled}
+                    title={disabled ? 'Khung giờ này đã qua' : undefined}
                     className={cn(
                       'py-2 rounded-lg text-sm text-center transition-all border',
                       active
                         ? 'bg-purple-500/20 border-purple-500/50 text-foreground'
-                        : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30'
+                        : disabled
+                          ? 'opacity-50 cursor-not-allowed bg-white/3 border-white/5 text-muted-foreground'
+                          : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30'
                     )}>
                     {slot}
                   </button>

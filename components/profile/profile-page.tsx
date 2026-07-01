@@ -1,11 +1,11 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
-import { Camera, Loader2, Save, ShieldCheck, Star, X } from 'lucide-react'
+import { Camera, Loader2, Save, ShieldCheck, Star, X, ChevronDown, Check, Clock } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { CosmicBackground } from '@/components/ui/floating-elements'
@@ -19,6 +19,7 @@ import { NumberInput } from '@/components/ui/number-input'
 import type { PackageItem } from '@/components/profile/reader-packages-tab'
 import type { AvailabilityItem } from '@/components/profile/reader-availability-tab'
 import { useAuthModal } from '@/contexts/auth-modal-context'
+import { specialties as SPECIALTY_LIST } from '@/lib/data'
 import { cn } from '@/lib/utils'
 
 interface CustomerInitial {
@@ -73,7 +74,7 @@ function resizeImage(file: File, max = 256): Promise<string> {
 
 export function ProfilePage(props: Props) {
   const { role, email, initial } = props
-  const { setUser } = useAuthModal()
+  const { setUser, user } = useAuthModal()
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -92,18 +93,31 @@ export function ProfilePage(props: Props) {
   const [avatar, setAvatar] = useState(initial.avatar_url)
   const [busy, setBusy] = useState(false)
 
-  // Reader: specialty tags
-  const [specialty, setSpecialty] = useState<string[]>(isReader ? (initial as ReaderInitial).specialty : [])
-  const [specialtyInput, setSpecialtyInput] = useState('')
+  // Voice recorder state (reader only)
+  const [recording, setRecording] = useState(false)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const [recordedUrl, setRecordedUrl] = useState<string | null>(null)
+  const [recordedDataUrl, setRecordedDataUrl] = useState<string | null>(null)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const timerRef = useRef<number | null>(null)
+  const [savingVoice, setSavingVoice] = useState(false)
+  const [serverVoiceSample, setServerVoiceSample] = useState<string | null>(null)
 
-  function addSpecialty() {
-    const t = specialtyInput.trim()
-    if (!t) return
-    if (specialty.includes(t)) { setSpecialtyInput(''); return }
-    if (specialty.length >= 8) { toast.error('Tối đa 8 chuyên môn.'); return }
-    setSpecialty((prev) => [...prev, t])
-    setSpecialtyInput('')
-  }
+  // Reader: specialty tags — chọn từ danh sách cố định
+  const [specialty, setSpecialty] = useState<string[]>(isReader ? (initial as ReaderInitial).specialty : [])
+  const [showSpecialtyMenu, setShowSpecialtyMenu] = useState(false)
+  const specialtyRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showSpecialtyMenu) return
+    const handler = (e: MouseEvent) => {
+      if (specialtyRef.current && !specialtyRef.current.contains(e.target as Node))
+        setShowSpecialtyMenu(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showSpecialtyMenu])
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -121,6 +135,116 @@ export function ProfilePage(props: Props) {
       if (fileRef.current) fileRef.current.value = ''
     }
   }
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mr = new MediaRecorder(stream)
+      audioChunksRef.current = []
+      setRecordedUrl(null)
+      setRecordedDataUrl(null)
+      mr.ondataavailable = (ev) => { if (ev.data.size > 0) audioChunksRef.current.push(ev.data) }
+      mr.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        const url = URL.createObjectURL(blob)
+        setRecordedUrl(url)
+        const reader = new FileReader()
+        reader.onload = () => {
+          const dataUrl = reader.result as string
+          setRecordedDataUrl(dataUrl)
+        }
+        reader.readAsDataURL(blob)
+      }
+      mediaRecorderRef.current = mr
+      mr.start()
+      setRecording(true)
+      setRecordingTime(0)
+      timerRef.current = window.setInterval(() => {
+        setRecordingTime((prev) => {
+          if (prev >= 9) {
+            stopRecording()
+          }
+          return prev + 1
+        })
+      }, 1000)
+    } catch (e) {
+      console.error('startRecording', e)
+      toast.error('Không thể mở micro. Vui lòng cho phép quyền ghi âm.')
+    }
+  }
+
+  const stopRecording = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    setRecording(false)
+    mediaRecorderRef.current?.stop()
+    mediaRecorderRef.current = null
+  }
+
+  const saveVoiceSample = async () => {
+    try {
+      setSavingVoice(true)
+      const dataUrl = recordedDataUrl
+      if (!dataUrl) {
+        toast.error('Không có bản ghi để lưu.')
+        return
+      }
+      const res = await fetch('/api/reader/voice', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voice: dataUrl }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        toast.error(data?.error ?? 'Lưu mẫu thất bại.')
+        return
+      }
+      const data = await res.json()
+      setServerVoiceSample(data.voiceSample ?? dataUrl)
+      setRecordedUrl(null)
+      setRecordedDataUrl(null)
+      toast.success('Đã lưu mẫu giọng.')
+    } catch (e) {
+      console.error(e)
+      toast.error('Lỗi khi lưu mẫu.')
+    } finally {
+      setSavingVoice(false)
+    }
+  }
+
+  const deleteVoiceSample = async () => {
+    if (!serverVoiceSample) return
+    try {
+      setSavingVoice(true)
+      const res = await fetch('/api/reader/voice', { method: 'DELETE' })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        toast.error(data?.error ?? 'Xóa mẫu giọng thất bại.')
+        return
+      }
+      setServerVoiceSample(null)
+      setRecordedUrl(null)
+      setRecordedDataUrl(null)
+      toast.success('Đã xóa mẫu giọng.')
+    } catch (e) {
+      console.error(e)
+      toast.error('Lỗi khi xóa mẫu giọng.')
+    } finally {
+      setSavingVoice(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!isReader || !user) return
+    fetch(`/api/users/${user.id}/voice`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.voiceSample) setServerVoiceSample(data.voiceSample)
+      })
+      .catch(() => {})
+  }, [isReader, user])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -218,7 +342,7 @@ export function ProfilePage(props: Props) {
               </div>
 
               {isReader ? (
-                <>
+                <div className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="display_name">Tên hiển thị</Label>
                     <Input id="display_name" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
@@ -238,53 +362,124 @@ export function ProfilePage(props: Props) {
                     </div>
                   </div>
 
-                  {/* Specialty tags */}
                   <div className="space-y-2">
-                    <Label htmlFor="specialty">Chuyên môn</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {specialty.map((s) => (
-                        <span key={s} className="inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                          {s}
-                          <button type="button" onClick={() => setSpecialty((prev) => prev.filter((x) => x !== s))}
-                            className="hover:text-white" aria-label={`Xóa ${s}`}>
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))}
+                    <Label>Chuyên môn <span className="text-muted-foreground font-normal">(tối đa 8)</span></Label>
+
+                    {specialty.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {specialty.map((s) => (
+                          <span key={s} className="inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            {s}
+                            <button type="button" onClick={() => setSpecialty(prev => prev.filter(x => x !== s))}
+                              className="hover:text-white" aria-label={`Xóa ${s}`}>
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="relative" ref={specialtyRef}>
+                      <button
+                        type="button"
+                        onClick={() => setShowSpecialtyMenu(!showSpecialtyMenu)}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm text-muted-foreground hover:border-purple-500/40 transition-colors"
+                      >
+                        <span>{specialty.length > 0 ? `Đã chọn ${specialty.length} chuyên môn` : 'Chọn chuyên môn...'}</span>
+                        <ChevronDown className={cn('w-4 h-4 transition-transform', showSpecialtyMenu && 'rotate-180')} />
+                      </button>
+
+                      {showSpecialtyMenu && (
+                        <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-xl overflow-hidden max-h-56 overflow-y-auto">
+                          {SPECIALTY_LIST.map((opt) => {
+                            const selected = specialty.includes(opt)
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => {
+                                  if (selected) {
+                                    setSpecialty(prev => prev.filter(x => x !== opt))
+                                  } else if (specialty.length < 8) {
+                                    setSpecialty(prev => [...prev, opt])
+                                  } else {
+                                    toast.error('Tối đa 8 chuyên môn.')
+                                  }
+                                }}
+                                className={cn(
+                                  'w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left',
+                                  selected ? 'bg-purple-500/20 text-purple-300' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+                                )}
+                              >
+                                {opt}
+                                {selected && <Check className="w-4 h-4 shrink-0" />}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex gap-2">
-                      <Input
-                        id="specialty"
-                        value={specialtyInput}
-                        onChange={(e) => setSpecialtyInput(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSpecialty() } }}
-                        placeholder="VD: Tình yêu, Sự nghiệp…"
-                      />
-                      <Button type="button" variant="outline" onClick={addSpecialty} className="border-white/10 shrink-0">
-                        Thêm
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Nhấn Enter hoặc &quot;Thêm&quot; để thêm tag. Tối đa 8.</p>
+                    <p className="text-xs text-muted-foreground">Chọn từ danh sách. Tối đa 8 chuyên môn.</p>
                   </div>
 
-                  {/* Read-only: rating + verified */}
-                  <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-white/10">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/25">
-                      <Star className="w-3.5 h-3.5 fill-yellow-400" />
-                      {(initial as ReaderInitial).rating.toFixed(1)} đánh giá
-                    </span>
-                    <span className={cn(
-                      'inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full border',
-                      (initial as ReaderInitial).verified
-                        ? 'bg-green-500/15 text-green-400 border-green-500/25'
-                        : 'bg-white/5 text-muted-foreground border-white/10'
-                    )}>
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      {(initial as ReaderInitial).verified ? 'Đã xác minh' : 'Chưa xác minh'}
-                    </span>
-                    <span className="text-xs text-muted-foreground">Đánh giá và xác minh do hệ thống quản lý.</span>
+                  <div className="space-y-4">
+                    <GlassCard className="p-4 bg-white/5 border border-white/10">
+                      <div className="flex flex-col gap-4">
+                        <div>
+                          <div className="text-sm font-semibold text-foreground">Mẫu giọng</div>
+                          <div className="text-xs text-muted-foreground">Ghi lại mẫu giọng ngắn để hiển thị với khách hàng.</div>
+                        </div>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                          {!recording ? (
+                            <Button type="button" size="sm" onClick={startRecording} className="bg-purple-600 text-white">Bắt đầu ghi</Button>
+                          ) : (
+                            <Button type="button" size="sm" onClick={stopRecording} className="bg-red-600 text-white">Dừng ({recordingTime}s)</Button>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            {recordedUrl ? (
+                              <audio src={recordedUrl} controls className="w-full rounded-lg bg-black/10" />
+                            ) : serverVoiceSample ? (
+                              <audio src={serverVoiceSample} controls className="w-full rounded-lg bg-black/10" />
+                            ) : (
+                              <div className="rounded-lg border border-dashed border-white/10 px-4 py-3 text-sm text-muted-foreground">
+                                Chưa có mẫu giọng. Ghi âm để lưu mẫu mới.
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-2 sm:gap-3">
+                            <Button type="button" size="sm" onClick={saveVoiceSample} disabled={savingVoice || !recordedUrl}
+                              className="bg-green-600 text-white whitespace-nowrap">
+                              {savingVoice ? 'Đang lưu…' : 'Lưu mẫu'}
+                            </Button>
+                            {serverVoiceSample && !recordedUrl && (
+                              <Button type="button" size="sm" onClick={deleteVoiceSample} disabled={savingVoice}
+                                className="bg-white/5 text-muted-foreground hover:bg-white/10 whitespace-nowrap">
+                                Xóa mẫu
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </GlassCard>
+
+                    <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-white/10">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/25">
+                        <Star className="w-3.5 h-3.5 fill-yellow-400" />
+                        {(initial as ReaderInitial).rating.toFixed(1)} đánh giá
+                      </span>
+                      <span className={cn(
+                        'inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full border',
+                        (initial as ReaderInitial).verified
+                          ? 'bg-green-500/15 text-green-400 border-green-500/25'
+                          : 'bg-white/5 text-muted-foreground border-white/10'
+                      )}>
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        {(initial as ReaderInitial).verified ? 'Đã xác minh' : 'Chưa xác minh'}
+                      </span>
+                      <span className="text-xs text-muted-foreground">Đánh giá và xác minh do hệ thống quản lý.</span>
+                    </div>
                   </div>
-                </>
+                </div>
               ) : (
                 <>
                   <div className="space-y-2">

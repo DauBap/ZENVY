@@ -12,46 +12,36 @@ export async function GET(
 
     const [
       followCount,
-      totalBookings,
       completedBookings,
-      sessionReviewCount,
-      legacyReviewCount,
+      cancelledBookings,
     ] = await Promise.all([
-      // Số người theo dõi
       prisma.readerFavorite.count({ where: { reader_id: readerId } }),
-
-      // Tổng số lịch hẹn (không tính CANCELLED)
-      prisma.booking.count({
-        where: { reader_id: readerId, status: { not: 'CANCELLED' } },
-      }),
-
-      // Số phiên hoàn thành
-      prisma.booking.count({
-        where: { reader_id: readerId, status: 'COMPLETED' },
-      }),
-
-      // Số review phiên
-      prisma.sessionReview.count({ where: { reader_id: readerId } }),
-
-      // Số review cũ (legacy)
-      prisma.review.count({ where: { reader_id: readerId } }),
+      prisma.booking.count({ where: { reader_id: readerId, status: 'COMPLETED' } }),
+      prisma.booking.count({ where: { reader_id: readerId, status: 'CANCELLED' } }),
     ])
 
-    const completionRate = totalBookings > 0
-      ? Math.round((completedBookings / totalBookings) * 100)
-      : 0
+    // Cách C: COMPLETED / (COMPLETED + CANCELLED)
+    // Phản ánh đúng uy tín: trong các booking đã kết thúc, bao nhiêu % hoàn thành
+    const closedBookings = completedBookings + cancelledBookings
+    const completionRate = closedBookings > 0
+      ? Math.round((completedBookings / closedBookings) * 100)
+      : 100 // chưa có booking nào kết thúc → mặc định 100%
 
-    // Lượt đánh giá = gộp cả 2 nguồn; điểm rating đọc thẳng từ cột reader_info.rating
-    const reviewCount = sessionReviewCount + legacyReviewCount
-    const reader = await prisma.readerInfo.findUnique({
-      where: { id: readerId },
-      select: { rating: true },
+    // Tính avgRating chỉ từ session_reviews
+    const sessionAgg = await prisma.sessionReview.aggregate({
+      where: { reader_id: readerId },
+      _avg: { rating: true },
+      _count: true,
     })
-    const avgRating = reader ? Number(reader.rating) : 0
+
+    const reviewCount = sessionAgg._count ?? 0
+    const avgRating = reviewCount > 0
+      ? Math.round((sessionAgg._avg.rating ?? 0) * 10) / 10
+      : 0
 
     return NextResponse.json({
       followCount,
-      totalBookings,
+      totalBookings: completedBookings + cancelledBookings,
       completedBookings,
       completionRate,
       avgRating,

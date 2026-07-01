@@ -5,7 +5,7 @@ import { Download, Search, ChevronLeft, ChevronRight, TrendingUp, DollarSign, St
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import { cn, formatAmountK } from '@/lib/utils'
 
 export function AdminPaymentsPage() {
   const [data, setData] = useState<any>(null)
@@ -62,7 +62,7 @@ export function AdminPaymentsPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Tổng doanh thu', value: `${(totalRevenue / 1_000_000).toFixed(2)}M₫`, icon: DollarSign, color: 'text-green-400', bg: 'bg-green-500/10' },
+          { label: 'Tổng doanh thu', value: `${(totalRevenue / 1_000_000).toFixed(2)}k`, icon: DollarSign, color: 'text-green-400', bg: 'bg-green-500/10' },
           { label: 'Giao dịch', value: (data?.total ?? 0).toLocaleString(), icon: TrendingUp, color: 'text-blue-400', bg: 'bg-blue-500/10' },
           { label: 'Reader nổi bật', value: topReaders[0]?.name ?? '—', icon: Star, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
         ].map(c => (
@@ -95,7 +95,7 @@ export function AdminPaymentsPage() {
                 )}
                 <span className="text-sm text-foreground flex-1">{r.name}</span>
                 <span className="text-sm text-muted-foreground">{r.sessionCount} phiên</span>
-                <span className="text-sm font-semibold text-green-400">{(Number(r.totalEarnings) / 1_000_000).toFixed(2)}M₫</span>
+                <span className="text-sm font-semibold text-green-400">{(Number(r.totalEarnings) / 1_000_000).toFixed(2)}k</span>
               </div>
             ))}
           </div>
@@ -145,7 +145,7 @@ export function AdminPaymentsPage() {
                     {e.package?.name} · {e.package?.duration}p
                   </td>
                   <td className="px-4 py-3 font-semibold text-green-400">
-                    {(Number(e.amount) / 1000).toFixed(0)}k₫
+                    {formatAmountK(Number(e.amount))}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {new Date(e.createdAt).toLocaleDateString('vi-VN')}

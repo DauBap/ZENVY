@@ -85,6 +85,24 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
 
   const slotsForSelected = availByDate.find((a) => a.date === selectedDate)?.slots ?? []
 
+  function isSlotPast(dateStr: string, slot: string) {
+    const nowUtc = Date.now()
+    const [y, m, d] = dateStr.split('-').map(Number)
+    const [hh, mm] = slot.split(':').map(Number)
+    const slotUtcMs = Date.UTC(y, m - 1, d, hh, mm) - ICT_OFFSET_MS
+    return slotUtcMs <= nowUtc
+  }
+
+  // Hide past slots when the selected date is today (VN time)
+  const visibleSlotsForSelected = slotsForSelected.filter((s) => !(selectedDate === todayVN && isSlotPast(selectedDate, s)))
+
+  // If the currently selected time becomes past (e.g., time passed while on page), clear it
+  useEffect(() => {
+    if (selectedDate && selectedTime && isSlotPast(selectedDate, selectedTime)) {
+      setSelectedTime('')
+    }
+  }, [selectedDate, selectedTime])
+
   const canProceed = () => {
     if (currentStep === 1) return selectedPackageId !== null
     if (currentStep === 2) return !!selectedDate && !!selectedTime
@@ -248,9 +266,9 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                           <Clock className="w-5 h-5 inline mr-2" />Chọn giờ
                         </h2>
                         {selectedDate ? (
-                          slotsForSelected.length > 0 ? (
+                          visibleSlotsForSelected.length > 0 ? (
                             <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                              {slotsForSelected.map((time) => (
+                              {visibleSlotsForSelected.map((time) => (
                                 <button key={time} onClick={() => setSelectedTime(time)}
                                   className={cn('p-3 rounded-xl text-center transition-all border',
                                     selectedTime === time
@@ -423,9 +441,9 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
           <AlertDialogFooter>
             <AlertDialogCancel>Để mình xem lại</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => { setShowPaymentConfirm(false); handleConfirmPayment() }}
+              onClick={() => setShowPaymentConfirm(false)}
               className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-              Đồng ý &amp; thanh toán
+              Đồng ý &amp; tiếp tục
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

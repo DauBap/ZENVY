@@ -5,7 +5,8 @@ import bcrypt from 'bcryptjs'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, password } = body
+    let { name, email, password } = body
+    email = typeof email === 'string' ? email.trim().toLowerCase() : ''
 
     // Validate input
     if (!email || !password || !name) {
@@ -31,17 +32,12 @@ export async function POST(request: NextRequest) {
     const saltRounds = 10
     const hashedPassword = await bcrypt.hash(password, saltRounds)
 
-    // Get CUSTOMER role (id = 2)
-    const customerRole = await prisma.role.findUnique({
+    // Ensure CUSTOMER role exists before creating the user
+    const customerRole = await prisma.role.upsert({
       where: { name: 'CUSTOMER' },
+      update: {},
+      create: { name: 'CUSTOMER', description: 'CUSTOMER role' },
     })
-
-    if (!customerRole) {
-      return NextResponse.json(
-        { error: 'CUSTOMER role not found in database' },
-        { status: 500 }
-      )
-    }
 
     // Create user and customer info in transaction
     const user = await prisma.user.create({

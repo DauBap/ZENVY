@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog'
 import { resizeImage } from '@/lib/image'
 import { EMOJIS, STICKERS } from '@/components/chat/emoji-data'
 import { cn } from '@/lib/utils'
@@ -31,6 +32,7 @@ interface ConversationItem {
   lastMessage: string
   lastMessageAt: string | null
   unread: number
+  hasOngoingSession?: boolean
 }
 
 interface ChatMessage {
@@ -52,6 +54,8 @@ interface SessionItem {
   time: string
   packageName: string
   duration: number
+  completedAt?: string | null
+  graceEndsAt?: string | null
 }
 
 interface ChatClientProps {
@@ -88,11 +92,20 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [completing, setCompleting] = useState(false)
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
+  const [showGraceInfo, setShowGraceInfo] = useState(false)
+  const [nowMs, setNowMs] = useState(Date.now())
   // null = view "Tin nhắn" (DM); số = đang xem một phiên cuộc hẹn
   const [sessionBookingId, setSessionBookingId] = useState<number | null>(initialBookingId)
   const [sessions, setSessions] = useState<SessionItem[]>([])
   // Ghi âm
   const [recording, setRecording] = useState(false)
+  // voice sample (reader profile) states
+  const [sampleRecording, setSampleRecording] = useState(false)
+  const sampleRecorderRef = useRef<MediaRecorder | null>(null)
+  const sampleChunksRef = useRef<Blob[]>([])
+  const [samplePreviewUrl, setSamplePreviewUrl] = useState<string | null>(null)
+  const [sampleSaving, setSampleSaving] = useState(false)
 
   const maxIdRef = useRef(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -137,19 +150,29 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
   const loadSessions = useCallback(async (conversationId: number) => {
     try {
       const res = await fetch(`/api/conversations/${conversationId}/sessions`)
-      if (!res.ok) return
+      if (!res.ok) return []
       const data = await res.json()
-      setSessions(data.sessions ?? [])
-    } catch { /* bỏ qua */ }
+      const sessions = data.sessions ?? []
+      setSessions(sessions)
+      return sessions as SessionItem[]
+    } catch {
+      return []
+    }
   }, [])
 
-  // ── Mở một hội thoại ────────────────────────────────────────────────────────
-  const openConversation = useCallback((conversationId: number) => {
+  // ── Mở một hội thoại ──────────────────────────────────────────────────────
+  const openConversation = useCallback(async (conversationId: number) => {
     setActiveId(conversationId)
     setMessages([])
     maxIdRef.current = 0
-    loadMessages(conversationId, false)
-    loadSessions(conversationId)
+    await loadMessages(conversationId, false)
+    const sessions = await loadSessions(conversationId)
+    const ongoing = sessions.find((s) => s.phase === 'ongoing')
+    if (ongoing) {
+      setSessionBookingId(ongoing.bookingId)
+    } else {
+      setSessionBookingId(null)
+    }
   }, [loadMessages, loadSessions])
 
   // ── Bootstrap: nếu vào từ ?reader= / ?customer= thì get-or-create rồi mở ─────
@@ -204,17 +227,39 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
     return () => clearInterval(t)
   }, [activeId, loadMessages, loadSessions])
 
-  // ── Tự cuộn xuống cuối khi có tin mới ───────────────────────────────────────
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
   const activeSession = sessionBookingId
     ? sessions.find((s) => s.bookingId === sessionBookingId) ?? null
     : null
 
-  // Khóa gửi tin khi xem phiên không phải "đang diễn ra"
-  const sessionLocked = sessionBookingId != null && activeSession?.phase !== 'ongoing'
+  const graceEndsMs = activeSession?.graceEndsAt ? new Date(activeSession.graceEndsAt).getTime() : null
+  const isWithinGrace = activeSession?.phase === 'past' && graceEndsMs !== null && graceEndsMs > nowMs
+  const graceRemainingMs = graceEndsMs ? Math.max(0, graceEndsMs - nowMs) : 0
+
+  const sessionLocked = sessionBookingId != null && (
+    activeSession?.phase === 'ongoing' ? false :
+    activeSession?.phase === 'past' ? !isWithinGrace :
+    true
+  )
+
+  useEffect(() => {
+    if (activeSession?.phase === 'past' && isWithinGrace) {
+      setShowGraceInfo(true)
+    } else {
+      setShowGraceInfo(false)
+    }
+  }, [activeSession, isWithinGrace])
+
+  useEffect(() => {
+    if (!activeSession || !activeSession.graceEndsAt) return
+    const tick = () => setNowMs(Date.now())
+    const t = setInterval(tick, 1000)
+    return () => clearInterval(t)
+  }, [activeSession?.graceEndsAt])
+
+  // ── Tự cuộn xuống cuối khi có tin mới ───────────────────────────────────────
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   // ── Gửi tin nhắn (text / media / sticker) ───────────────────────────────────
   async function sendMessage(payload: { type: MsgType; body?: string; mediaUrl?: string }) {
@@ -321,8 +366,11 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
       })
       const data = await res.json()
       if (!res.ok) { toast.error(data.error ?? 'Không hoàn thành được.'); return }
-      toast.success('Đã hoàn thành session.')
-      if (activeId) loadSessions(activeId)
+      toast.success('Đã hoàn thành session. Bạn còn 30 phút để xem/xem thêm trước khi chuyển về chế độ chỉ xem.')
+      setShowCompleteConfirm(false)
+      if (activeId) {
+        await loadSessions(activeId)
+      }
     } catch {
       toast.error('Lỗi kết nối. Vui lòng thử lại.')
     } finally {
@@ -370,9 +418,16 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-foreground truncate">{c.name}</span>
-                      {c.unread > 0 && (
-                        <span className="shrink-0 w-5 h-5 rounded-full bg-purple-500 text-white text-xs flex items-center justify-center">{c.unread}</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {c.hasOngoingSession && (
+                          <span className="shrink-0 rounded-full bg-green-500/10 text-green-300 text-[10px] uppercase px-2 py-1">
+                            Đang diễn ra
+                          </span>
+                        )}
+                        {c.unread > 0 && (
+                          <span className="shrink-0 w-5 h-5 rounded-full bg-purple-500 text-white text-xs flex items-center justify-center">{c.unread}</span>
+                        )}
+                      </div>
                     </div>
                     <p className="text-sm text-muted-foreground truncate">{c.lastMessage || 'Bắt đầu trò chuyện...'}</p>
                   </div>
@@ -400,10 +455,30 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                   <div className="flex items-center gap-1 shrink-0">
                     {/* Reader hoàn thành session khi đang diễn ra */}
                     {isReader && activeSession?.phase === 'ongoing' && (
-                      <Button size="sm" disabled={completing} onClick={completeSession}
-                        className="bg-green-600 hover:bg-green-500 text-white mr-1">
-                        {completing ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> …</> : 'Hoàn thành'}
-                      </Button>
+                      <>
+                        <Button size="sm" disabled={completing} onClick={() => setShowCompleteConfirm(true)}
+                          className="bg-green-600 hover:bg-green-500 text-white mr-1">
+                          {completing ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> …</> : 'Hoàn thành'}
+                        </Button>
+                        <AlertDialog open={showCompleteConfirm} onOpenChange={setShowCompleteConfirm}>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Xác nhận hoàn thành phiên</AlertDialogTitle>
+                              <AlertDialogDescription className="space-y-3 text-left">
+                                <p>Bạn chắc chắn muốn hoàn thành phiên này?</p>
+                                <p>Sau khi hoàn thành, cuộc chat vẫn có thể tiếp tục trong 30 phút, sau đó sẽ chuyển sang chỉ xem lại.</p>
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Hủy</AlertDialogCancel>
+                              <AlertDialogAction onClick={completeSession}
+                                className="bg-green-600 hover:bg-green-500 text-white">
+                                Xác nhận hoàn thành
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
                     )}
                     {/* Icon gọi / video — trang trí, chưa hoạt động */}
                     <button title="Gọi thoại (sắp ra mắt)" disabled
@@ -533,76 +608,151 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                       {activeSession?.phase === 'upcoming'
                         ? 'Phiên sắp diễn ra — bạn có thể nhắn tin khi tới giờ hẹn.'
                         : activeSession?.phase === 'past'
-                        ? 'Phiên đã hoàn thành — chỉ xem lại lịch sử.'
+                        ? 'Phiên đã hoàn thành — đã hết 30 phút hỗ trợ, chỉ xem lại lịch sử.'
                         : 'Phiên chưa được xác nhận — chưa thể nhắn tin.'}
                     </p>
                   ) : (
-                    <div className="flex items-center gap-1.5">
-                      {/* Ảnh */}
-                      <button type="button" onClick={() => fileRef.current?.click()} disabled={sending}
-                        title="Gửi ảnh"
-                        className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-purple-300 hover:bg-white/5 transition-colors shrink-0">
-                        <ImagePlus className="w-5 h-5" />
-                      </button>
-                      <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} className="hidden" />
+                    <div className="space-y-2">
+                      {activeSession?.phase === 'past' && isWithinGrace && (
+                        <p className="text-center text-xs text-muted-foreground py-1.5">
+                          Phiên đã hoàn thành. Bạn còn {Math.ceil(graceRemainingMs / 60000)} phút để nhắn tin trước khi chuyển sang chế độ chỉ xem.
+                        </p>
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        {/* Ảnh */}
+                        <button type="button" onClick={() => fileRef.current?.click()} disabled={sending}
+                          title="Gửi ảnh"
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-purple-300 hover:bg-white/5 transition-colors shrink-0">
+                          <ImagePlus className="w-5 h-5" />
+                        </button>
+                        <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} className="hidden" />
 
-                      {/* Emoji */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button type="button" title="Emoji"
-                            className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-purple-300 hover:bg-white/5 transition-colors shrink-0">
-                            <Smile className="w-5 h-5" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent align="start" className="w-72 bg-background/95 backdrop-blur-xl border-white/10">
-                          <div className="grid grid-cols-8 gap-1 max-h-48 overflow-y-auto">
-                            {EMOJIS.map((e, i) => (
-                              <button key={i} onClick={() => setDraft((d) => d + e)}
-                                className="text-xl hover:bg-white/10 rounded p-1 transition-colors">{e}</button>
-                            ))}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                        {/* Emoji */}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button type="button" title="Emoji"
+                              className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-purple-300 hover:bg-white/5 transition-colors shrink-0">
+                              <Smile className="w-5 h-5" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent align="start" className="w-72 bg-background/95 backdrop-blur-xl border-white/10">
+                            <div className="grid grid-cols-8 gap-1 max-h-48 overflow-y-auto">
+                              {EMOJIS.map((e, i) => (
+                                <button key={i} onClick={() => setDraft((d) => d + e)}
+                                  className="text-xl hover:bg-white/10 rounded p-1 transition-colors">{e}</button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
 
-                      {/* Sticker */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button type="button" title="Sticker"
-                            className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-purple-300 hover:bg-white/5 transition-colors shrink-0">
-                            <Sticker className="w-5 h-5" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent align="start" className="w-72 bg-background/95 backdrop-blur-xl border-white/10">
-                          <div className="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto">
-                            {STICKERS.map((s, i) => (
-                              <button key={i} onClick={() => sendMessage({ type: 'STICKER', body: s })}
-                                className="text-3xl hover:bg-white/10 rounded p-1 transition-colors">{s}</button>
-                            ))}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                        {/* Sticker */}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button type="button" title="Sticker"
+                              className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-purple-300 hover:bg-white/5 transition-colors shrink-0">
+                              <Sticker className="w-5 h-5" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent align="start" className="w-72 bg-background/95 backdrop-blur-xl border-white/10">
+                            <div className="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto">
+                              {STICKERS.map((s, i) => (
+                                <button key={i} onClick={() => sendMessage({ type: 'STICKER', body: s })}
+                                  className="text-3xl hover:bg-white/10 rounded p-1 transition-colors">{s}</button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
 
-                      {/* Ghi âm */}
-                      <button type="button" onClick={toggleRecording} disabled={sending}
-                        title={recording ? 'Dừng & gửi' : 'Ghi âm'}
-                        className={cn(
-                          'w-9 h-9 rounded-full flex items-center justify-center transition-colors shrink-0',
-                          recording ? 'bg-red-500/20 text-red-400 animate-pulse' : 'text-muted-foreground hover:text-purple-300 hover:bg-white/5'
-                        )}>
-                        {recording ? <Square className="w-4 h-4 fill-current" /> : <Mic className="w-5 h-5" />}
-                      </button>
+                        {/* Ghi âm */}
+                        <button type="button" onClick={toggleRecording} disabled={sending}
+                          title={recording ? 'Dừng & gửi' : 'Ghi âm'}
+                          className={cn(
+                            'w-9 h-9 rounded-full flex items-center justify-center transition-colors shrink-0',
+                            recording ? 'bg-red-500/20 text-red-400 animate-pulse' : 'text-muted-foreground hover:text-purple-300 hover:bg-white/5'
+                          )}>
+                          {recording ? <Square className="w-4 h-4 fill-current" /> : <Mic className="w-5 h-5" />}
+                        </button>
 
-                      <Input
-                        placeholder={sessionBookingId ? 'Đặt câu hỏi cho cuộc hẹn...' : 'Nhập tin nhắn...'}
-                        value={draft}
-                        onChange={(e) => setDraft(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText() } }}
-                        className="flex-1 bg-white/5 border-white/10 focus:border-purple-500/50"
-                      />
-                      <Button size="icon" onClick={sendText} disabled={!draft.trim() || sending}
-                        className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
-                        {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                      </Button>
+                        <Input
+                          placeholder={sessionBookingId ? 'Đặt câu hỏi cho cuộc hẹn...' : 'Nhập tin nhắn...'}
+                          value={draft}
+                          onChange={(e) => setDraft(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText() } }}
+                          className="flex-1 bg-white/5 border-white/10 focus:border-purple-500/50"
+                        />
+                        <Button size="icon" onClick={sendText} disabled={!draft.trim() || sending}
+                          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
+                          {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                      {/* Sample voice row: readers can record & save; normal users see play button if exists */}
+                      <div className="mt-2 flex items-center gap-2">
+                        {currentRole === 'READER' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (sampleRecording) { sampleRecorderRef.current?.stop(); return }
+                                try {
+                                  const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+                                  sampleChunksRef.current = []
+                                  const rec = new MediaRecorder(stream)
+                                  sampleRecorderRef.current = rec
+                                  rec.ondataavailable = (e) => { if (e.data.size > 0) sampleChunksRef.current.push(e.data) }
+                                  rec.onstop = () => {
+                                    stream.getTracks().forEach((t) => t.stop())
+                                    setSampleRecording(false)
+                                    const blob = new Blob(sampleChunksRef.current, { type: rec.mimeType || 'audio/webm' })
+                                    const url = URL.createObjectURL(blob)
+                                    setSamplePreviewUrl(url)
+                                  }
+                                  rec.start()
+                                  setSampleRecording(true)
+                                  // auto stop after 10s
+                                  setTimeout(() => { if (rec.state === 'recording') rec.stop() }, 10000)
+                                } catch {
+                                  toast.error('Không thể truy cập micro.')
+                                }
+                              }}
+                              className={cn('px-3 py-1 rounded bg-purple-600 text-white text-sm', sampleRecording && 'bg-red-600')}
+                            >
+                              {sampleRecording ? 'Đang ghi...' : 'Ghi mẫu giọng (10s)'}
+                            </button>
+                            {samplePreviewUrl && (
+                              <audio controls src={samplePreviewUrl} className="max-w-xs" />
+                            )}
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (!samplePreviewUrl) return
+                                setSampleSaving(true)
+                                try {
+                                  const resp = await fetch(samplePreviewUrl)
+                                  const blob = await resp.blob()
+                                  const fr = new FileReader()
+                                  fr.onloadend = async () => {
+                                    const dataUrl = fr.result as string
+                                    const res = await fetch('/api/reader/voice', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: dataUrl }) })
+                                    const d = await res.json()
+                                    if (!res.ok) toast.error(d?.error || 'Lưu thất bại')
+                                    else { toast.success('Lưu mẫu thành công'); setSamplePreviewUrl(null) }
+                                    setSampleSaving(false)
+                                  }
+                                  fr.readAsDataURL(blob)
+                                } catch (err) {
+                                  console.error(err)
+                                  toast.error('Lỗi khi lưu mẫu')
+                                  setSampleSaving(false)
+                                }
+                              }}
+                              className="px-3 py-1 rounded bg-green-600 text-white text-sm"
+                              disabled={!samplePreviewUrl}
+                            >
+                              {sampleSaving ? 'Đang lưu...' : 'Lưu mẫu'}
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

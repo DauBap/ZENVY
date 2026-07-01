@@ -15,15 +15,33 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    // Simulate login
-    setTimeout(() => {
-      setIsLoading(false)
+    setErrorMessage(null)
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      })
+
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setErrorMessage(data?.error ?? 'Đăng nhập thất bại. Vui lòng thử lại.')
+        return
+      }
+
       window.location.href = '/dashboard'
-    }, 1500)
+    } catch (err) {
+      console.error('Login error', err)
+      setErrorMessage('Đăng nhập thất bại. Vui lòng thử lại.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -97,6 +115,12 @@ export default function LoginPage() {
               </div>
 
               {/* Submit */}
+              {errorMessage && (
+                <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+                  {errorMessage}
+                </div>
+              )}
+
               <Button
                 type="submit"
                 disabled={isLoading}

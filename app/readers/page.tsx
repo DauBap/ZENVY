@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { serializeReaders } from '@/lib/serializers'
-import { readers as fallbackReaders, specialties as fallbackSpecialties } from '@/lib/data'
+import { specialties as SPECIALTIES } from '@/lib/data'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { MobileNav } from '@/components/layout/mobile-nav'
@@ -11,28 +11,23 @@ import { ReadersPage } from '@/components/readers/readers-page'
 export const dynamic = 'force-dynamic'
 
 export default async function ReadersRoutePage() {
-  let readers: any[]
-  let specialties: string[]
+  let readers: any[] = []
+  const specialties = SPECIALTIES
 
   try {
     const dbReaders = await prisma.readerInfo.findMany({
       orderBy: { rating: 'desc' },
       include: {
         packages: true,
-        _count: { select: { reviews: true, session_reviews: true } },
+        _count: { select: { session_reviews: true } },
       },
     })
 
     if (dbReaders.length > 0) {
       readers = serializeReaders(dbReaders)
-      specialties = fallbackSpecialties
-    } else {
-      readers = fallbackReaders as any
-      specialties = fallbackSpecialties
     }
-  } catch {
-    readers = fallbackReaders as any
-    specialties = fallbackSpecialties
+  } catch (error) {
+    console.error('ReadersRoutePage failed:', error)
   }
 
   return (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
@@ -30,6 +30,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
   const [favCount, setFavCount] = useState(0)
   const [isTogglingFav, setIsTogglingFav] = useState(false)
   const { user, openLogin } = useAuthModal()
+  const isOwner = user?.id === (reader as any).user_id
   // Reader không được đặt lịch / nhắn tin với reader khác
   const isReaderViewer = user?.role === 'READER'
   const [stats, setStats] = useState<{
@@ -110,6 +111,81 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
   }, [activeTab, reader.id, reviewPage])
 
   const pkg = reader.packages?.find((p) => p.id === selectedPkg)
+
+  // Recorder state (owner only)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<BlobPart[]>([])
+  const [isRecordingLocal, setIsRecordingLocal] = useState(false)
+  const [recordSeconds, setRecordSeconds] = useState(0)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [savingVoice, setSavingVoice] = useState(false)
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      chunksRef.current = []
+      const mr = new MediaRecorder(stream)
+      mediaRecorderRef.current = mr
+      mr.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksRef.current.push(e.data) }
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        const url = URL.createObjectURL(blob)
+        setPreviewUrl(url)
+        stream.getTracks().forEach((t) => t.stop())
+        setIsRecordingLocal(false)
+        setRecordSeconds(0)
+      }
+      mr.start()
+      setIsRecordingLocal(true)
+      setRecordSeconds(0)
+      const start = Date.now()
+      const tick = () => {
+        const s = Math.floor((Date.now() - start) / 1000)
+        setRecordSeconds(s)
+        if (s >= 10) {
+          mr.stop()
+        } else if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          requestAnimationFrame(tick)
+        }
+      }
+      requestAnimationFrame(tick)
+    } catch (err) {
+      console.error('Microphone access denied', err)
+      alert('Không thể truy cập micro. Vui lòng cho phép quyền.')
+    }
+  }
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop()
+  }
+
+  const savePreviewAsVoice = async () => {
+    if (!previewUrl) return
+    setSavingVoice(true)
+    try {
+      const resp = await fetch(previewUrl)
+      const blob = await resp.blob()
+      const readerFR = new FileReader()
+      readerFR.onloadend = async () => {
+        const dataUrl = readerFR.result as string
+        const res = await fetch('/api/reader/voice', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: dataUrl }) })
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}))
+          alert(d?.error || 'Lưu mẫu giọng thất bại')
+        } else {
+          alert('Lưu mẫu giọng thành công')
+          // reload to fetch updated reader
+          location.reload()
+        }
+        setSavingVoice(false)
+      }
+      readerFR.readAsDataURL(blob)
+    } catch (err) {
+      console.error(err)
+      alert('Lỗi khi lưu mẫu giọng')
+      setSavingVoice(false)
+    }
+  }
 
   return (
     <>
@@ -341,6 +417,35 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                               <MessageCircle className="w-4 h-4 mr-2" /> Nhắn tin
                             </Button>
                           )}
+                          {/* Voice sample / recorder UI */}
+                          <div className="mt-3">
+                            {isOwner ? (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  className="px-3 py-1 rounded bg-purple-600 text-white text-sm"
+                                  onClick={() => {
+                                    if (isRecordingLocal) stopRecording(); else startRecording()
+                                  }}
+                                >
+                                  {isRecordingLocal ? `Đang ghi... ${recordSeconds}s` : 'Ghi âm mẫu (10s)'}
+                                </button>
+
+                                {previewUrl && <audio controls src={previewUrl} className="max-w-xs" />}
+
+                                <button
+                                  className="px-3 py-1 rounded bg-green-600 text-white text-sm"
+                                  onClick={savePreviewAsVoice}
+                                  disabled={!previewUrl || savingVoice}
+                                >
+                                  {savingVoice ? 'Đang lưu...' : 'Lưu mẫu'}
+                                </button>
+                              </div>
+                            ) : (
+                              reader.voiceSample ? (
+                                <audio controls src={reader.voiceSample} className="w-full mt-2" />
+                              ) : null
+                            )}
+                          </div>
                         </>
                       )}
                     </div>

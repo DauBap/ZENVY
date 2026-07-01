@@ -6,7 +6,7 @@ import { Search, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import { cn, formatAmountK } from '@/lib/utils'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tất cả' },
@@ -139,7 +139,7 @@ export function AdminBookingsPage() {
                     {b.package?.name} · {b.package?.duration}p
                   </td>
                   <td className="px-4 py-3 text-foreground whitespace-nowrap">
-                    {b.package ? `${(b.package.price / 1000).toFixed(0)}k₫` : '—'}
+                    {b.package ? formatAmountK(b.package.price) : '—'}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{b.date}</td>
                   <td className="px-4 py-3 text-muted-foreground">{b.time}</td>

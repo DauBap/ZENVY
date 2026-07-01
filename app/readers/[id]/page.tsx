@@ -12,7 +12,7 @@ export default async function ReaderRoutePage({
 
   const reader = await prisma.readerInfo.findUnique({
     where: { id: Number(id) },
-    include: { packages: true, reviews: true, availability: true },
+    include: { packages: true, availability: true, _count: { select: { session_reviews: true } } },
   })
 
   if (!reader) return notFound()
