@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { isParticipant } from '@/lib/chat'
+import { createNotification } from '@/lib/notifications'
 
 // Lấy conversation + xác thực participant; trả { error, status } hoặc { conv, userId }
 async function loadAuthorized(conversationId: number) {
@@ -51,6 +52,17 @@ export async function GET(
       await prisma.conversation.update({
         where: { id: conversationId },
         data: { [field]: new Date() },
+      })
+      
+      // Đánh dấu tất cả NEW_MESSAGE notifications của người dùng này là đã đọc
+      // (tức là người dùng đã xem tin nhắn trong cuộc hội thoại này)
+      await prisma.notification.updateMany({
+        where: {
+          user_id: userId,
+          type: 'NEW_MESSAGE',
+          is_read: false,
+        },
+        data: { is_read: true },
       })
     }
 
@@ -162,6 +174,13 @@ export async function POST(
         data: { last_message_at: now, [readField]: now },
       }),
     ])
+
+    // Gửi thông báo cho người nhận tin nhắn
+    const counterpartUserId = conv.customer_user_id === userId ? conv.reader_user_id : conv.customer_user_id
+    // Không gửi notification cho tin nhắn - chỉ lưu trong DB
+    // if (counterpartUserId !== userId) {
+    //   createNotification({ ... })
+    // }
 
     return NextResponse.json(
       {

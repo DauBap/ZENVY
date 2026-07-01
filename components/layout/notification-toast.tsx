@@ -31,33 +31,39 @@ export function NotificationToast() {
     }, 6000) // Auto remove after 6 seconds
   }, [])
 
-  // Poll for new notifications
+  // Poll for new notifications - chỉ hiển thị những notification chưa đọc
   useEffect(() => {
     if (!user) return
 
     let isActive = true
+    let lastProcessedId = lastSeenId
 
     async function checkNewNotifications() {
       try {
-        const res = await fetch(`/api/notifications?limit=1`)
+        const res = await fetch(`/api/notifications?limit=5`)
         if (!res.ok) return
 
         const data = await res.json()
         if (data.notifications && data.notifications.length > 0) {
-          const latestNotif = data.notifications[0]
-          
-          // Only show booking notifications (not NEW_MESSAGE)
-          if (['BOOKING_CONFIRMED', 'BOOKING_COMPLETED', 'BOOKING_CANCELLED'].includes(latestNotif.type)) {
-            if (!lastSeenId || latestNotif.id > lastSeenId) {
-              if (isActive) {
-                addToast({
-                  id: `notif-${latestNotif.id}`,
-                  type: latestNotif.type,
-                  title: latestNotif.title,
-                  content: latestNotif.content,
-                  timestamp: Date.now(),
-                })
-                setLastSeenId(latestNotif.id)
+          // Lấy các notification mới + chưa đọc (isRead: false)
+          for (const notif of data.notifications) {
+            // Chỉ hiển thị nếu: 
+            // 1. Lớn hơn lastProcessedId (notification mới)
+            // 2. isRead === false (chưa được đánh dấu đã đọc)
+            if (notif.id > (lastProcessedId || 0) && !notif.isRead) {
+              // Show only booking notifications (not messages)
+              if (['BOOKING_CONFIRMED', 'BOOKING_COMPLETED', 'BOOKING_CANCELLED'].includes(notif.type)) {
+                if (isActive) {
+                  addToast({
+                    id: `notif-${notif.id}`,
+                    type: notif.type,
+                    title: notif.title,
+                    content: notif.content,
+                    timestamp: Date.now(),
+                  })
+                  lastProcessedId = notif.id
+                  setLastSeenId(notif.id)
+                }
               }
             }
           }
@@ -68,13 +74,13 @@ export function NotificationToast() {
     }
 
     checkNewNotifications()
-    const interval = setInterval(checkNewNotifications, 5000) // Poll every 5 seconds
+    const interval = setInterval(checkNewNotifications, 3000) // Poll every 3 seconds
 
     return () => {
       isActive = false
       clearInterval(interval)
     }
-  }, [user, lastSeenId, addToast])
+  }, [user, addToast])
 
   if (!user) return null
 

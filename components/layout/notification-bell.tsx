@@ -49,7 +49,7 @@ export function NotificationBell() {
         (n: Notification) => !['NEW_MESSAGE'].includes(n.type)
       )
       setNotifications(bookingNotifications)
-      // Count unread notifications excluding messages
+      // Count all unread notifications excluding messages
       const unreadBookingNotifications = bookingNotifications.filter((n: Notification) => !n.isRead)
       setUnreadCount(unreadBookingNotifications.length)
     } finally {
@@ -57,12 +57,19 @@ export function NotificationBell() {
     }
   }, [user])
 
-  // Load khi mount + poll mỗi 30s
+  // Load khi mount + poll mỗi 5s (cập nhật nhanh hơn)
   useEffect(() => {
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, 30_000)
+    const interval = setInterval(fetchNotifications, 5_000)
     return () => clearInterval(interval)
   }, [fetchNotifications])
+
+  // Fetch lại khi mở dropdown
+  useEffect(() => {
+    if (open) {
+      fetchNotifications()
+    }
+  }, [open, fetchNotifications])
 
   // Đóng khi click ngoài
   useEffect(() => {

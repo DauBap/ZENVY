@@ -107,9 +107,9 @@ export default async function DashboardRoutePage() {
           const raw = await prisma.booking.findMany({
             where: {
               reader_id: readerInfo.id,
-              // Reader chỉ thấy lịch SAU KHI admin duyệt thanh toán.
-              // PENDING (khách vừa đặt, admin chưa duyệt) bị ẩn.
-              status: { in: ['PAYMENT_CONFIRMED', 'CONFIRMED', 'COMPLETED'] },
+              // Reader thấy lịch từ lúc khách đặt (PENDING)
+              // Bao gồm: PENDING (vừa đặt), PAYMENT_CONFIRMED (admin duyệt TT), CONFIRMED (reader xác nhận), COMPLETED
+              status: { in: ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED', 'COMPLETED'] },
             },
             include: {
               customer: { select: { id: true, fullname: true, avatar_url: true } },

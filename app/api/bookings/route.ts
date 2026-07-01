@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { createNotification } from '@/lib/notifications'
 
 // POST /api/bookings — tạo booking mới
 export async function POST(request: NextRequest) {
@@ -93,8 +94,9 @@ export async function POST(request: NextRequest) {
         status: 'PENDING' as const,
       },
       include: {
-        reader: { select: { display_name: true, avatar_url: true } },
+        reader: { select: { display_name: true, avatar_url: true, user_id: true } },
         package: { select: { name: true, duration: true, price: true } },
+        customer: { select: { user: { select: { id: true } } } },
       },
     }
 
@@ -119,6 +121,15 @@ export async function POST(request: NextRequest) {
       )
       booking = await prisma.booking.create(bookingCreatePayload)
     }
+
+    // Gửi thông báo cho reader
+    createNotification({
+      userId: booking.reader.user_id,
+      title: 'Khách hàng mới đặt lịch 📅',
+      content: `Gói ${booking.package.name} - ${new Date(booking.date).toLocaleDateString('vi-VN')} lúc ${booking.time}`,
+      type: 'BOOKING_CONFIRMED',
+      link: '/dashboard',
+    }).catch(() => {})
 
     return NextResponse.json({ success: true, booking }, { status: 201 })
   } catch (error) {
