@@ -44,8 +44,14 @@ export function NotificationBell() {
       const res = await fetch('/api/notifications?limit=20')
       if (!res.ok) return
       const data = await res.json()
-      setNotifications(data.notifications ?? [])
-      setUnreadCount(data.unreadCount ?? 0)
+      // Filter to show only booking-related notifications (not messages)
+      const bookingNotifications = (data.notifications ?? []).filter(
+        (n: Notification) => !['NEW_MESSAGE'].includes(n.type)
+      )
+      setNotifications(bookingNotifications)
+      // Count unread notifications excluding messages
+      const unreadBookingNotifications = bookingNotifications.filter((n: Notification) => !n.isRead)
+      setUnreadCount(unreadBookingNotifications.length)
     } finally {
       setLoading(false)
     }
@@ -98,7 +104,7 @@ export function NotificationBell() {
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 leading-none">
+          <span className="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 leading-none">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -133,7 +139,7 @@ export function NotificationBell() {
           </div>
 
           {/* List */}
-          <div className="max-h-[400px] overflow-y-auto">
+          <div className="max-h-100 overflow-y-auto">
             {loading && notifications.length === 0 ? (
               <div className="flex justify-center py-8">
                 <div className="w-5 h-5 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />

@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthModalProvider } from '@/contexts/auth-modal-context'
 import { AuthModal } from '@/components/auth/auth-modal'
+import { NotificationToast } from '@/components/layout/notification-toast'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
@@ -56,6 +57,7 @@ export default function RootLayout({
         <AuthModalProvider>
           {children}
           <AuthModal />
+          <NotificationToast />
           <Toaster />
         </AuthModalProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}

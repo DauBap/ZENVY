@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { isParticipant } from '@/lib/chat'
-import { createNotification } from '@/lib/notifications'
 
 // Lấy conversation + xác thực participant; trả { error, status } hoặc { conv, userId }
 async function loadAuthorized(conversationId: number) {
@@ -163,17 +162,6 @@ export async function POST(
         data: { last_message_at: now, [readField]: now },
       }),
     ])
-
-    const counterpartUserId = conv.customer_user_id === userId ? conv.reader_user_id : conv.customer_user_id
-    if (counterpartUserId !== userId) {
-      createNotification({
-        userId: counterpartUserId,
-        title: 'Tin nhắn mới 💬',
-        content: text || 'Bạn có tin nhắn mới trong hội thoại.',
-        type: 'NEW_MESSAGE',
-        link: '/chat',
-      }).catch(() => {})
-    }
 
     return NextResponse.json(
       {
