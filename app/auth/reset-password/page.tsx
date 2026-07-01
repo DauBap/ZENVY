@@ -80,7 +80,7 @@ function ResetPasswordForm() {
         )}
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">Mật khẩu mới</label>
+          <label className="text-sm font-medium text-foreground">Mật khẩu mới <span className="text-red-400">*</span></label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input type={showPwd ? 'text' : 'password'} placeholder="••••••••" value={password}
@@ -102,7 +102,7 @@ function ResetPasswordForm() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">Xác nhận mật khẩu</label>
+          <label className="text-sm font-medium text-foreground">Xác nhận mật khẩu <span className="text-red-400">*</span></label>
           <div className="relative">
             <Lock className={cn('absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors',
               confirm && confirm !== password ? 'text-red-400' : confirm && confirm === password ? 'text-green-400' : 'text-muted-foreground')} />

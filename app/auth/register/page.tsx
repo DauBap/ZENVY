@@ -280,7 +280,7 @@ export default function RegisterPage() {
 
               {/* Name */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Họ và tên</label>
+                <label className="text-sm font-medium text-foreground">Họ và tên <span className="text-red-400">*</span></label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input type="text" placeholder="Nguyễn Văn A" value={name}
@@ -291,7 +291,7 @@ export default function RegisterPage() {
 
               {/* Email */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Email</label>
+                <label className="text-sm font-medium text-foreground">Email <span className="text-red-400">*</span></label>
                 <div className="relative">
                   <Mail className={cn(
                     'absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors',
@@ -334,7 +334,7 @@ export default function RegisterPage() {
 
               {/* Password */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Mật khẩu</label>
+                <label className="text-sm font-medium text-foreground">Mật khẩu <span className="text-red-400">*</span></label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -376,7 +376,7 @@ export default function RegisterPage() {
 
               {/* Confirm Password */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Xác nhận mật khẩu</label>
+                <label className="text-sm font-medium text-foreground">Xác nhận mật khẩu <span className="text-red-400">*</span></label>
                 <div className="relative">
                   <Lock className={cn(
                     'absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors',

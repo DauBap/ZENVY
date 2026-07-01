@@ -148,7 +148,7 @@ export default function RegisterReaderPage() {
               <div className="space-y-6">
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="block text-sm font-medium text-foreground">
-                  Email
+                  Email <span className="text-red-400">*</span>
                   <Input
                     type="email"
                     value={email}
@@ -159,7 +159,7 @@ export default function RegisterReaderPage() {
                   {emailError && <p className="mt-2 text-xs text-red-400">Email không hợp lệ.</p>}
                 </label>
                 <label className="block text-sm font-medium text-foreground">
-                  Mật khẩu
+                  Mật khẩu <span className="text-red-400">*</span>
                   <div className="relative mt-2">
                     <Input
                       type={showPassword ? 'text' : 'password'}
@@ -181,7 +181,7 @@ export default function RegisterReaderPage() {
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="block text-sm font-medium text-foreground">
-                  Xác nhận mật khẩu
+                  Xác nhận mật khẩu <span className="text-red-400">*</span>
                   <div className="relative mt-2">
                     <Input
                       type={showConfirmPassword ? 'text' : 'password'}
@@ -216,7 +216,7 @@ export default function RegisterReaderPage() {
               <div className="space-y-8">
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="block text-sm font-medium text-foreground">
-                  Link Facebook để liên hệ
+                  Link Facebook để liên hệ <span className="text-red-400">*</span>
                   <Input
                     type="url"
                     value={facebookLink}
@@ -228,7 +228,7 @@ export default function RegisterReaderPage() {
                   {facebookError && <p className="mt-2 text-xs text-red-400">Nhập link Facebook hợp lệ.</p>}
                 </label>
                 <label className="block text-sm font-medium text-foreground">
-                  Số điện thoại
+                  Số điện thoại <span className="text-red-400">*</span>
                   <Input
                     type="tel"
                     value={phone}
@@ -242,7 +242,7 @@ export default function RegisterReaderPage() {
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="block text-sm font-medium text-foreground">
-                  Họ và tên đầy đủ
+                  Họ và tên đầy đủ <span className="text-red-400">*</span>
                   <Input
                     type="text"
                     value={name}
@@ -252,7 +252,7 @@ export default function RegisterReaderPage() {
                   />
                 </label>
                 <label className="block text-sm font-medium text-foreground">
-                  Năm kinh nghiệm
+                  Năm kinh nghiệm <span className="text-red-400">*</span>
                   <Input
                     type="number"
                     min={0}

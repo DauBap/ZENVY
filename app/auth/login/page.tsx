@@ -72,7 +72,7 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Email</label>
+                <label className="text-sm font-medium text-foreground">Email <span className="text-red-400">*</span></label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -89,7 +89,7 @@ export default function LoginPage() {
               {/* Password */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-foreground">Mật khẩu</label>
+                  <label className="text-sm font-medium text-foreground">Mật khẩu <span className="text-red-400">*</span></label>
                   <Link href="/auth/forgot-password" className="text-xs text-purple-400 hover:text-purple-300">
                     Quên mật khẩu?
                   </Link>

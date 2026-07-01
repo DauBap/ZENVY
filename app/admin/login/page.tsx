@@ -62,7 +62,7 @@ export default function AdminLoginPage() {
             )}
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-white/80">Email</label>
+              <label className="text-sm font-medium text-white/80">Email <span className="text-red-400">*</span></label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                 <Input
@@ -78,7 +78,7 @@ export default function AdminLoginPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-white/80">Mật khẩu</label>
+              <label className="text-sm font-medium text-white/80">Mật khẩu <span className="text-red-400">*</span></label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                 <Input
