@@ -83,13 +83,11 @@ export function ReaderWithdrawalTab() {
     setProcessingQr(true)
     try {
       const resizedDataUrl = await resizeImage(file, 1024)
-      const blob = await fetch(resizedDataUrl).then((res) => res.blob())
-      const formData = new FormData()
-      formData.append('qr', new File([blob], file.name, { type: blob.type }))
 
       const res = await fetch('/api/reader/bank/qr', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qrDataUrl: resizedDataUrl }),
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) {
