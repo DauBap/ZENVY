@@ -14,18 +14,38 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')?.trim() ?? ''
     const status = searchParams.get('status') ?? ''
     const role   = searchParams.get('role') ?? ''
+    const pending = searchParams.get('pending') === 'true'
 
-    const where: any = {
-      ...(status && { status }),
-      ...(role && { role: { name: role } }),
+    const pendingWhere: any = {
+      role: { name: 'READER' },
+      status: 'INACTIVE',
+      reader_info: { isNot: null },
       ...(search && {
         OR: [
           { email: { contains: search, mode: 'insensitive' } },
-          { customer_info: { fullname: { contains: search, mode: 'insensitive' } } },
           { reader_info: { display_name: { contains: search, mode: 'insensitive' } } },
         ],
       }),
     }
+
+    const where: any = pending
+      ? pendingWhere
+      : {
+          ...(status && { status }),
+          ...(role && { role: { name: role } }),
+          ...(search && {
+            OR: [
+              { email: { contains: search, mode: 'insensitive' } },
+              { customer_info: { fullname: { contains: search, mode: 'insensitive' } } },
+              { reader_info: { display_name: { contains: search, mode: 'insensitive' } } },
+            ],
+          }),
+          NOT: {
+            role: { name: 'READER' },
+            status: 'INACTIVE',
+            reader_info: { isNot: null },
+          },
+        }
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({

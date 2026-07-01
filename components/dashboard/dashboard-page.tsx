@@ -258,9 +258,6 @@ export function DashboardPage({
   // Reader thấy thêm tab Dịch vụ + Lịch trống
   const navTabs = isReader ? [...tabs, ...readerTabs] : tabs
 
-  // Ping heartbeat mỗi 30s khi reader đang online
-  useHeartbeat(isReader)
-
   // Trạng thái cho các thao tác hủy / xác nhận
   const [busyId, setBusyId] = useState<number | null>(null)
   const [cancelTarget, setCancelTarget] = useState<any | null>(null)

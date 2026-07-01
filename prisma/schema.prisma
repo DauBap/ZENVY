@@ -33,10 +33,10 @@ model User {
   forum_posts            ForumPost[]
   forum_saves            ForumSave[]
   messages_sent          Message[]            @relation("MessageSender")
-  password_reset_tokens  PasswordResetToken[]
-  reader_favorites       ReaderFavorite[]
   notifications          Notification[]
+  password_reset_tokens  PasswordResetToken[]
   push_subscriptions     PushSubscription[]
+  reader_favorites       ReaderFavorite[]
   reader_info            ReaderInfo?
   refresh_tokens         RefreshToken[]
   role                   Role                 @relation(fields: [role_id], references: [id])
@@ -98,6 +98,7 @@ model ReaderInfo {
   rating            Decimal             @default(0.0) @db.Decimal(2, 1)
   verified          Boolean             @default(false)
   avatar_url        String?
+  facebook_link     String?             @db.VarChar(255)
   specialty         String[]            @default([])
   created_at        DateTime            @default(now()) @db.Timestamp(6)
   updated_at        DateTime            @updatedAt @db.Timestamp(6)
@@ -108,9 +109,9 @@ model ReaderInfo {
   /// Thông tin ngân hàng để rút tiền
   bank_name         String?             @db.VarChar(100)
   bank_owner_name   String?             @db.VarChar(100)
-  bank_qr_code      String?             @db.Text  // base64 hoặc URL ảnh QR
   /// Base64 data URL or external URL to a short voice sample
   voice_sample      String?
+  bank_qr_code      String?
   availability      Availability[]
   bookings          Booking[]
   packages          Package[]
@@ -400,6 +401,33 @@ model reviews {
   @@index([reader_id])
 }
 
+model notifications {
+  id         Int              @id @default(autoincrement())
+  user_id    Int
+  title      String           @db.VarChar(255)
+  content    String
+  type       NotificationType
+  is_read    Boolean          @default(false)
+  link       String?          @db.VarChar(500)
+  created_at DateTime         @default(now()) @db.Timestamp(6)
+  users      User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at])
+  @@index([user_id, is_read])
+}
+
+model push_subscriptions {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  users      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
 /// Trạng thái tài khoản người dùng
 enum UserStatus {
   ACTIVE
@@ -429,10 +457,6 @@ enum WithdrawalStatus {
   REJECTED
 }
 
-// =============================================================================
-// THÔNG BÁO IN-APP
-// =============================================================================
-
 enum NotificationType {
   BOOKING_CONFIRMED
   BOOKING_COMPLETED
@@ -450,7 +474,7 @@ model Notification {
   content    String           @db.Text
   type       NotificationType
   is_read    Boolean          @default(false)
-  link       String?          @db.VarChar(500)  // URL để navigate khi click
+  link       String?          @db.VarChar(500)
   created_at DateTime         @default(now()) @db.Timestamp(6)
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -460,17 +484,12 @@ model Notification {
   @@map("notifications")
 }
 
-// =============================================================================
-// WEB PUSH SUBSCRIPTIONS
-// Lưu token thiết bị để gửi Push Notification ngoài màn hình
-// =============================================================================
-
 model PushSubscription {
   id         Int      @id @default(autoincrement())
   user_id    Int
   endpoint   String   @unique @db.Text
-  p256dh     String   @db.Text   // public key
-  auth       String   @db.Text   // auth secret
+  p256dh     String   @db.Text
+  auth       String   @db.Text
   created_at DateTime @default(now()) @db.Timestamp(6)
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)

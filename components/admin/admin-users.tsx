@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Search, ChevronLeft, ChevronRight, ShieldCheck, ShieldOff, Trash2, Eye } from 'lucide-react'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +28,8 @@ export function AdminUsersPage() {
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<number | null>(null)
+  const [detailUser, setDetailUser] = useState<any | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -49,6 +52,19 @@ export function AdminUsersPage() {
     })
     if (res.ok) { toast.success('Đã cập nhật trạng thái.'); load() }
     else toast.error('Cập nhật thất bại.')
+    setBusyId(null)
+  }
+
+  async function loadDetail(userId: number) {
+    setBusyId(userId)
+    const res = await fetch(`/api/admin/users/${userId}`)
+    if (res.ok) {
+      const data = await res.json()
+      setDetailUser(data)
+      setDetailOpen(true)
+    } else {
+      toast.error('Không lấy được chi tiết user.')
+    }
     setBusyId(null)
   }
 
@@ -99,7 +115,94 @@ export function AdminUsersPage() {
         </div>
       </GlassCard>
 
-      {/* Table */}
+      <Dialog open={detailOpen} onOpenChange={(open) => !open && setDetailOpen(false)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Chi tiết người dùng</DialogTitle>
+            <DialogDescription>Thông tin chi tiết của người dùng.</DialogDescription>
+          </DialogHeader>
+
+          {!detailUser ? (
+            <div className="py-10 text-center text-muted-foreground">Đang tải chi tiết...</div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                {detailUser.avatar ? (
+                  <div className="w-16 h-16 rounded-full bg-cover bg-center" style={{ backgroundImage: `url('${detailUser.avatar}')` }} />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-xl text-muted-foreground">?</div>
+                )}
+                <div>
+                  <p className="text-xs uppercase text-muted-foreground">Tên</p>
+                  <p className="text-sm text-foreground font-medium">{detailUser.name}</p>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase text-muted-foreground">Email</p>
+                  <p className="text-sm text-foreground font-medium">{detailUser.email}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase text-muted-foreground">Email</p>
+                  <p className="text-sm text-foreground font-medium">{detailUser.email}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase text-muted-foreground">Role</p>
+                  <p className="text-sm text-foreground font-medium">{detailUser.role}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase text-muted-foreground">Trạng thái</p>
+                  <p className="text-sm text-foreground font-medium">{detailUser.status}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase text-muted-foreground">Ngày đăng ký</p>
+                  <p className="text-sm text-foreground font-medium">{new Date(detailUser.createdAt).toLocaleDateString('vi-VN')}</p>
+                </div>
+              </div>
+
+              {detailUser.readerInfo ? (
+                <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs uppercase text-muted-foreground">Tên hiển thị</p>
+                      <p className="text-sm text-foreground font-medium">{detailUser.readerInfo.display_name ?? '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase text-muted-foreground">Số điện thoại</p>
+                      <p className="text-sm text-foreground font-medium">{detailUser.phone ?? '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase text-muted-foreground">Facebook</p>
+                      <p className="text-sm text-foreground font-medium">{detailUser.readerInfo.facebook_link ?? '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase text-muted-foreground">Kinh nghiệm</p>
+                      <p className="text-sm text-foreground font-medium">{detailUser.readerInfo.experience_year ?? 0} năm</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-xs uppercase text-muted-foreground">Chuyên môn</p>
+                      <p className="text-sm text-foreground font-medium">{detailUser.readerInfo.specialty?.join(', ') || '—'}</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-xs uppercase text-muted-foreground">Giá/phiên</p>
+                      <p className="text-sm text-foreground font-medium">{detailUser.readerInfo.price_per_session ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(detailUser.readerInfo.price_per_session) : '—'}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground">Không có thông tin reader.</div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="secondary" className="w-full sm:w-auto" onClick={() => setDetailOpen(false)}>
+              Đóng
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <GlassCard className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

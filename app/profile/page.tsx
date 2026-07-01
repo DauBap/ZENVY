@@ -43,6 +43,7 @@ export default async function ProfileRoutePage() {
         date: a.date.toISOString().split('T')[0],
         slots: a.slots,
       })),
+      voiceSample: reader?.voice_sample ?? null,
     }
     return <ProfilePage role="READER" email={session.email} initial={initial} />
   }
