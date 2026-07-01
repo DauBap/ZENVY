@@ -14,6 +14,7 @@ import { CosmicBackground } from '@/components/ui/floating-elements'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { VerifiedBadge } from '@/components/ui/verified-badge'
+import { AudioPlayer } from '@/components/ui/audio-player'
 import { cn } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { SerializedReader } from '@/lib/serializers'
@@ -430,7 +431,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                                   {isRecordingLocal ? `Đang ghi... ${recordSeconds}s` : 'Ghi âm mẫu (10s)'}
                                 </button>
 
-                                {previewUrl && <audio controls src={previewUrl} className="max-w-xs" />}
+                                {previewUrl && <AudioPlayer src={previewUrl} className="max-w-xs" />}
 
                                 <button
                                   className="px-3 py-1 rounded bg-green-600 text-white text-sm"
@@ -442,7 +443,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                               </div>
                             ) : (
                               reader.voiceSample ? (
-                                <audio controls src={reader.voiceSample} className="w-full mt-2" />
+                                <AudioPlayer src={reader.voiceSample} className="w-full mt-2" />
                               ) : null
                             )}
                           </div>

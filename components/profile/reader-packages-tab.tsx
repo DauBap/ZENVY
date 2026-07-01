@@ -22,7 +22,7 @@ export interface PackageItem {
 }
 
 function emptyPackage(): PackageItem {
-  return { id: null, name: '', duration: 30, price: 100000, description: '', popular: false }
+  return { id: null, name: '', duration: 30, price: 0, description: '', popular: false }
 }
 
 export function ReaderPackagesTab({ initial }: { initial: PackageItem[] }) {
@@ -38,7 +38,7 @@ export function ReaderPackagesTab({ initial }: { initial: PackageItem[] }) {
     const pkg = items[idx]
     if (!pkg.name.trim()) { toast.error('Vui lòng nhập tên gói.'); return }
     if (pkg.duration <= 0) { toast.error('Thời lượng phải lớn hơn 0.'); return }
-    if (pkg.price <= 0) { toast.error('Giá phải lớn hơn 0.'); return }
+    // price = 0 hợp lệ (miễn phí)
 
     const key = `save-${idx}`
     setBusyKey(key)
@@ -131,9 +131,21 @@ export function ReaderPackagesTab({ initial }: { initial: PackageItem[] }) {
                 onChange={(v) => update(idx, { duration: Number(v) })} />
             </div>
             <div className="space-y-2">
-              <Label>Giá (đ)</Label>
-              <NumberInput min={0} step={1000} value={pkg.price}
-                onChange={(v) => update(idx, { price: Number(v) })} />
+              <Label>Giá (k) — nhập 100 = 100,000đ</Label>
+              <NumberInput
+                min={0}
+                step={1}
+                value={pkg.price / 1000}
+                onChange={(v) => update(idx, { price: Math.round(Number(v) * 1000) })}
+              />
+              {pkg.price > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  = {pkg.price.toLocaleString('vi-VN')}đ
+                </p>
+              )}
+              {pkg.price === 0 && (
+                <p className="text-xs text-green-400">Miễn phí</p>
+              )}
             </div>
           </div>
 

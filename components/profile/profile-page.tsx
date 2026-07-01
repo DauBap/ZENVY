@@ -10,6 +10,7 @@ import { Header } from '@/components/layout/header'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { CosmicBackground } from '@/components/ui/floating-elements'
 import { GlassCard } from '@/components/ui/glass-card'
+import { AudioPlayer } from '@/components/ui/audio-player'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -450,9 +451,9 @@ export function ProfilePage(props: Props) {
                           )}
                           <div className="flex-1 min-w-0">
                             {recordedUrl ? (
-                              <audio src={recordedUrl} controls className="w-full rounded-lg bg-black/10" />
+                              <AudioPlayer src={recordedUrl} className="w-full" />
                             ) : serverVoiceSample ? (
-                              <audio src={serverVoiceSample} controls className="w-full rounded-lg bg-black/10" />
+                              <AudioPlayer src={serverVoiceSample} className="w-full" />
                             ) : (
                               <div className="rounded-lg border border-dashed border-white/10 px-4 py-3 text-sm text-muted-foreground">
                                 Chưa có mẫu giọng. Ghi âm để lưu mẫu mới.

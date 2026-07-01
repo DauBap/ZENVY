@@ -16,6 +16,7 @@ export default async function ReadersRoutePage() {
 
   try {
     const dbReaders = await prisma.readerInfo.findMany({
+      where: { verified: true }, // Chỉ hiển thị readers đã được admin duyệt
       orderBy: { rating: 'desc' },
       include: {
         packages: true,

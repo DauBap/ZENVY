@@ -21,6 +21,7 @@ export default async function HomePage() {
   // Fetch all data in parallel from the database
   const [dbReaders, dbStat, dbTestimonials, dbFAQs] = await Promise.allSettled([
     prisma.readerInfo.findMany({
+      where: { verified: true }, // Chỉ lấy readers đã được duyệt
       orderBy: { rating: 'desc' },
       take: 10,
     }),

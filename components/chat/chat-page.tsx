@@ -12,6 +12,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { CosmicBackground } from '@/components/ui/floating-elements'
+import { AudioPlayer } from '@/components/ui/audio-player'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -595,7 +596,7 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                               className="rounded-lg max-h-60 w-auto object-cover mb-1" unoptimized />
                           )}
                           {msg.type === 'AUDIO' && msg.mediaUrl && (
-                            <audio controls src={msg.mediaUrl} className="max-w-[220px] h-9" />
+                            <AudioPlayer src={msg.mediaUrl} compact className="max-w-[220px]" />
                           )}
                           {msg.body && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.body}</p>}
                           <div className={cn('flex items-center gap-1 mt-0.5', msg.mine ? 'justify-end' : 'justify-start')}>

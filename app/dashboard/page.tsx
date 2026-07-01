@@ -32,6 +32,7 @@ export default async function DashboardRoutePage() {
 
   try {
     const dbReaders = await prisma.readerInfo.findMany({
+      where: { verified: true }, // Chỉ lấy readers đã được duyệt
       orderBy: { rating: 'desc' },
       take: 6,
       include: {

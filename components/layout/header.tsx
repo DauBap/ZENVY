@@ -44,6 +44,12 @@ export function Header() {
       return
     }
 
+    // Khi đang ở trang chat, badge không cần hiển thị (user đang đọc)
+    if (pathname.startsWith('/chat')) {
+      setMessageUnreadCount(0)
+      return
+    }
+
     let isActive = true
 
     async function fetchUnreadCount() {
@@ -58,12 +64,21 @@ export function Header() {
     }
 
     fetchUnreadCount()
-    const interval = window.setInterval(fetchUnreadCount, 30_000)
+    // Poll mỗi 5 giây để badge cập nhật gần realtime
+    const interval = window.setInterval(fetchUnreadCount, 5_000)
+
+    // Fetch ngay khi user tab back vào trang
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') fetchUnreadCount()
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     return () => {
       isActive = false
       window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [user])
+  }, [user, pathname])
 
   return (
     <>
