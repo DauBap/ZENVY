@@ -20,7 +20,12 @@ export default async function ReadersRoutePage() {
       orderBy: { rating: 'desc' },
       include: {
         packages: true,
-        _count: { select: { session_reviews: true } },
+        _count: {
+          select: {
+            session_reviews: true,
+            bookings: { where: { status: 'COMPLETED' } },
+          },
+        },
       },
     })
 

@@ -44,11 +44,12 @@ export function serializeReader(
   reader: ReaderInfo & {
     packages?: Package[]
     availability?: Availability[]
-    _count?: { session_reviews?: number }
+    _count?: { session_reviews?: number; bookings?: number }
   }
 ): SerializedReader {
   const pricePerSession = toNumber(reader.price_per_session)
   const reviewCount = reader._count?.session_reviews ?? 0
+  const totalSessions = reader._count?.bookings ?? 0
 
   return {
     ...reader,
@@ -61,7 +62,7 @@ export function serializeReader(
     bio: reader.description ?? '',
     isOnline: isReaderOnline(reader.last_seen_at),
     isVerified: reader.verified,
-    totalSessions: 0,
+    totalSessions,
     reviewCount,
     responseTime: '< 5 phút',
     pricePerSession,
@@ -80,7 +81,7 @@ export function serializeReaders(
     ReaderInfo & {
       packages?: Package[]
       availability?: Availability[]
-      _count?: { session_reviews?: number }
+      _count?: { session_reviews?: number; bookings?: number }
     }
   >
 ): SerializedReader[] {
