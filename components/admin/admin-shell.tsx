@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, Calendar, CreditCard, Banknote,
-  Settings, LogOut, Menu, X, ChevronRight, Bell, UserCheck,
+  Settings, LogOut, Menu, X, ChevronRight, UserCheck, Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
@@ -18,6 +18,7 @@ const NAV = [
   { href: '/admin/bookings',    label: 'Lịch hẹn',             icon: Calendar },
   { href: '/admin/payments',    label: 'Thanh toán',           icon: CreditCard },
   { href: '/admin/withdrawals', label: 'Giải ngân & Rút tiền', icon: Banknote },
+  { href: '/admin/specialties', label: 'Chủ đề',               icon: Sparkles },
 ]
 
 export function AdminShell({ children, session }: { children: React.ReactNode; session: JWTPayload }) {
@@ -34,7 +35,7 @@ export function AdminShell({ children, session }: { children: React.ReactNode; s
       <div className="flex items-center gap-3 p-5 border-b border-white/10">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center text-lg">☽</div>
         <div>
-          <div className="text-sm font-bold gradient-text">SAGETO</div>
+          <div className="text-sm font-bold gradient-text">SageTo</div>
           <div className="text-[11px] text-muted-foreground">Admin Panel</div>
         </div>
       </div>
@@ -102,9 +103,6 @@ export function AdminShell({ children, session }: { children: React.ReactNode; s
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1" />
-          <button className="relative p-2 text-muted-foreground hover:text-foreground">
-            <Bell className="w-5 h-5" />
-          </button>
           <div className="text-sm text-muted-foreground hidden sm:block">{session.email}</div>
         </header>
 

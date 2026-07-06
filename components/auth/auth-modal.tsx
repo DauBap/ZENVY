@@ -368,7 +368,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string, name: string) 
             confirmError ? 'text-red-400' : confirmPassword && passwordsMatch ? 'text-green-400' : 'text-muted-foreground')} />
           <Input type={showConfirm ? 'text' : 'password'} placeholder="••••••••" value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)} onBlur={() => setConfirmTouched(true)}
-            className={cn('pl-10 pr-10 bg-white/5 border-white/10 focus:border-[#768064]/50',
+            className={cn('pl-10 pr-10 bg-white/5 border-[var(--border)] focus:border-[#768064]/50',
               confirmError && 'border-red-500/50', confirmPassword && passwordsMatch && 'border-green-500/40')} />
           <button type="button" onClick={() => setShowConfirm(!showConfirm)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -388,7 +388,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string, name: string) 
       <label className="flex items-start gap-3 cursor-pointer">
         <div onClick={() => setAgreed(!agreed)}
           className={cn('w-5 h-5 rounded border flex items-center justify-center shrink-0 mt-0.5 transition-colors',
-            agreed ? 'bg-[#4C583E] border-[#A5B38B]' : 'border-white/20 hover:border-[#768064]/50')}>
+            agreed ? 'bg-[#4C583E] border-[#A5B38B]' : 'border-[var(--border)] hover:border-[#768064]/50')}>
           {agreed && <Check className="w-3 h-3 text-white" />}
         </div>
         <span className="text-sm text-muted-foreground">

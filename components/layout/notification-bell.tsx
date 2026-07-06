@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Bell, Check, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import { usePushNotification } from '@/hooks/use-push-notification'
@@ -104,9 +105,11 @@ export function NotificationBell() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => { setOpen(v => !v); if (!open) fetchNotifications() }}
-        className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="relative text-muted-foreground hover:text-foreground"
         aria-label="Thông báo"
       >
         <Bell className="w-5 h-5" />
@@ -115,7 +118,7 @@ export function NotificationBell() {
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
-      </button>
+      </Button>
 
       {open && (
         <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl border border-white/10 bg-card shadow-2xl shadow-black/40 backdrop-blur-xl z-50 overflow-hidden">

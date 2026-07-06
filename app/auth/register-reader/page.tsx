@@ -138,8 +138,8 @@ export default function RegisterReaderPage() {
               </div>
             )}
 
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-              <div className="mb-8 border-b border-white/10 pb-6">
+            <div className="rounded-3xl border-[var(--border)] bg-white/5 p-8">
+              <div className="mb-8 border-b border-[var(--border)] pb-6">
                 <p className="text-xs uppercase tracking-[0.3em] text-[#4C583E]">Tài khoản</p>
                 <h2 className="mt-3 text-xl font-semibold text-foreground">Thông tin đăng nhập</h2>
                 <p className="mt-2 text-sm text-muted-foreground">Nhập email và mật khẩu để tạo tài khoản Reader.</p>
@@ -153,7 +153,7 @@ export default function RegisterReaderPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="mt-2 bg-white/5 border-white/10"
+                    className="mt-2 bg-white/5 border-[var(--border)]"
                     required
                   />
                   {emailError && <p className="mt-2 text-xs text-red-400">Email không hợp lệ.</p>}
@@ -165,7 +165,7 @@ export default function RegisterReaderPage() {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-white/5 border-white/10 pr-10"
+                      className="bg-white/5 border-[var(--border)] pr-10"
                       required
                     />
                     <button
@@ -187,7 +187,7 @@ export default function RegisterReaderPage() {
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="bg-white/5 border-white/10 pr-10"
+                      className="bg-white/5 border-[var(--border)] pr-10"
                       required
                     />
                     <button
@@ -206,8 +206,8 @@ export default function RegisterReaderPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-              <div className="mb-8 border-b border-white/10 pb-6">
+            <div className="rounded-3xl border-[var(--border)] bg-white/5 p-8">
+              <div className="mb-8 border-b border-[var(--border)] pb-6">
                 <p className="text-xs uppercase tracking-[0.3em] text-[#4C583E]">Thông tin Reader</p>
                 <h2 className="mt-3 text-xl font-semibold text-foreground">Hồ sơ cá nhân</h2>
                 <p className="mt-2 text-sm text-muted-foreground">Cho admin biết được phong cách đọc của bạn và cách khách hàng có thể liên lạc.</p>
@@ -221,8 +221,7 @@ export default function RegisterReaderPage() {
                     type="url"
                     value={facebookLink}
                     onChange={(e) => setFacebookLink(e.target.value)}
-                    placeholder="https://facebook.com/yourprofile"
-                    className="mt-2 bg-white/5 border-white/10"
+                    className="mt-2 bg-white/5 border-[var(--border)]"
                     required
                   />
                   {facebookError && <p className="mt-2 text-xs text-red-400">Nhập link Facebook hợp lệ.</p>}
@@ -233,8 +232,7 @@ export default function RegisterReaderPage() {
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="0901234567"
-                    className="mt-2 bg-white/5 border-white/10"
+                    className="mt-2 bg-white/5 border-[var(--border)]"
                     required
                   />
                 </label>
@@ -247,7 +245,7 @@ export default function RegisterReaderPage() {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="mt-2 bg-white/5 border-white/10"
+                    className="mt-2 bg-white/5 border-[var(--border)]"
                     required
                   />
                 </label>
@@ -258,7 +256,7 @@ export default function RegisterReaderPage() {
                     min={0}
                     value={experienceYear}
                     onChange={(e) => setExperienceYear(e.target.value)}
-                    className="mt-2 bg-white/5 border-white/10"
+                    className="mt-2 bg-white/5 border-[var(--border)]"
                     required
                   />
                 </label>
@@ -286,14 +284,14 @@ export default function RegisterReaderPage() {
                     <button
                       type="button"
                       onClick={() => setShowSpecialtyMenu(!showSpecialtyMenu)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm text-muted-foreground hover:border-[#768064]/40 transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg border-[var(--border)] bg-white/5 text-sm text-muted-foreground hover:border-[#768064]/40 transition-colors"
                     >
                       <span>{selectedSpecialties.length > 0 ? `Đã chọn ${selectedSpecialties.length} chủ đề` : 'Chọn chủ đề...'}</span>
                       <ChevronDown className={cn('w-4 h-4 transition-transform', showSpecialtyMenu && 'rotate-180')} />
                     </button>
                     
                     {showSpecialtyMenu && (
-                      <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-xl overflow-hidden max-h-56 overflow-y-auto">
+                      <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-[var(--border)] rounded-xl shadow-xl overflow-hidden max-h-56 overflow-y-auto">
                         {specialties.map((opt) => {
                           const selected = selectedSpecialties.includes(opt)
                           return (
@@ -373,7 +371,7 @@ export default function RegisterReaderPage() {
                   <Textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="mt-2 min-h-[180px] bg-white/5 border-white/10"
+                    className="mt-2 min-h-[180px] bg-white/5 border-[var(--border)]"
                     rows={6}
                     required
                   />
@@ -389,7 +387,7 @@ export default function RegisterReaderPage() {
             <label className="flex items-start gap-3 cursor-pointer text-sm text-muted-foreground">
               <span className={cn(
                 'mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors',
-                agreed ? 'bg-[#4C583E] border-[#A5B38B] text-white' : 'border-white/20'
+                agreed ? 'bg-[#4C583E] border-[#A5B38B] text-white' : 'border-[var(--border)]'
               )}>
                 {agreed && <Check className="w-3 h-3" />}
               </span>
@@ -437,7 +435,7 @@ export default function RegisterReaderPage() {
               <Button
                 onClick={() => router.push('/')}
                 variant="outline"
-                className="w-full border-white/20 text-foreground hover:bg-white/5"
+                className="w-full border-[var(--border)] text-foreground hover:bg-white/5"
               >
                 Quay lại trang chủ
               </Button>

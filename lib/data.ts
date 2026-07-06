@@ -322,20 +322,23 @@ export const faqData = [
   },
 ]
 
-export const specialties = [
-  'Tình yêu',
-  'Sự nghiệp',
-  'Tài chính',
-  'Sức khỏe',
-  'Gia đình',
-  'Tâm linh',
-  'Kinh doanh',
-  'Đầu tư',
-  'Quyết định',
-  'Hôn nhân',
-  'Healing',
-  'Phong thủy',
-  'Lenormand',
-  'Oracle',
-  'Angel Cards',
-]
+// Load specialties from data file at runtime if possible; fallback to embedded list
+let _specialties: string[] | null = null
+
+export function getSpecialties(): string[] {
+  if (_specialties) return _specialties
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const data = require('../data/specialties.json')
+    _specialties = Array.isArray(data) ? data : []
+  } catch {
+    _specialties = [
+      'Tình yêu', 'Sự nghiệp', 'Tài chính', 'Sức khỏe', 'Gia đình', 'Tâm linh',
+      'Kinh doanh', 'Đầu tư', 'Quyết định', 'Hôn nhân', 'Healing', 'Phong thủy',
+      'Lenormand', 'Oracle', 'Angel Cards',
+    ]
+  }
+  return _specialties
+}
+
+export const specialties = getSpecialties()

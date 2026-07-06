@@ -112,6 +112,14 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
   }, [activeTab, reader.id, reviewPage])
 
   const pkg = reader.packages?.find((p) => p.id === selectedPkg)
+  const todayVN = new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const futureAvailability = (reader.availability ?? [])
+    .map((a) => ({
+      ...a,
+      date: String(a.date).split('T')[0],
+    }))
+    .filter((a) => a.date >= todayVN)
+    .slice(0, 3)
 
   // Recorder state (owner only)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -280,13 +288,13 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                   </button>
                   {isReaderViewer ? (
                     <button disabled title="Reader không thể nhắn tin với reader khác"
-                      className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white/10 text-white/40 cursor-not-allowed border border-white/10">
+                      className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white/10 text-white/40 cursor-not-allowed border-[var(--border)]">
                       <MessageCircle className="w-4 h-4" />
                       Trò chuyện
                     </button>
                   ) : (
                     <Link href={`/chat?reader=${reader.id}`}>
-                      <button className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white/15 hover:bg-white/25 text-white backdrop-blur-sm transition-all border border-white/20">
+                      <button className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white/15 hover:bg-white/25 text-white backdrop-blur-sm transition-all border-[var(--border)]">
                         <MessageCircle className="w-4 h-4" />
                         Trò chuyện
                       </button>
@@ -535,14 +543,14 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                   </div>
 
                   {/* Availability */}
-                  {reader.availability && reader.availability.length > 0 && (
+                  {futureAvailability.length > 0 && (
                     <GlassCard className="p-4">
                       <div className="flex items-center gap-2 mb-4">
                         <Calendar className="w-4 h-4 text-[#768064]" />
                         <h3 className="font-semibold text-foreground">Lịch trống</h3>
                       </div>
                       <div className="space-y-3">
-                        {reader.availability.slice(0, 3).map((a) => (
+                        {futureAvailability.map((a) => (
                           <div key={a.id}>
                             <div className="text-xs text-muted-foreground mb-2">
                               {new Date(a.date).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' })}

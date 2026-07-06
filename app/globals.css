@@ -239,6 +239,42 @@
   animation: shimmer 2s infinite;
 }
 
+/* Safe area helpers for devices with notches (iPhone, etc.) */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Respect user reduced-motion preference to improve accessibility and performance on small devices */
+@media (prefers-reduced-motion: reduce) {
+  .animate-gradient,
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-twinkle,
+  .shimmer {
+    animation: none !important;
+  }
+  * {
+    transition: none !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/*
+  Global override: many components use Tailwind utilities like `border-white/10`.
+  Instead of editing every file, override those utility classes at runtime to use
+  the theme `--border` token so borders remain visible on the cream background.
+*/
+[class*="border-white/"] {
+  border-color: var(--border) !important;
+}
+[class*="border-white/"] * {
+  border-color: var(--border) !important;
+}
+
 /* Skeleton loading */
 .skeleton {
   background: linear-gradient(90deg, var(--muted) 25%, var(--secondary) 50%, var(--muted) 75%);

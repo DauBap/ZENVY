@@ -378,14 +378,6 @@ export function DashboardPage({
               <p className="text-muted-foreground">Quản lý lịch hẹn và hoạt động của bạn</p>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="icon" className="relative border-white/10">
-                <Bell className="w-5 h-5" />
-                {upcomingBookings.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
-                    {upcomingBookings.length}
-                  </span>
-                )}
-              </Button>
               <Link href="/profile">
                 <Button variant="outline" size="icon" className="border-white/10">
                   <Settings className="w-5 h-5" />

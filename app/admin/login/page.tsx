@@ -53,7 +53,7 @@ export default function AdminLoginPage() {
         </div>
 
         {/* Form */}
-        <div className="bg-card border border-white/10 rounded-2xl p-6 shadow-xl shadow-black/5">
+        <div className="bg-card border-[var(--border)] rounded-2xl p-6 shadow-xl shadow-black/5">
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {error && (
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
@@ -62,15 +62,15 @@ export default function AdminLoginPage() {
             )}
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-white/80">Email <span className="text-red-400">*</span></label>
+              <label className="text-sm font-medium text-foreground">Email <span className="text-red-400">*</span></label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type="email"
                   placeholder="admin@sageto.dev"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#768064]/50"
+                  className="pl-9 bg-white/5 border-[var(--border)] text-foreground placeholder:text-muted-foreground focus:border-[var(--ring)]"
                   required
                   autoFocus
                 />
@@ -78,19 +78,19 @@ export default function AdminLoginPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-white/80">Mật khẩu <span className="text-red-400">*</span></label>
+              <label className="text-sm font-medium text-foreground">Mật khẩu <span className="text-red-400">*</span></label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type={showPwd ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="pl-9 pr-9 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#768064]/50"
+                  className="pl-9 pr-9 bg-white/5 border-[var(--border)] text-foreground placeholder:text-muted-foreground focus:border-[var(--ring)]"
                   required
                 />
                 <button type="button" onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -102,7 +102,7 @@ export default function AdminLoginPage() {
                 'hover:from-[#768064] hover:to-[#4C583E] text-white font-medium'
               )}>
               {loading
-                ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ? <div className="w-5 h-5 border-2 border-[var(--border)] border-t-[var(--foreground)] rounded-full animate-spin" />
                 : 'Đăng nhập'}
             </Button>
           </form>

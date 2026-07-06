@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createNotificationForAdmins } from '@/lib/notifications'
 import bcrypt from 'bcryptjs'
 
 const MAX_AVATAR_LEN = 1_500_000
@@ -99,6 +100,13 @@ export async function POST(request: NextRequest) {
       },
       include: { reader_info: true },
     })
+
+    await createNotificationForAdmins({
+      title: 'Yêu cầu đăng ký Reader mới',
+      content: `Có yêu cầu đăng ký reader mới từ ${name} (${normalizedEmail}). `,
+      type: 'SYSTEM',
+      link: '/admin/readers',
+    }).catch(() => {})
 
     return NextResponse.json({
       success: true,

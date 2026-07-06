@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
-import { createNotification } from '@/lib/notifications'
+import { createNotificationForAdmins } from '@/lib/notifications'
 
 // POST /api/bookings — tạo booking mới
 export async function POST(request: NextRequest) {
@@ -122,13 +122,12 @@ export async function POST(request: NextRequest) {
       booking = await prisma.booking.create(bookingCreatePayload)
     }
 
-    // Gửi thông báo cho reader
-    createNotification({
-      userId: booking.reader.user_id,
-      title: 'Khách hàng mới đặt lịch 📅',
-      content: `Gói ${booking.package.name} - ${new Date(booking.date).toLocaleDateString('vi-VN')} lúc ${booking.time}`,
-      type: 'BOOKING_CONFIRMED',
-      link: '/dashboard',
+    // Gửi thông báo cho admin để duyệt trước khi booking được chuyển tới reader
+    createNotificationForAdmins({
+      title: 'Có lịch hẹn mới cần duyệt',
+      content: `Khách hàng vừa đặt lịch cho gói ${booking.package.name} vào ${new Date(booking.date).toLocaleDateString('vi-VN')} lúc ${booking.time}. `,
+      type: 'SYSTEM',
+      link: '/admin/bookings',
     }).catch(() => {})
 
     return NextResponse.json({ success: true, booking }, { status: 201 })

@@ -269,7 +269,7 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
                     placeholder="Tìm kiếm theo tên hoặc mô tả..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 focus:border-[#768064]/50"
+                    className="pl-10 bg-white/5 border-[var(--border)] focus:border-[var(--ring)]"
                   />
                 </div>
                 <div className="flex gap-3 flex-wrap">
@@ -278,13 +278,14 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
                     <Button
                       variant="outline"
                       onClick={() => setShowSortMenu(!showSortMenu)}
-                      className={cn('border-white/10 gap-2', showSortMenu && 'bg-[#768064]/20 border-[#768064]/30 text-[#768064]')}
+                      className={cn('border-[var(--border)] gap-2', showSortMenu && 'bg-[#768064]/20 border-[#768064]/30 text-[#768064]')}
                     >
                       <ArrowUpDown className="w-4 h-4" />
                       {activeSortLabel}
                     </Button>
+
                     {showSortMenu && (
-                      <div className="absolute right-0 top-full mt-2 w-44 z-50 rounded-xl bg-background/95 backdrop-blur-xl border border-white/10 shadow-xl overflow-hidden">
+                      <div className="absolute right-0 top-full mt-2 w-44 z-50 rounded-xl bg-background/95 backdrop-blur-xl border-[var(--border)] shadow-xl overflow-hidden">
                         {SORT_OPTIONS.map((opt) => (
                           <button
                             key={opt.value}
@@ -334,7 +335,7 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
                         className={cn('px-3 py-1.5 text-sm rounded-full border transition-all',
                           selectedSpecialties.includes(spec)
                             ? 'bg-[#768064]/20 border-[#768064]/50 text-[#4C583E]'
-                            : 'bg-white/5 border-white/10 text-muted-foreground hover:border-[#768064]/30')}>
+                            : 'bg-white/5 border-[var(--border)] text-muted-foreground hover:border-[#768064]/30')}>
                         {spec}
                       </button>
                     ))}

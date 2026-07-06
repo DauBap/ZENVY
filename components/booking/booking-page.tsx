@@ -62,7 +62,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
 
   const availByDate = (reader.availability ?? [])
     .map((a) => {
-      const date = a.date.split('T')[0]
+      const date = typeof a.date === 'string' ? a.date.split('T')[0] : a.date.toISOString().split('T')[0]
       return {
         date,
         // Chỉ loại slot đã bị chiếm bởi booking khác

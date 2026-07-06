@@ -33,7 +33,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
         <div className={cn(
           'relative rounded-[18px] overflow-hidden cursor-pointer',
           'transition-all duration-300',
-          'bg-card border border-white/10 shadow-sm hover:shadow-lg hover:border-white/20'
+          'bg-card border-[var(--border)] shadow-sm hover:shadow-lg hover:border-[var(--ring)]'
         )}>
 
           {/* ── Ảnh background ── */}
@@ -98,7 +98,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
 // ─── Skeleton ──────────────────────────────────────────────────────────────────
 export function ReaderCardSkeleton() {
   return (
-    <div className="rounded-[18px] overflow-hidden border border-white/10 bg-background">
+    <div className="rounded-[18px] overflow-hidden border-[var(--border)] bg-background">
       <div className="w-full aspect-[3/4] skeleton" />
       <div className="px-3 pt-2.5 pb-3 space-y-2">
         <div className="h-4 w-2/3 skeleton rounded" />

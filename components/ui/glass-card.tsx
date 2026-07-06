@@ -29,8 +29,8 @@ export function GlassCard({
       className={cn(
         'relative overflow-hidden rounded-2xl',
         'bg-white/5 backdrop-blur-xl',
-        'border border-white/15',
-        hover && 'transition-all duration-300 hover:bg-white/10 hover:border-white/20',
+        'border-[var(--border)]',
+        hover && 'transition-all duration-300 hover:bg-white/10 hover:border-[var(--ring)]',
         glowStyles[glow],
         className
       )}

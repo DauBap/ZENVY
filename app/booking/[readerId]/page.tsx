@@ -21,6 +21,18 @@ export default async function BookingPage({
 
   if (!reader) return notFound()
 
+  const now = new Date()
+  const todayVN = new Date(now.getTime() + 7 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const availFiltered = reader.availability?.filter((a) => {
+    const date = a.date instanceof Date ? a.date.toISOString().split('T')[0] : String(a.date).split('T')[0]
+    return date >= todayVN
+  })
+
+  const readerWithFilteredAvailability = {
+    ...reader,
+    availability: availFiltered,
+  }
+
   // Các slot đã bị chiếm bởi booking ở mọi trạng thái trừ CANCELLED
   // → ngăn double-booking ở mọi giai đoạn thanh toán
   const confirmed = await prisma.booking.findMany({
@@ -32,5 +44,5 @@ export default async function BookingPage({
   })
   const takenSlots = confirmed.map((b) => `${b.date.toISOString().split('T')[0]} ${b.time}`)
 
-  return <BookingClient reader={serializeReader(reader)} takenSlots={takenSlots} />
+  return <BookingClient reader={serializeReader(readerWithFilteredAvailability)} takenSlots={takenSlots} />
 }

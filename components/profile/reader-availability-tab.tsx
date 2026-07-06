@@ -18,11 +18,11 @@ export interface AvailabilityItem {
 
 export function ReaderAvailabilityTab({ initial }: { initial: AvailabilityItem[] }) {
   const router = useRouter()
-  const [items, setItems] = useState<AvailabilityItem[]>(initial)
+  const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
+  const todayVN = new Date(Date.now() + ICT_OFFSET_MS).toISOString().split('T')[0]
+  const [items, setItems] = useState<AvailabilityItem[]>(() => initial.filter((it) => it.date >= todayVN))
   const [newDate, setNewDate] = useState('')
   const [busy, setBusy] = useState(false)
-  
-  const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
   
   function isSlotPast(dateStr: string, slot: string) {
     const nowUtcMs = Date.now()
@@ -36,6 +36,10 @@ export function ReaderAvailabilityTab({ initial }: { initial: AvailabilityItem[]
 
   function addDate() {
     if (!newDate) { toast.error('Vui lòng chọn ngày.'); return }
+    if (newDate < todayVN) {
+      toast.error('Không thể thêm ngày đã qua.')
+      return
+    }
     if (items.some((it) => it.date === newDate)) {
       toast.error('Ngày này đã có trong danh sách.')
       return
