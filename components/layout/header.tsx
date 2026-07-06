@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -85,8 +85,8 @@ export function Header() {
       <header className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
         isScrolled
-          ? 'bg-background/80 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/10'
-          : 'bg-transparent'
+          ? 'bg-background/90 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/10'
+          : 'bg-background/95 border-b border-white/10'
       )}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
@@ -94,12 +94,12 @@ export function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
               <div className="relative">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#768064] via-[#4C583E] to-[#2C3424] flex items-center justify-center">
                   <span className="text-2xl">☽</span>
                 </div>
-                <div className="absolute inset-0 rounded-xl bg-purple-500/50 blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
+                <div className="absolute inset-0 rounded-xl bg-[#768064]/25 blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
               </div>
-              <span className="text-xl font-bold gradient-text hidden sm:block">ZENVY</span>
+              <span className="text-xl font-bold gradient-text hidden sm:block">SAGETO</span>
             </Link>
 
             {/* Desktop Nav */}
@@ -114,12 +114,12 @@ export function Header() {
                         ? 'text-foreground font-semibold'
                         : 'text-muted-foreground hover:text-foreground'
                     )}>
-                    {link.icon && <link.icon className={cn('w-4 h-4', isActive ? 'text-purple-400' : 'text-purple-400/60')} />}
+                    {link.icon && <link.icon className={cn('w-4 h-4', isActive ? 'text-[#768064]' : 'text-[#768064]/60')} />}
                     {link.label}
                     {isActive && (
                       <motion.span
                         layoutId="nav-underline"
-                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
+                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-[#768064] to-[#2C3424] rounded-full"
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                       />
                     )}
@@ -162,9 +162,9 @@ export function Header() {
                     Đăng nhập
                   </Button>
                   <Button onClick={openRegister} className={cn(
-                    'bg-gradient-to-r from-purple-600 to-indigo-600',
-                    'hover:from-purple-500 hover:to-indigo-500',
-                    'text-white shadow-lg shadow-purple-500/25')}>
+                    'bg-gradient-to-r from-[#768064] to-[#4C583E]',
+                    'hover:from-[#5f7154] hover:to-[#3f4f34]',
+                    'text-white shadow-lg shadow-[#768064]/25')}>
                     Đăng ký
                   </Button>
                 </>
@@ -201,10 +201,10 @@ export function Header() {
                       className={cn(
                         'flex items-center gap-3 py-3 px-4 rounded-xl transition-colors',
                         isActive
-                          ? 'text-foreground font-semibold bg-purple-500/10'
+                          ? 'text-foreground font-semibold bg-[#768064]/10'
                           : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                       )}>
-                      {link.icon && <link.icon className={cn('w-5 h-5', isActive ? 'text-purple-400' : 'text-purple-400/60')} />}
+                      {link.icon && <link.icon className={cn('w-5 h-5', isActive ? 'text-[#768064]' : 'text-[#768064]/60')} />}
                       {link.label}
                     </Link>
                   )
@@ -235,8 +235,8 @@ export function Header() {
                         Đăng nhập
                       </Button>
                       <Button onClick={() => { openRegister(); setIsMobileMenuOpen(false) }}
-                        className={cn('w-full bg-gradient-to-r from-purple-600 to-indigo-600',
-                          'hover:from-purple-500 hover:to-indigo-500', 'text-white')}>
+                        className={cn('w-full bg-gradient-to-r from-[#768064] to-[#4C583E]',
+                          'hover:from-[#5f7154] hover:to-[#3f4f34]', 'text-white')}>
                         Đăng ký miễn phí
                       </Button>
                     </>
@@ -255,14 +255,14 @@ export function Header() {
 function UserAvatar({ user, size = 32 }: { user: { name: string; avatar: string | null }; size?: number }) {
   if (user.avatar) {
     return (
-      <div className="rounded-full overflow-hidden ring-2 ring-purple-500/40 shrink-0"
+      <div className="rounded-full overflow-hidden ring-2 ring-[#768064]/40 shrink-0"
         style={{ width: size, height: size }}>
         <Image src={user.avatar} alt={user.name} width={size} height={size} className="object-cover" />
       </div>
     )
   }
   return (
-    <div className="rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shrink-0 ring-2 ring-purple-500/40"
+    <div className="rounded-full bg-gradient-to-br from-[#768064] via-[#4C583E] to-[#2C3424] flex items-center justify-center shrink-0 ring-2 ring-[#768064]/40"
       style={{ width: size, height: size }}>
       <span className="text-white font-semibold" style={{ fontSize: size * 0.4 }}>
         {user.name.charAt(0).toUpperCase()}
@@ -276,7 +276,7 @@ function UserMenu({ user, onLogout }: { user: { name: string; email: string; ava
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50">
+        <button className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#768064]/50">
           <UserAvatar user={user} size={36} />
           <span className="text-sm font-medium text-foreground hidden xl:block max-w-[120px] truncate">
             {user.name}

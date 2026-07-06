@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Suspense } from 'react'
 import { useState } from 'react'
@@ -53,7 +53,7 @@ function ResetPasswordForm() {
     <div className="text-center py-16">
       <XCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
       <p className="text-muted-foreground mb-4">Link không hợp lệ hoặc đã hết hạn.</p>
-      <Link href="/readers" className="text-purple-400 hover:text-purple-300">Về trang chủ</Link>
+      <Link href="/readers" className="text-[#768064] hover:text-[#4C583E]">Về trang chủ</Link>
     </div>
   )
 
@@ -85,7 +85,7 @@ function ResetPasswordForm() {
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input type={showPwd ? 'text' : 'password'} placeholder="••••••••" value={password}
               onChange={e => setPassword(e.target.value)}
-              className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-purple-500/50" required />
+              className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-[#768064]/50" required />
             <button type="button" onClick={() => setShowPwd(!showPwd)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
               {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -108,7 +108,7 @@ function ResetPasswordForm() {
               confirm && confirm !== password ? 'text-red-400' : confirm && confirm === password ? 'text-green-400' : 'text-muted-foreground')} />
             <Input type="password" placeholder="••••••••" value={confirm}
               onChange={e => setConfirm(e.target.value)}
-              className={cn('pl-10 bg-white/5 border-white/10 focus:border-purple-500/50 transition-colors',
+              className={cn('pl-10 bg-white/5 border-white/10 focus:border-[#768064]/50 transition-colors',
                 confirm && confirm !== password && 'border-red-500/50',
                 confirm && confirm === password && 'border-green-500/40')} required />
           </div>
@@ -118,7 +118,7 @@ function ResetPasswordForm() {
         </div>
 
         <Button type="submit" disabled={loading || !password || !confirm}
-          className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
+          className="w-full h-11 bg-gradient-to-r from-[#4C583E] to-[#2C3424] hover:from-[#768064] hover:to-[#4C583E] text-white">
           {loading
             ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             : 'Đặt lại mật khẩu'}
@@ -135,16 +135,16 @@ export default function ResetPasswordPage() {
       <main className="relative min-h-screen flex items-center justify-center px-4 py-12">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
           <Link href="/readers" className="flex items-center justify-center gap-2 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center">
               <span className="text-3xl">☽</span>
             </div>
-            <span className="text-2xl font-bold gradient-text">ZENVY</span>
+            <span className="text-2xl font-bold gradient-text">SAGETO</span>
           </Link>
 
-          <GlassCard className="p-8" glow="purple">
+          <GlassCard className="p-8" glow="olive">
             <Suspense fallback={
               <div className="flex justify-center py-8">
-                <div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[#768064]/30 border-t-[#A5B38B] rounded-full animate-spin" />
               </div>
             }>
               <ResetPasswordForm />

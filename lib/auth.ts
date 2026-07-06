@@ -1,11 +1,11 @@
-import { SignJWT, jwtVerify } from 'jose'
+﻿import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
 const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? 'zenvy-fallback-secret'
+  process.env.JWT_SECRET ?? 'sageto-fallback-secret'
 )
 
-const COOKIE_NAME = 'zenvy_token'
+const COOKIE_NAME = 'sageto_token'
 const EXPIRES_IN = 7 * 24 * 60 * 60 // 7 ngày (giây)
 
 export interface JWTPayload {

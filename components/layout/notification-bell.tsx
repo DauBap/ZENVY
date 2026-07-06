@@ -122,7 +122,7 @@ export function NotificationBell() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
             <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-purple-400" />
+              <Bell className="w-4 h-4 text-[#768064]" />
               <span className="font-semibold text-foreground text-sm">Thông báo</span>
               {unreadCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-xs font-medium">
@@ -134,7 +134,7 @@ export function NotificationBell() {
               {unreadCount > 0 && (
                 <button
                   onClick={markAllRead}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-purple-400 hover:bg-purple-500/10 transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-[#768064] hover:bg-[#768064]/10 transition-colors"
                 >
                   <Check className="w-3 h-3" /> Đọc hết
                 </button>
@@ -149,7 +149,7 @@ export function NotificationBell() {
           <div className="max-h-100 overflow-y-auto">
             {loading && notifications.length === 0 ? (
               <div className="flex justify-center py-8">
-                <div className="w-5 h-5 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-[#768064]/30 border-t-[#A5B38B] rounded-full animate-spin" />
               </div>
             ) : notifications.length === 0 ? (
               <div className="text-center py-10">
@@ -163,7 +163,7 @@ export function NotificationBell() {
                   onClick={() => markOneRead(n.id, n.link)}
                   className={cn(
                     'w-full flex items-start gap-3 px-4 py-3 text-left transition-colors border-b border-white/5 last:border-0',
-                    n.isRead ? 'hover:bg-white/5' : 'bg-purple-500/5 hover:bg-purple-500/10'
+                    n.isRead ? 'hover:bg-white/5' : 'bg-[#768064]/10 hover:bg-[#768064]/15'
                   )}
                 >
                   <span className="text-lg shrink-0 mt-0.5">{TYPE_ICON[n.type] ?? '📢'}</span>
@@ -177,7 +177,7 @@ export function NotificationBell() {
                     </div>
                   </div>
                   {!n.isRead && (
-                    <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0 mt-1.5" />
+                    <span className="w-2 h-2 rounded-full bg-[#768064] shrink-0 mt-1.5" />
                   )}
                 </button>
               ))

@@ -1,11 +1,11 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import type { NotificationType } from '@prisma/client'
 import webpush from 'web-push'
 
 // Cấu hình VAPID một lần
 if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
   webpush.setVapidDetails(
-    process.env.VAPID_MAILTO ?? 'mailto:admin@zenvy.vn',
+    process.env.VAPID_MAILTO ?? 'mailto:admin@sageto.vn',
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY,
   )

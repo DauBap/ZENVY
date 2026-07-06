@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -32,9 +32,9 @@ export function AdminShell({ children, session }: { children: React.ReactNode; s
     )}>
       {/* Logo */}
       <div className="flex items-center gap-3 p-5 border-b border-white/10">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-lg">☽</div>
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center text-lg">☽</div>
         <div>
-          <div className="text-sm font-bold gradient-text">ZENVY</div>
+          <div className="text-sm font-bold gradient-text">SAGETO</div>
           <div className="text-[11px] text-muted-foreground">Admin Panel</div>
         </div>
       </div>
@@ -48,7 +48,7 @@ export function AdminShell({ children, session }: { children: React.ReactNode; s
               onClick={() => setSidebarOpen(false)}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
-                active ? 'bg-purple-500/20 text-purple-300' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+                active ? 'bg-[#768064]/20 text-[#4C583E]' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
               )}>
               <item.icon className="w-4 h-4 shrink-0" />
               {item.label}
@@ -61,7 +61,7 @@ export function AdminShell({ children, session }: { children: React.ReactNode; s
       {/* User + logout */}
       <div className="p-3 border-t border-white/10 space-y-0.5">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center text-white text-xs font-bold shrink-0">
             {session.name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">

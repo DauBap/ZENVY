@@ -320,7 +320,7 @@ export function ProfilePage(props: Props) {
               {/* Avatar */}
               <div className="flex items-center gap-5">
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-purple-500/40 bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                  <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-[#A5B38B]/40 bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center">
                     {avatar ? (
                       <Image src={avatar} alt="Avatar" width={96} height={96} className="w-full h-full object-cover" unoptimized />
                     ) : (
@@ -330,7 +330,7 @@ export function ProfilePage(props: Props) {
                   <button
                     type="button"
                     onClick={() => fileRef.current?.click()}
-                    className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-purple-600 hover:bg-purple-500 flex items-center justify-center ring-2 ring-background transition-colors"
+                    className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#4C583E] hover:bg-[#768064] flex items-center justify-center ring-2 ring-background transition-colors"
                     aria-label="Đổi ảnh đại diện"
                   >
                     <Camera className="w-4 h-4 text-white" />
@@ -382,7 +382,7 @@ export function ProfilePage(props: Props) {
                     {specialty.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-2">
                         {specialty.map((s) => (
-                          <span key={s} className="inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                          <span key={s} className="inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full bg-[#768064]/20 text-[#4C583E] border border-[#768064]/30">
                             {s}
                             <button type="button" onClick={() => setSpecialty(prev => prev.filter(x => x !== s))}
                               className="hover:text-white" aria-label={`Xóa ${s}`}>
@@ -397,7 +397,7 @@ export function ProfilePage(props: Props) {
                       <button
                         type="button"
                         onClick={() => setShowSpecialtyMenu(!showSpecialtyMenu)}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm text-muted-foreground hover:border-purple-500/40 transition-colors"
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm text-muted-foreground hover:border-[#768064]/40 transition-colors"
                       >
                         <span>{specialty.length > 0 ? `Đã chọn ${specialty.length} chuyên môn` : 'Chọn chuyên môn...'}</span>
                         <ChevronDown className={cn('w-4 h-4 transition-transform', showSpecialtyMenu && 'rotate-180')} />
@@ -422,7 +422,7 @@ export function ProfilePage(props: Props) {
                                 }}
                                 className={cn(
                                   'w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left',
-                                  selected ? 'bg-purple-500/20 text-purple-300' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+                                  selected ? 'bg-[#768064]/20 text-[#4C583E]' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                                 )}
                               >
                                 {opt}
@@ -445,7 +445,7 @@ export function ProfilePage(props: Props) {
                         </div>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                           {!recording ? (
-                            <Button type="button" size="sm" onClick={startRecording} className="bg-purple-600 text-white">Bắt đầu ghi</Button>
+                            <Button type="button" size="sm" onClick={startRecording} className="bg-[#4C583E] text-white">Bắt đầu ghi</Button>
                           ) : (
                             <Button type="button" size="sm" onClick={stopRecording} className="bg-red-600 text-white">Dừng ({recordingTime}s)</Button>
                           )}
@@ -529,7 +529,7 @@ export function ProfilePage(props: Props) {
 
               <div className="flex justify-end pt-2">
                 <Button type="submit" disabled={busy}
-                  className="bg-purple-600 hover:bg-purple-500 text-white">
+                  className="bg-[#4C583E] hover:bg-[#768064] text-white">
                   {busy ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Đang lưu…</>
                   ) : (

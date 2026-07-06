@@ -29,8 +29,8 @@ export function AITarotSection() {
   return (
     <section className="py-16 lg:py-24 relative overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-indigo-900/10 to-purple-900/20" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-500/10 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#2C3424]/20 via-[#4C583E]/10 to-[#2C3424]/20" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#768064]/10 via-transparent to-transparent" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -41,9 +41,9 @@ export function AITarotSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
-              <Sparkles className="w-4 h-4 text-purple-400" />
-              <span className="text-sm text-purple-300">Miễn phí</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#768064]/10 border border-[#768064]/20 mb-6">
+              <Sparkles className="w-4 h-4 text-[#768064]" />
+              <span className="text-sm text-[#4C583E]">Miễn phí</span>
             </div>
 
             <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-6">
@@ -84,9 +84,9 @@ export function AITarotSection() {
                   size="lg"
                   className={cn(
                     'h-14 px-8',
-                    'bg-gradient-to-r from-purple-600 to-indigo-600',
-                    'hover:from-purple-500 hover:to-indigo-500',
-                    'text-white shadow-xl shadow-purple-500/30',
+                    'bg-gradient-to-r from-[#4C583E] to-[#2C3424]',
+                    'hover:from-[#768064] hover:to-[#4C583E]',
+                    'text-white shadow-xl shadow-[#768064]/20',
                     'group'
                   )}
                 >
@@ -123,7 +123,7 @@ export function AITarotSection() {
                         animate={{ rotateY: 0 }}
                         exit={{ rotateY: -180 }}
                         transition={{ duration: 0.4 }}
-                        className="absolute inset-0 rounded-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-800 flex items-center justify-center shadow-2xl shadow-purple-500/30"
+                        className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#4C583E] via-[#4C583E] to-[#2C3424] flex items-center justify-center shadow-2xl shadow-[#768064]/20"
                       >
                         <div className="text-center">
                           <div className="text-4xl mb-2">☽</div>
@@ -157,7 +157,7 @@ export function AITarotSection() {
               {/* Controls */}
               <Button
                 variant="outline"
-                className="w-full border-purple-500/30 hover:bg-purple-500/10"
+                className="w-full border-[#768064]/30 hover:bg-[#768064]/10"
                 onClick={handleShuffle}
               >
                 <Shuffle className="w-4 h-4 mr-2" />

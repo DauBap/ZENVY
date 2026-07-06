@@ -104,9 +104,9 @@ export function AdminWithdrawalsPage() {
       {/* Commission rate editor */}
       <GlassCard className="p-5">
         <div className="flex items-center gap-3 flex-wrap">
-          <Settings2 className="w-4 h-4 text-purple-400 shrink-0" />
+          <Settings2 className="w-4 h-4 text-[#768064] shrink-0" />
           <span className="text-sm font-medium text-foreground">Phí sàn hiện tại:</span>
-          <span className="text-lg font-bold text-purple-400">{commissionRate}%</span>
+          <span className="text-lg font-bold text-[#768064]">{commissionRate}%</span>
           <div className="flex items-center gap-2 ml-auto">
             <Input
               value={editRate}
@@ -119,7 +119,7 @@ export function AdminWithdrawalsPage() {
             />
             <span className="text-sm text-muted-foreground">%</span>
             <Button size="sm" onClick={saveCommissionRate} disabled={savingRate}
-              className="bg-purple-600 hover:bg-purple-500 text-white">
+              className="bg-[#4C583E] hover:bg-[#768064] text-white">
               {savingRate ? 'Đang lưu…' : 'Cập nhật'}
             </Button>
           </div>
@@ -135,8 +135,8 @@ export function AdminWithdrawalsPage() {
               className={cn(
                 'px-4 py-1.5 rounded-full text-sm border transition-all',
                 status === o.value
-                  ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
-                  : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30'
+                  ? 'bg-[#768064]/20 border-[#768064]/50 text-[#4C583E]'
+                  : 'bg-white/5 border-white/10 text-muted-foreground hover:border-[#768064]/30'
               )}>
               {o.label}
             </button>

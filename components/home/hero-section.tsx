@@ -29,10 +29,10 @@ export function HeroSection({ readers, platformStats }: HeroSectionProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#768064]/10 border border-[#768064]/20 mb-6"
           >
-            <Sparkles className="w-4 h-4 text-purple-400" />
-            <span className="text-sm text-purple-300">
+            <Sparkles className="w-4 h-4 text-[#768064]" />
+            <span className="text-sm text-[#4C583E]">
               {platformStats.onlineReaders} Readers đang online
             </span>
             <OnlineIndicator isOnline={true} size="sm" />
@@ -76,9 +76,9 @@ export function HeroSection({ readers, platformStats }: HeroSectionProps) {
                 size="lg"
                 className={cn(
                   'h-14 px-8 text-lg',
-                  'bg-gradient-to-r from-purple-600 to-indigo-600',
-                  'hover:from-purple-500 hover:to-indigo-500',
-                  'text-white shadow-xl shadow-purple-500/30',
+                  'bg-gradient-to-r from-[#4C583E] to-[#2C3424]',
+                  'hover:from-[#768064] hover:to-[#4C583E]',
+                  'text-white shadow-xl shadow-[#768064]/20',
                   'group'
                 )}
               >
@@ -90,9 +90,9 @@ export function HeroSection({ readers, platformStats }: HeroSectionProps) {
               <Button
                 size="lg"
                 variant="outline"
-                className="h-14 px-8 text-lg border-purple-500/30 hover:bg-purple-500/10"
+                className="h-14 px-8 text-lg border-[#768064]/30 hover:bg-[#768064]/10"
               >
-                <Sparkles className="w-5 h-5 mr-2 text-purple-400" />
+                <Sparkles className="w-5 h-5 mr-2 text-[#768064]" />
                 Thử AI Tarot miễn phí
               </Button>
             </Link>
@@ -151,7 +151,7 @@ export function HeroSection({ readers, platformStats }: HeroSectionProps) {
               <span>{platformStats.averageRating} Rating trung bình</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Zap className="w-5 h-5 text-purple-400" />
+              <Zap className="w-5 h-5 text-[#768064]" />
               <span>Phản hồi {platformStats.avgResponseTime}</span>
             </div>
           </motion.div>
@@ -159,7 +159,8 @@ export function HeroSection({ readers, platformStats }: HeroSectionProps) {
       </div>
 
       {/* Gradient fade at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#2C3424] via-[#2C3424] to-[#2C3424]" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#2C3424] to-transparent" />
     </section>
   )
 }

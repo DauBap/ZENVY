@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -41,19 +41,19 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-3 shadow-lg shadow-purple-500/30">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center mb-3 shadow-lg shadow-[#768064]/20">
             <ShieldCheck className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-xl font-bold text-white">ZENVY Admin</h1>
-          <p className="text-sm text-white/50 mt-1">Đăng nhập vào bảng quản trị</p>
+          <h1 className="text-xl font-bold text-foreground">SageTo Admin</h1>
+          <p className="text-sm text-muted-foreground mt-1">Đăng nhập vào bảng quản trị</p>
         </div>
 
         {/* Form */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-2xl">
+        <div className="bg-card border border-white/10 rounded-2xl p-6 shadow-xl shadow-black/5">
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {error && (
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
@@ -67,10 +67,10 @@ export default function AdminLoginPage() {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                 <Input
                   type="email"
-                  placeholder="admin@zenvy.dev"
+                  placeholder="admin@sageto.dev"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-purple-500/50"
+                  className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#768064]/50"
                   required
                   autoFocus
                 />
@@ -86,7 +86,7 @@ export default function AdminLoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="pl-9 pr-9 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-purple-500/50"
+                  className="pl-9 pr-9 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#768064]/50"
                   required
                 />
                 <button type="button" onClick={() => setShowPwd(!showPwd)}
@@ -98,8 +98,8 @@ export default function AdminLoginPage() {
 
             <Button type="submit" disabled={loading || !email || !password}
               className={cn(
-                'w-full h-11 mt-2 bg-gradient-to-r from-purple-600 to-indigo-600',
-                'hover:from-purple-500 hover:to-indigo-500 text-white font-medium'
+                'w-full h-11 mt-2 bg-gradient-to-r from-[#4C583E] to-[#2C3424]',
+                'hover:from-[#768064] hover:to-[#4C583E] text-white font-medium'
               )}>
               {loading
                 ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

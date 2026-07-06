@@ -1,4 +1,4 @@
-// Mock data for Tarot Booking Platform
+﻿// Mock data for Tarot Booking Platform
 
 export interface Reader {
   id: string
@@ -247,7 +247,7 @@ export const testimonials: Testimonial[] = [
     userName: 'Trần Minh Đức',
     userAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
     rating: 5,
-    comment: 'Đã dùng nhiều app tarot nhưng ZENVY là tốt nhất. Các reader ở đây đều được verify và rất chuyên nghiệp. Booking nhanh, chat tiện lợi!',
+    comment: 'Đã dùng nhiều app tarot nhưng SAGETO là tốt nhất. Các reader ở đây đều được verify và rất chuyên nghiệp. Booking nhanh, chat tiện lợi!',
     readerName: 'Đặng Mystic',
     verified: true,
   },

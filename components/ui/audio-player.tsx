@@ -70,8 +70,8 @@ export function AudioPlayer({ src, className, compact = false }: AudioPlayerProp
         onClick={togglePlay}
         className={cn(
           'w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all',
-          'bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500',
-          'shadow-md shadow-purple-500/30 text-white'
+          'bg-gradient-to-br from-[#4C583E] to-[#2C3424] hover:from-[#768064] hover:to-[#4C583E]',
+          'shadow-md shadow-[#768064]/20 text-white'
         )}
       >
         {playing
@@ -84,7 +84,7 @@ export function AudioPlayer({ src, className, compact = false }: AudioPlayerProp
         <div className="relative h-1.5 rounded-full bg-white/10 overflow-hidden">
           {/* fill */}
           <div
-            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all"
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#768064] to-[#4C583E] transition-all"
             style={{ width: `${progress}%` }}
           />
           {/* scrubber */}

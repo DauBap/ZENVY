@@ -120,7 +120,7 @@ export default function RegisterReaderPage() {
     <main className="relative min-h-screen py-12 px-4">
       <div className="mx-auto max-w-3xl">
         <div className="mb-10 text-center">
-          <p className="text-sm text-purple-400 uppercase tracking-[0.3em]">Dành cho Tarot Reader</p>
+          <p className="text-sm text-[#768064] uppercase tracking-[0.3em]">Dành cho Tarot Reader</p>
           <h1 className="mt-4 text-4xl font-bold text-foreground">Đăng ký làm Reader</h1>
           <p className="mt-3 text-sm text-muted-foreground">Gửi thông tin của bạn đến admin để được duyệt và kích hoạt.</p>
         </div>
@@ -140,7 +140,7 @@ export default function RegisterReaderPage() {
 
             <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
               <div className="mb-8 border-b border-white/10 pb-6">
-                <p className="text-xs uppercase tracking-[0.3em] text-purple-300">Tài khoản</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-[#4C583E]">Tài khoản</p>
                 <h2 className="mt-3 text-xl font-semibold text-foreground">Thông tin đăng nhập</h2>
                 <p className="mt-2 text-sm text-muted-foreground">Nhập email và mật khẩu để tạo tài khoản Reader.</p>
               </div>
@@ -208,7 +208,7 @@ export default function RegisterReaderPage() {
 
             <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
               <div className="mb-8 border-b border-white/10 pb-6">
-                <p className="text-xs uppercase tracking-[0.3em] text-purple-300">Thông tin Reader</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-[#4C583E]">Thông tin Reader</p>
                 <h2 className="mt-3 text-xl font-semibold text-foreground">Hồ sơ cá nhân</h2>
                 <p className="mt-2 text-sm text-muted-foreground">Cho admin biết được phong cách đọc của bạn và cách khách hàng có thể liên lạc.</p>
               </div>
@@ -271,7 +271,7 @@ export default function RegisterReaderPage() {
                   {selectedSpecialties.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-2">
                       {selectedSpecialties.map((s) => (
-                        <span key={s} className="inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        <span key={s} className="inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full bg-[#768064]/20 text-[#4C583E] border border-[#768064]/30">
                           {s}
                           <button type="button" onClick={() => setSelectedSpecialties(prev => prev.filter(x => x !== s))}
                             className="hover:text-white" aria-label={`Xóa ${s}`}>
@@ -286,7 +286,7 @@ export default function RegisterReaderPage() {
                     <button
                       type="button"
                       onClick={() => setShowSpecialtyMenu(!showSpecialtyMenu)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm text-muted-foreground hover:border-purple-500/40 transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm text-muted-foreground hover:border-[#768064]/40 transition-colors"
                     >
                       <span>{selectedSpecialties.length > 0 ? `Đã chọn ${selectedSpecialties.length} chủ đề` : 'Chọn chủ đề...'}</span>
                       <ChevronDown className={cn('w-4 h-4 transition-transform', showSpecialtyMenu && 'rotate-180')} />
@@ -311,7 +311,7 @@ export default function RegisterReaderPage() {
                               }}
                               className={cn(
                                 'w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left',
-                                selected ? 'bg-purple-500/20 text-purple-300' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+                                selected ? 'bg-[#768064]/20 text-[#4C583E]' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                               )}
                             >
                               {opt}
@@ -330,7 +330,7 @@ export default function RegisterReaderPage() {
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="block text-sm font-medium text-foreground">
                   Chân dung
-                  <div className="mt-2 rounded-3xl border-2 border-dashed border-purple-500/20 bg-gradient-to-br from-white/5 to-transparent p-5 text-center transition hover:border-purple-400 hover:bg-white/10">
+                  <div className="mt-2 rounded-3xl border-2 border-dashed border-[#768064]/20 bg-gradient-to-br from-white/5 to-transparent p-5 text-center transition hover:border-[#A5B38B]/70 hover:bg-white/10">
                     <div className="mx-auto mb-4 h-24 w-24 overflow-hidden rounded-3xl bg-white/5 shadow-inner shadow-black/10">
                       {avatarDataUrl ? (
                         <img src={avatarDataUrl} alt="Preview chân dung" className="h-full w-full object-cover" />
@@ -343,7 +343,7 @@ export default function RegisterReaderPage() {
                       <p className="text-xs text-muted-foreground">JPG/PNG, tối đa 1.5MB</p>
                       <button
                         type="button"
-                        className="inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-500"
+                        className="inline-flex items-center gap-2 rounded-full bg-[#4C583E] px-4 py-2 text-sm text-white hover:bg-[#768064]"
                         onClick={() => document.getElementById('reader-avatar-input')?.click()}
                       >
                         <ImagePlus className="w-4 h-4" /> Chọn ảnh
@@ -389,7 +389,7 @@ export default function RegisterReaderPage() {
             <label className="flex items-start gap-3 cursor-pointer text-sm text-muted-foreground">
               <span className={cn(
                 'mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors',
-                agreed ? 'bg-purple-600 border-purple-600 text-white' : 'border-white/20'
+                agreed ? 'bg-[#4C583E] border-[#A5B38B] text-white' : 'border-white/20'
               )}>
                 {agreed && <Check className="w-3 h-3" />}
               </span>
@@ -405,7 +405,7 @@ export default function RegisterReaderPage() {
 
             <p className="text-center text-sm text-muted-foreground">
               Đã có tài khoản?{' '}
-              <Link href="/auth/login" className="text-purple-400 hover:text-purple-300">
+              <Link href="/auth/login" className="text-[#768064] hover:text-[#4C583E]">
                 Đăng nhập
               </Link>
             </p>
@@ -430,7 +430,7 @@ export default function RegisterReaderPage() {
             <DialogFooter className="mt-6 flex flex-col gap-3 sm:flex-col">
               <Button
                 onClick={() => router.push('/auth/login')}
-                className="w-full bg-purple-600 hover:bg-purple-500"
+                className="w-full bg-[#4C583E] hover:bg-[#768064]"
               >
                 Đăng nhập ngay
               </Button>

@@ -53,7 +53,7 @@ export function NumberInput({
           tabIndex={-1}
           aria-label="Tăng"
           onClick={() => bump(1)}
-          className="flex h-[18px] w-7 items-center justify-center text-muted-foreground transition-colors hover:bg-purple-500/10 hover:text-purple-300 rounded-tr-md"
+          className="flex h-[18px] w-7 items-center justify-center text-muted-foreground transition-colors hover:bg-[#768064]/10 hover:text-[#4C583E] rounded-tr-md"
         >
           <ChevronUp className="w-3.5 h-3.5" />
         </button>
@@ -62,7 +62,7 @@ export function NumberInput({
           tabIndex={-1}
           aria-label="Giảm"
           onClick={() => bump(-1)}
-          className="flex h-[18px] w-7 items-center justify-center text-muted-foreground transition-colors hover:bg-purple-500/10 hover:text-purple-300 rounded-br-md border-t border-input/60"
+          className="flex h-[18px] w-7 items-center justify-center text-muted-foreground transition-colors hover:bg-[#768064]/10 hover:text-[#4C583E] rounded-br-md border-t border-input/60"
         >
           <ChevronDown className="w-3.5 h-3.5" />
         </button>

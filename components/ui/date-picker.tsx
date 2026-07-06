@@ -55,12 +55,12 @@ export function DatePicker({
           type="button"
           className={cn(
             'flex h-9 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm outline-none transition-colors',
-            'hover:border-purple-500/40 focus-visible:ring-1 focus-visible:ring-ring',
+            'hover:border-[#768064]/40 focus-visible:ring-1 focus-visible:ring-ring',
             !selected && 'text-muted-foreground',
             className,
           )}
         >
-          <CalendarIcon className="w-4 h-4 text-purple-400 shrink-0" />
+          <CalendarIcon className="w-4 h-4 text-[#768064] shrink-0" />
           <span className="flex-1 text-left">{label}</span>
         </button>
       </PopoverTrigger>

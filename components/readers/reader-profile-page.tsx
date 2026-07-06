@@ -209,8 +209,8 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
             className="mb-8"
           >
             <div className="relative overflow-hidden rounded-2xl border border-white/10"
-              style={{ background: 'linear-gradient(135deg, #3b1f6e 0%, #6b3fa0 40%, #a78bda 100%)' }}>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-900/60 via-purple-600/30 to-indigo-400/20" />
+              style={{ background: 'linear-gradient(135deg, #858b7f 0%, #2C3424 40%, #2C3424 100%)' }}>
+              <div className="absolute inset-0 bg-gradient-to-r from-[#2C3424]/60 via-[#4C583E]/30 to-[#768064]/20" />
 
               <div className="relative flex flex-col sm:flex-row items-center sm:items-center gap-4 p-5 sm:p-6">
 
@@ -341,7 +341,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
 
                     {/* Rating overlay */}
                     <div className="absolute bottom-3 left-3">
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-600/90 backdrop-blur-sm">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#4C583E]/90 backdrop-blur-sm">
                         <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                         <span className="text-white text-xs font-bold">{Number(reader.rating).toFixed(2)}</span>
                         <span className="text-white/60 text-xs">({stats ? stats.reviewCount : reader.totalSessions} đánh giá)</span>
@@ -360,7 +360,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                     {reader.specialty.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         {reader.specialty.slice(0, 4).map((s) => (
-                          <span key={s} className="px-2 py-0.5 text-xs rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                          <span key={s} className="px-2 py-0.5 text-xs rounded-full bg-[#768064]/20 text-[#4C583E] border border-[#768064]/30">
                             {s}
                           </span>
                         ))}
@@ -398,12 +398,12 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                         <>
                           {user ? (
                             <Link href={`/booking/${reader.id}`} className="block">
-                              <Button className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
+                              <Button className="w-full bg-gradient-to-r from-[#4C583E] to-[#2C3424] hover:from-[#768064] hover:to-[#4C583E] text-white">
                                 <Calendar className="w-4 h-4 mr-2" /> Đặt lịch ngay
                               </Button>
                             </Link>
                           ) : (
-                            <Button onClick={() => openLogin()} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
+                            <Button onClick={() => openLogin()} className="w-full bg-gradient-to-r from-[#4C583E] to-[#2C3424] hover:from-[#768064] hover:to-[#4C583E] text-white">
                               <Calendar className="w-4 h-4 mr-2" /> Đặt lịch ngay
                             </Button>
                           )}
@@ -423,7 +423,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                             {isOwner ? (
                               <div className="flex items-center gap-2">
                                 <button
-                                  className="px-3 py-1 rounded bg-purple-600 text-white text-sm"
+                                  className="px-3 py-1 rounded bg-[#4C583E] text-white text-sm"
                                   onClick={() => {
                                     if (isRecordingLocal) stopRecording(); else startRecording()
                                   }}
@@ -458,7 +458,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                 <GlassCard className="p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <Moon className="w-4 h-4 text-purple-400" />
+                    <Moon className="w-4 h-4 text-[#768064]" />
                     <h3 className="text-sm font-semibold text-foreground">Thông tin</h3>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed">
@@ -485,7 +485,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                     {tab}
                     {activeTab === tab && (
                       <motion.div layoutId="profile-tab-indicator"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#768064] to-[#4C583E]"
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }} />
                     )}
                   </button>
@@ -503,14 +503,14 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                         className={cn(
                           'w-full p-4 rounded-xl text-left transition-all border',
                           selectedPkg === p.id
-                            ? 'bg-purple-500/20 border-purple-500/50'
-                            : 'bg-white/5 border-white/10 hover:border-purple-500/30'
+                            ? 'bg-[#768064]/20 border-[#768064]/50'
+                            : 'bg-white/5 border-white/10 hover:border-[#768064]/30'
                         )}
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <Sparkles className="w-4 h-4 text-purple-400" />
+                              <Sparkles className="w-4 h-4 text-[#768064]" />
                               <span className="font-semibold text-foreground">{p.name}</span>
                               {p.popular && (
                                 <span className="px-2 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -538,7 +538,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                   {reader.availability && reader.availability.length > 0 && (
                     <GlassCard className="p-4">
                       <div className="flex items-center gap-2 mb-4">
-                        <Calendar className="w-4 h-4 text-purple-400" />
+                        <Calendar className="w-4 h-4 text-[#768064]" />
                         <h3 className="font-semibold text-foreground">Lịch trống</h3>
                       </div>
                       <div className="space-y-3">
@@ -549,7 +549,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {a.slots.map((slot) => (
-                                <span key={slot} className="px-2.5 py-1 text-xs rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300">
+                                <span key={slot} className="px-2.5 py-1 text-xs rounded-lg bg-[#768064]/10 border border-[#768064]/20 text-[#4C583E]">
                                   {slot}
                                 </span>
                               ))}
@@ -562,7 +562,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
 
                   {/* Booking CTA */}
                   {pkg && (
-                    <div className="flex items-center gap-3 p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                    <div className="flex items-center gap-3 p-4 rounded-xl bg-[#768064]/10 border border-[#768064]/20">
                       <div className="flex-1">
                         <div className="text-sm text-muted-foreground">Gói đã chọn</div>
                         <div className="font-semibold text-foreground">{pkg.name} · {pkg.duration} phút</div>
@@ -577,12 +577,12 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                         </Button>
                       ) : user ? (
                         <Link href={`/booking/${reader.id}?package=${pkg.id}`}>
-                          <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
+                          <Button className="bg-gradient-to-r from-[#4C583E] to-[#2C3424] text-white shrink-0">
                             Đặt lịch
                           </Button>
                         </Link>
                       ) : (
-                        <Button onClick={() => openLogin()} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
+                        <Button onClick={() => openLogin()} className="bg-gradient-to-r from-[#4C583E] to-[#2C3424] text-white shrink-0">
                           Đặt lịch
                         </Button>
                       )}                    </div>
@@ -619,7 +619,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                               <span className="w-3 text-muted-foreground">{s}</span>
                               <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                               <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                <div className="h-full rounded-full bg-gradient-to-r from-purple-500 to-yellow-400 transition-all"
+                                <div className="h-full rounded-full bg-gradient-to-r from-[#768064] to-yellow-400 transition-all"
                                   style={{ width: total > 0 ? `${(count / total) * 100}%` : '0%' }} />
                               </div>
                               <span className="w-4 text-muted-foreground">{count}</span>
@@ -633,14 +633,14 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                   {/* Review list */}
                   {loadingReviews ? (
                     <div className="flex justify-center py-8">
-                      <div className="w-6 h-6 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                      <div className="w-6 h-6 border-2 border-[#768064]/30 border-t-[#A5B38B] rounded-full animate-spin" />
                     </div>
                   ) : sessionReviews.length > 0 ? (
                     <div className="space-y-3">
                       {sessionReviews.map((review) => (
                         <GlassCard key={review.id} className="p-4">
                           <div className="flex items-start gap-3">
-                            <div className="w-9 h-9 rounded-full shrink-0 bg-purple-500/20 flex items-center justify-center text-sm font-bold text-purple-300"
+                            <div className="w-9 h-9 rounded-full shrink-0 bg-[#768064]/20 flex items-center justify-center text-sm font-bold text-[#4C583E]"
                               style={review.customer.avatar ? {
                                 backgroundImage: `url("${review.customer.avatar}")`,
                                 backgroundSize: 'cover', backgroundPosition: 'center',
@@ -711,7 +711,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <Moon className="w-12 h-12 text-purple-400/30 mx-auto mb-3" />
+                      <Moon className="w-12 h-12 text-[#768064]/30 mx-auto mb-3" />
                       <p className="text-muted-foreground">Chưa có đánh giá nào</p>
                     </div>
                   )}
@@ -723,7 +723,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                 <div className="space-y-4">
                   <GlassCard className="p-5">
                     <div className="flex items-center gap-2 mb-4">
-                      <BookOpen className="w-4 h-4 text-purple-400" />
+                      <BookOpen className="w-4 h-4 text-[#768064]" />
                       <h3 className="font-semibold text-foreground">Về tôi</h3>
                     </div>
                     <p className="text-muted-foreground leading-relaxed text-sm whitespace-pre-line">
@@ -742,7 +742,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                         { icon: Sparkles, label: 'Chuyên môn', value: reader.specialty.join(', ') || 'Tarot' },
                       ].map(({ icon: Icon, label, value }) => (
                         <div key={label} className="flex items-center gap-3 text-sm">
-                          <Icon className="w-4 h-4 text-purple-400 shrink-0" />
+                          <Icon className="w-4 h-4 text-[#768064] shrink-0" />
                           <span className="text-muted-foreground w-28 shrink-0">{label}</span>
                           <span className="text-foreground">{value}</span>
                         </div>

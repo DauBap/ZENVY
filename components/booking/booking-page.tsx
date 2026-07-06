@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -172,7 +172,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                     <div className={cn(
                       'w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all',
                       currentStep > step.id ? 'bg-green-500 border-green-500 text-white'
-                        : currentStep === step.id ? 'bg-purple-500 border-purple-500 text-white'
+                        : currentStep === step.id ? 'bg-[#768064] border-[#768064] text-white'
                         : 'bg-transparent border-white/20 text-muted-foreground'
                     )}>
                       {currentStep > step.id ? <Check className="w-5 h-5" /> : step.id}
@@ -204,12 +204,12 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                           <button key={pkg.id} onClick={() => setSelectedPackageId(pkg.id)}
                             className={cn('w-full p-4 rounded-xl text-left transition-all border',
                               selectedPackageId === pkg.id
-                                ? 'bg-purple-500/20 border-purple-500/50'
-                                : 'bg-white/5 border-white/10 hover:border-purple-500/30')}>
+                                ? 'bg-[#768064]/20 border-[#768064]/50'
+                                : 'bg-white/5 border-white/10 hover:border-[#768064]/30')}>
                             <div className="flex items-start justify-between mb-2">
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <Sparkles className="w-4 h-4 text-purple-400" />
+                                  <Sparkles className="w-4 h-4 text-[#768064]" />
                                   <span className="font-medium text-foreground">{pkg.name}</span>
                                   {pkg.popular && (
                                     <span className="px-2 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-300">Phổ biến</span>
@@ -236,7 +236,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                   <GlassCard className="p-6">
                     {dates.length === 0 ? (
                       <div className="text-center py-12">
-                        <Calendar className="w-12 h-12 text-purple-400/30 mx-auto mb-4" />
+                        <Calendar className="w-12 h-12 text-[#768064]/30 mx-auto mb-4" />
                         <p className="text-muted-foreground">Reader chưa mở lịch trống. Vui lòng quay lại sau hoặc nhắn tin để hẹn lịch.</p>
                       </div>
                     ) : (
@@ -253,8 +253,8 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                             <button key={d.value} onClick={() => { setSelectedDate(d.value); setSelectedTime('') }}
                               className={cn('flex flex-col items-center p-3 rounded-xl min-w-[70px] transition-all border',
                                 selectedDate === d.value
-                                  ? 'bg-purple-500/20 border-purple-500/50'
-                                  : 'bg-white/5 border-white/10 hover:border-purple-500/30')}>
+                                  ? 'bg-[#768064]/20 border-[#768064]/50'
+                                  : 'bg-white/5 border-white/10 hover:border-[#768064]/30')}>
                               <span className="text-xs text-muted-foreground">{d.day}</span>
                               <span className="text-xl font-bold text-foreground">{d.date}</span>
                               <span className="text-xs text-muted-foreground">Th.{d.month}</span>
@@ -272,8 +272,8 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                                 <button key={time} onClick={() => setSelectedTime(time)}
                                   className={cn('p-3 rounded-xl text-center transition-all border',
                                     selectedTime === time
-                                      ? 'bg-purple-500/20 border-purple-500/50 text-foreground'
-                                      : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30')}>
+                                      ? 'bg-[#768064]/20 border-[#768064]/50 text-foreground'
+                                      : 'bg-white/5 border-white/10 text-muted-foreground hover:border-[#768064]/30')}>
                                   {time}
                                 </button>
                               ))}
@@ -299,7 +299,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                     </h2>
                     <div className="space-y-3">
                       {['Thẻ tín dụng/Ghi nợ','MoMo','VNPay','Chuyển khoản'].map((m) => (
-                        <button key={m} className="w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all text-left flex items-center justify-between">
+                        <button key={m} className="w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:border-[#768064]/30 transition-all text-left flex items-center justify-between">
                           <span className="text-foreground">{m}</span>
                           <ChevronRight className="w-5 h-5 text-muted-foreground" />
                         </button>
@@ -340,7 +340,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                       </div>
                     </div>
                     <Link href="/dashboard">
-                      <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                      <Button className="bg-gradient-to-r from-[#4C583E] to-[#2C3424] text-white">
                         Xem lịch hẹn của tôi
                       </Button>
                     </Link>
@@ -359,7 +359,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                       ? () => { if (!user) { openLogin() } else { handleConfirmPayment() } }
                       : () => setCurrentStep(s => Math.min(4, s + 1))}
                     disabled={!canProceed() || (currentStep === 3 && submitting)}
-                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                    className="bg-gradient-to-r from-[#4C583E] to-[#2C3424] text-white">
                     {currentStep === 3 ? (submitting ? 'Đang xử lý…' : 'Xác nhận thanh toán') : 'Tiếp tục'}
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
@@ -425,7 +425,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
             <AlertDialogTitle>Xác nhận đặt lịch</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2 text-left">
               <span className="block">
-                Trước khi xác nhận, bạn vui lòng lưu ý chính sách hủy lịch của ZENVY nhé:
+                Trước khi xác nhận, bạn vui lòng lưu ý chính sách hủy lịch của SAGETO nhé:
               </span>
               <span className="block">
                 💜 Hủy <strong>trước 12 giờ</strong> so với giờ hẹn: hoàn tiền, chỉ giữ lại <strong>10%</strong> phí dịch vụ.
@@ -442,7 +442,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
             <AlertDialogCancel>Để mình xem lại</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => setShowPaymentConfirm(false)}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+              className="bg-gradient-to-r from-[#4C583E] to-[#2C3424] text-white">
               Đồng ý &amp; tiếp tục
             </AlertDialogAction>
           </AlertDialogFooter>

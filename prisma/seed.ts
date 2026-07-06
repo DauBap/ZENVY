@@ -1,4 +1,4 @@
-import 'dotenv/config'
+﻿import 'dotenv/config'
 import { PrismaClient, Prisma } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
@@ -31,7 +31,7 @@ async function main() {
 
   // 2. Readers
   for (const reader of readers) {
-    const email = `reader_${reader.id}@zenvy.com`
+    const email = `reader_${reader.id}@sageto.com`
     const expYear = parseInt(reader.experience.match(/\d+/)?.[0] ?? '0', 10)
 
     const user = await prisma.user.upsert({
@@ -131,7 +131,7 @@ async function main() {
   console.log('✓ Testimonials')
 
   console.log('\n🌙 Seeding finished.')
-  console.log(`\nDemo reader accounts: reader_1@zenvy.com ... reader_6@zenvy.com`)
+  console.log(`\nDemo reader accounts: reader_1@sageto.com ... reader_6@sageto.com`)
   console.log(`Password: ${READER_PASSWORD}`)
 }
 
