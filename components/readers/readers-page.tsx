@@ -67,7 +67,7 @@ function ReaderScrollSection({
             <h2 className="text-xl font-bold text-foreground">{title}</h2>
           </div>
           {badge && (
-            <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+            <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-[#768064]/20 text-[#4C583E] border border-[#768064]/30">
               {badge}
             </span>
           )}
@@ -128,7 +128,7 @@ function ReaderScrollSection({
           className={cn(
             'flex items-center gap-2 px-8 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap',
             'bg-white/5 border border-white/10 text-muted-foreground',
-            'hover:bg-purple-500/10 hover:border-purple-500/30 hover:text-purple-300'
+            'hover:bg-[#768064]/10 hover:border-[#768064]/30 hover:text-[#4C583E]'
           )}
         >
           Xem tất cả <ArrowRight className="w-4 h-4" />
@@ -235,7 +235,7 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
           {/* Reader Mới */}
           <ReaderScrollSection
             title="Reader Mới"
-            icon={<Sparkles className="w-5 h-5 text-indigo-400" />}
+            icon={<Sparkles className="w-5 h-5 text-[#4C583E]" />}
             readers={newReaders}
             badge="Mới tham gia"
             delay={0.1}
@@ -269,7 +269,7 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
                     placeholder="Tìm kiếm theo tên hoặc mô tả..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 focus:border-purple-500/50"
+                    className="pl-10 bg-white/5 border-[var(--border)] focus:border-[var(--ring)]"
                   />
                 </div>
                 <div className="flex gap-3 flex-wrap">
@@ -278,13 +278,14 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
                     <Button
                       variant="outline"
                       onClick={() => setShowSortMenu(!showSortMenu)}
-                      className={cn('border-white/10 gap-2', showSortMenu && 'bg-purple-500/20 border-purple-500/30 text-purple-400')}
+                      className={cn('border-[var(--border)] gap-2', showSortMenu && 'bg-[#768064]/20 border-[#768064]/30 text-[#768064]')}
                     >
                       <ArrowUpDown className="w-4 h-4" />
                       {activeSortLabel}
                     </Button>
+
                     {showSortMenu && (
-                      <div className="absolute right-0 top-full mt-2 w-44 z-50 rounded-xl bg-background/95 backdrop-blur-xl border border-white/10 shadow-xl overflow-hidden">
+                      <div className="absolute right-0 top-full mt-2 w-44 z-50 rounded-xl bg-background/95 backdrop-blur-xl border-[var(--border)] shadow-xl overflow-hidden">
                         {SORT_OPTIONS.map((opt) => (
                           <button
                             key={opt.value}
@@ -292,7 +293,7 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
                             className={cn(
                               'w-full text-left px-4 py-2.5 text-sm transition-colors',
                               sortBy === opt.value
-                                ? 'bg-purple-500/20 text-purple-300'
+                                ? 'bg-[#768064]/20 text-[#4C583E]'
                                 : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                             )}
                           >
@@ -312,7 +313,7 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
 
                   <Button variant="outline"
                     onClick={() => setShowFilters(!showFilters)}
-                    className={cn('border-white/10', showFilters && 'bg-purple-500/20 border-purple-500/30 text-purple-400')}>
+                    className={cn('border-white/10', showFilters && 'bg-[#768064]/20 border-[#768064]/30 text-[#768064]')}>
                     <SlidersHorizontal className="w-4 h-4 mr-2" />
                     Bộ lọc
                   </Button>
@@ -333,8 +334,8 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
                       <button key={spec} onClick={() => toggleSpecialty(spec)}
                         className={cn('px-3 py-1.5 text-sm rounded-full border transition-all',
                           selectedSpecialties.includes(spec)
-                            ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
-                            : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30')}>
+                            ? 'bg-[#768064]/20 border-[#768064]/50 text-[#4C583E]'
+                            : 'bg-white/5 border-[var(--border)] text-muted-foreground hover:border-[#768064]/30')}>
                         {spec}
                       </button>
                     ))}
@@ -349,13 +350,13 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
             <p className="text-sm text-muted-foreground">
               Hiển thị <span className="text-foreground font-medium">{filteredReaders.length}</span> readers
               {sortBy !== 'newest' && (
-                <span className="ml-2 text-purple-400">· {activeSortLabel}</span>
+                <span className="ml-2 text-[#768064]">· {activeSortLabel}</span>
               )}
             </p>
             {selectedSpecialties.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {selectedSpecialties.map((spec) => (
-                  <span key={spec} className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  <span key={spec} className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-[#768064]/20 text-[#4C583E] border border-[#768064]/30">
                     {spec}
                     <button onClick={() => toggleSpecialty(spec)}><X className="w-3 h-3" /></button>
                   </span>

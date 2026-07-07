@@ -75,9 +75,9 @@ function ModalContent() {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#0f0a1a]/95 backdrop-blur-xl border border-white/10 shadow-[0_0_80px_rgba(168,85,247,0.2)]">
+    <div className="relative overflow-hidden rounded-2xl bg-background/95 backdrop-blur-xl border border-white/10 shadow-[0_0_80px_rgba(168,85,247,0.2)]">
       {/* Gradient overlay */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/8 via-transparent to-indigo-500/8 pointer-events-none" />
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#768064]/8 via-transparent to-[#4C583E]/8 pointer-events-none" />
 
       {/* Close */}
       <button
@@ -139,7 +139,7 @@ function TabButton({ value }: { value: 'login' | 'register' }) {
       {active && (
         <motion.div
           layoutId="auth-tab-indicator"
-          className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500"
+          className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#768064] to-[#4C583E]"
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         />
       )}
@@ -203,21 +203,21 @@ function LoginForm({ onForgot }: { onForgot?: () => void }) {
           <Input ref={prefillEmail ? undefined : inputRef}
             type="email" placeholder="email@example.com" value={email}
             onChange={(e) => { setEmail(e.target.value); setError('') }}
-            className="pl-10 bg-white/5 border-white/10 focus:border-purple-500/50" required />
+            className="pl-10 bg-white/5 border-white/10 focus:border-[#768064]/50" required />
         </div>
       </div>
 
       <div className="space-y-1.5">
         <div className="flex justify-between items-center">
           <label className="text-sm font-medium text-foreground">Mật khẩu</label>
-          <button type="button" onClick={onForgot} className="text-xs text-purple-400 hover:text-purple-300 transition-colors">Quên mật khẩu?</button>
+          <button type="button" onClick={onForgot} className="text-xs text-[#768064] hover:text-[#4C583E] transition-colors">Quên mật khẩu?</button>
         </div>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input ref={prefillEmail ? inputRef : undefined}
             type={showPwd ? 'text' : 'password'} placeholder="••••••••" value={password}
             onChange={(e) => { setPassword(e.target.value); setError('') }}
-            className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-purple-500/50" required />
+            className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-[#768064]/50" required />
           <button type="button" onClick={() => setShowPwd(!showPwd)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
             {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -232,7 +232,7 @@ function LoginForm({ onForgot }: { onForgot?: () => void }) {
       </div>
 
       <Button type="submit" disabled={isLoading || !email || !password}
-        className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-500/25">
+        className="w-full h-11 bg-gradient-to-r from-[#4C583E] to-[#2C3424] hover:from-[#768064] hover:to-[#4C583E] text-white shadow-lg shadow-[#768064]/20">
         {isLoading
           ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           : <><LogIn className="w-4 h-4 mr-2" />Đăng nhập</>}
@@ -240,7 +240,7 @@ function LoginForm({ onForgot }: { onForgot?: () => void }) {
 
       <p className="text-center text-sm text-muted-foreground">
         Chưa có tài khoản?{' '}
-        <button type="button" onClick={() => switchTab('register')} className="text-purple-400 hover:text-purple-300 font-medium">
+        <button type="button" onClick={() => switchTab('register')} className="text-[#768064] hover:text-[#4C583E] font-medium">
           Đăng ký miễn phí
         </button>
       </p>
@@ -316,7 +316,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string, name: string) 
           <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input type="text" placeholder="Nguyễn Văn A" value={name}
             onChange={(e) => setName(e.target.value)}
-            className="pl-10 bg-white/5 border-white/10 focus:border-purple-500/50" required />
+            className="pl-10 bg-white/5 border-white/10 focus:border-[#768064]/50" required />
         </div>
       </div>
 
@@ -328,7 +328,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string, name: string) 
             emailError ? 'text-red-400' : isValidEmail(email) ? 'text-green-400' : 'text-muted-foreground')} />
           <Input type="email" placeholder="email@example.com" value={email}
             onChange={(e) => setEmail(e.target.value)} onBlur={() => setEmailTouched(true)}
-            className={cn('pl-10 pr-10 bg-white/5 border-white/10 focus:border-purple-500/50',
+            className={cn('pl-10 pr-10 bg-white/5 border-white/10 focus:border-[#768064]/50',
               emailError && 'border-red-500/50', isValidEmail(email) && !emailError && 'border-green-500/40')} />
           {email && <div className="absolute right-3 top-1/2 -translate-y-1/2">
             {isValidEmail(email) ? <Check className="w-4 h-4 text-green-400" /> : <X className="w-4 h-4 text-red-400" />}
@@ -346,7 +346,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string, name: string) 
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input type={showPwd ? 'text' : 'password'} placeholder="••••••••" value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-purple-500/50" required />
+            className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-[#768064]/50" required />
           <button type="button" onClick={() => setShowPwd(!showPwd)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
             {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -368,7 +368,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string, name: string) 
             confirmError ? 'text-red-400' : confirmPassword && passwordsMatch ? 'text-green-400' : 'text-muted-foreground')} />
           <Input type={showConfirm ? 'text' : 'password'} placeholder="••••••••" value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)} onBlur={() => setConfirmTouched(true)}
-            className={cn('pl-10 pr-10 bg-white/5 border-white/10 focus:border-purple-500/50',
+            className={cn('pl-10 pr-10 bg-white/5 border-[var(--border)] focus:border-[#768064]/50',
               confirmError && 'border-red-500/50', confirmPassword && passwordsMatch && 'border-green-500/40')} />
           <button type="button" onClick={() => setShowConfirm(!showConfirm)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -388,19 +388,19 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string, name: string) 
       <label className="flex items-start gap-3 cursor-pointer">
         <div onClick={() => setAgreed(!agreed)}
           className={cn('w-5 h-5 rounded border flex items-center justify-center shrink-0 mt-0.5 transition-colors',
-            agreed ? 'bg-purple-600 border-purple-600' : 'border-white/20 hover:border-purple-500/50')}>
+            agreed ? 'bg-[#4C583E] border-[#A5B38B]' : 'border-[var(--border)] hover:border-[#768064]/50')}>
           {agreed && <Check className="w-3 h-3 text-white" />}
         </div>
         <span className="text-sm text-muted-foreground">
           Tôi đồng ý với{' '}
-          <Link href="/terms" className="text-purple-400 hover:text-purple-300">Điều khoản</Link>
+          <Link href="/terms" className="text-[#768064] hover:text-[#4C583E]">Điều khoản</Link>
           {' '}và{' '}
-          <Link href="/privacy" className="text-purple-400 hover:text-purple-300">Chính sách bảo mật</Link>
+          <Link href="/privacy" className="text-[#768064] hover:text-[#4C583E]">Chính sách bảo mật</Link>
         </span>
       </label>
 
       <Button type="submit" disabled={isLoading || !agreed}
-        className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-500/25">
+        className="w-full h-11 bg-gradient-to-r from-[#4C583E] to-[#2C3424] hover:from-[#768064] hover:to-[#4C583E] text-white shadow-lg shadow-[#768064]/20">
         {isLoading
           ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           : <>Đăng ký miễn phí<ArrowRight className="w-4 h-4 ml-2" /></>}
@@ -408,7 +408,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string, name: string) 
 
       <p className="text-center text-sm text-muted-foreground">
         Đã có tài khoản?{' '}
-        <button type="button" onClick={() => switchTab('login')} className="text-purple-400 hover:text-purple-300 font-medium">
+        <button type="button" onClick={() => switchTab('login')} className="text-[#768064] hover:text-[#4C583E] font-medium">
           Đăng nhập
         </button>
       </p>
@@ -436,18 +436,18 @@ function SuccessScreen({ name, email, onClose }: { name: string; email: string; 
       <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
         <X className="w-5 h-5" />
       </button>
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/8 via-transparent to-indigo-500/8 pointer-events-none" />
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#768064]/8 via-transparent to-[#4C583E]/8 pointer-events-none" />
 
       {sparkles.map((s, i) => (
         <motion.span key={i} initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: [0, 1, 0.6], scale: 1 }}
           transition={{ delay: [0.3, 0.45, 0.55, 0.4][i], duration: 0.6 }}
-          className="absolute text-purple-300/60 text-xl pointer-events-none select-none" style={s}>✦</motion.span>
+          className="absolute text-[#4C583E]/60 text-xl pointer-events-none select-none" style={s}>✦</motion.span>
       ))}
 
       <motion.div initial={{ scale: 0, rotate: -30 }} animate={{ scale: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.05 }}
-        className="mx-auto mb-5 w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/40">
+        className="mx-auto mb-5 w-20 h-20 rounded-full bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center shadow-lg shadow-[#768064]/20">
         <ShieldCheck className="w-10 h-10 text-white" />
       </motion.div>
 
@@ -471,7 +471,7 @@ function SuccessScreen({ name, email, onClose }: { name: string; email: string; 
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
         <Button onClick={handleExplore}
-          className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-500/25">
+          className="w-full h-11 bg-gradient-to-r from-[#4C583E] to-[#2C3424] hover:from-[#768064] hover:to-[#4C583E] text-white shadow-lg shadow-[#768064]/20">
           <Sparkles className="w-4 h-4 mr-2" />Khám phá ngay
         </Button>
       </motion.div>
@@ -507,8 +507,8 @@ function ForgotPasswordScreen({ onBack, onClose }: { onBack: () => void; onClose
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#0f0a1a]/95 backdrop-blur-xl border border-white/10 shadow-[0_0_80px_rgba(168,85,247,0.2)]">
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/8 via-transparent to-indigo-500/8 pointer-events-none" />
+    <div className="relative overflow-hidden rounded-2xl bg-background/95 backdrop-blur-xl border border-white/10 shadow-[0_0_80px_rgba(168,85,247,0.2)]">
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#768064]/8 via-transparent to-[#4C583E]/8 pointer-events-none" />
       <button onClick={onClose} className="absolute top-4 right-4 z-10 text-muted-foreground hover:text-foreground transition-colors">
         <X className="w-5 h-5" />
       </button>
@@ -532,20 +532,20 @@ function ForgotPasswordScreen({ onBack, onClose }: { onBack: () => void; onClose
               <div className="mt-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-left">
                 <p className="text-xs text-yellow-400 font-medium mb-1">🛠 Dev mode — Link reset:</p>
                 <a href={resetUrl} onClick={onClose}
-                  className="text-xs text-purple-400 hover:text-purple-300 break-all underline">
+                  className="text-xs text-[#768064] hover:text-[#4C583E] break-all underline">
                   {resetUrl}
                 </a>
               </div>
             )}
-            <button onClick={onBack} className="mt-4 text-sm text-purple-400 hover:text-purple-300">
+            <button onClick={onBack} className="mt-4 text-sm text-[#768064] hover:text-[#4C583E]">
               Quay lại đăng nhập
             </button>
           </motion.div>
         ) : (
           <>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <KeyRound className="w-5 h-5 text-purple-400" />
+              <div className="w-10 h-10 rounded-full bg-[#768064]/20 flex items-center justify-center">
+                <KeyRound className="w-5 h-5 text-[#768064]" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-foreground">Quên mật khẩu</h2>
@@ -569,12 +569,12 @@ function ForgotPasswordScreen({ onBack, onClose }: { onBack: () => void; onClose
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input type="email" placeholder="email@example.com" value={email}
                     onChange={e => setEmail(e.target.value)} autoFocus
-                    className="pl-10 bg-white/5 border-white/10 focus:border-purple-500/50" required />
+                    className="pl-10 bg-white/5 border-white/10 focus:border-[#768064]/50" required />
                 </div>
               </div>
 
               <Button type="submit" disabled={loading || !email.trim()}
-                className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white">
+                className="w-full h-11 bg-gradient-to-r from-[#4C583E] to-[#2C3424] hover:from-[#768064] hover:to-[#4C583E] text-white">
                 {loading
                   ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   : <><Mail className="w-4 h-4 mr-2" />Gửi link đặt lại</>}

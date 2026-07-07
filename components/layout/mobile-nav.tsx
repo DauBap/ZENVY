@@ -20,7 +20,7 @@ export function MobileNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-      <div className="bg-background/90 backdrop-blur-xl border-t border-white/10 safe-area-inset-bottom">
+      <div className="bg-[#DADED8]/90 backdrop-blur-xl border-t border-[#DADED8]/40 safe-area-inset-bottom">
         <div className="flex items-center justify-around h-16">
           {navItems.map((item) => {
             const isActive = pathname === item.href ||
@@ -44,20 +44,20 @@ export function MobileNav() {
                   <item.icon
                     className={cn(
                       'w-5 h-5 transition-colors',
-                      isActive ? 'text-purple-400' : 'text-muted-foreground'
+                      isActive ? 'text-[#768064]' : 'text-muted-foreground'
                     )}
                   />
                   {isActive && (
                     <motion.div
                       layoutId="mobile-nav-indicator"
-                      className="absolute -inset-2 bg-purple-500/20 rounded-xl -z-10"
+                      className="absolute -inset-2 bg-[#768064]/10 rounded-xl -z-10"
                       transition={{ type: 'spring', duration: 0.4 }}
                     />
                   )}
                 </div>
                 <span className={cn(
                   'text-[10px] font-medium transition-colors',
-                  isActive ? 'text-purple-400' : 'text-muted-foreground'
+                  isActive ? 'text-[#768064]' : 'text-muted-foreground'
                 )}>
                   {item.label}
                 </span>

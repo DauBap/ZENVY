@@ -53,7 +53,7 @@ export function AdminPaymentsPage() {
           <p className="text-sm text-muted-foreground">{data?.total ?? 0} giao dịch</p>
         </div>
         <Button onClick={exportCSV} disabled={exporting}
-          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+          className="bg-gradient-to-r from-[#4C583E] to-[#2C3424] text-white">
           <Download className="w-4 h-4 mr-2" />
           {exporting ? 'Đang xuất...' : 'Xuất CSV'}
         </Button>
@@ -89,7 +89,7 @@ export function AdminPaymentsPage() {
                 {r.avatar ? (
                   <div className="w-7 h-7 rounded-full shrink-0" style={{ backgroundImage: `url("${r.avatar}")`, backgroundSize: 'cover' }} />
                 ) : (
-                  <div className="w-7 h-7 rounded-full bg-purple-500/20 flex items-center justify-center text-xs text-purple-300 shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-[#768064]/20 flex items-center justify-center text-xs text-[#4C583E] shrink-0">
                     {r.name.charAt(0)}
                   </div>
                 )}

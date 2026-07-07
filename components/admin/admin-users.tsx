@@ -226,7 +226,7 @@ export function AdminUsersPage() {
                       {u.avatar ? (
                         <div className="w-7 h-7 rounded-full shrink-0" style={{ backgroundImage: `url("${u.avatar}")`, backgroundSize: 'cover' }} />
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-purple-500/20 flex items-center justify-center text-xs text-purple-300 shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-[#768064]/20 flex items-center justify-center text-xs text-[#4C583E] shrink-0">
                           {u.name.charAt(0)}
                         </div>
                       )}
@@ -236,7 +236,7 @@ export function AdminUsersPage() {
                   <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
                   <td className="px-4 py-3">
                     <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium',
-                      u.role === 'ADMIN' ? 'bg-purple-500/20 text-purple-300' :
+                      u.role === 'ADMIN' ? 'bg-[#768064]/20 text-[#4C583E]' :
                       u.role === 'READER' ? 'bg-blue-500/20 text-blue-300' : 'bg-white/10 text-muted-foreground')}>
                       {u.role}
                     </span>

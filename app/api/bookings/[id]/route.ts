@@ -79,6 +79,15 @@ export async function PATCH(
         if (booking.status !== 'PENDING')
           return NextResponse.json({ error: 'Chỉ xác nhận thanh toán cho lịch đang chờ.' }, { status: 409 })
         await prisma.booking.update({ where: { id: bookingId }, data: { status: 'PAYMENT_CONFIRMED' } })
+
+        createNotification({
+          userId: booking.reader.user_id,
+          title: 'Có lịch hẹn mới cần xác nhận',
+          content: `Lịch hẹn vào ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} đã được admin duyệt thanh toán. Bạn có thể xác nhận trong dashboard.`,
+          type: 'BOOKING_CONFIRMED',
+          link: '/dashboard',
+        }).catch(() => {})
+
         return NextResponse.json({ success: true, booking: { id: bookingId, status: 'PAYMENT_CONFIRMED' } })
       }
 
@@ -139,11 +148,10 @@ export async function PATCH(
         return NextResponse.json({ error: 'Không có quyền.' }, { status: 403 })
 
       if (action === 'confirm') {
-        // Reader xác nhận booking — chấp nhận cả PENDING (khách vừa đặt)
-        // và PAYMENT_CONFIRMED (admin đã duyệt TT) → CONFIRMED
-        if (booking.status !== 'PENDING' && booking.status !== 'PAYMENT_CONFIRMED')
+        // Reader chỉ được xác nhận sau khi admin đã duyệt thanh toán
+        if (booking.status !== 'PAYMENT_CONFIRMED')
           return NextResponse.json({
-            error: 'Chỉ xác nhận được lịch đang chờ hoặc đã duyệt thanh toán.',
+            error: 'Chỉ xác nhận được lịch đã được admin duyệt thanh toán.',
           }, { status: 409 })
 
         await prisma.booking.update({ where: { id: bookingId }, data: { status: 'CONFIRMED' } })

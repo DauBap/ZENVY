@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { Facebook, Instagram, Youtube, Twitter, Mail, Phone, MapPin } from 'lucide-react'
@@ -46,10 +46,10 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#768064] via-[#4C583E] to-[#2C3424] flex items-center justify-center">
                 <span className="text-2xl">☽</span>
               </div>
-              <span className="text-xl font-bold gradient-text">ZENVY</span>
+              <span className="text-xl font-bold gradient-text">SAGETO</span>
             </Link>
             <p className="text-sm text-muted-foreground mb-6 max-w-xs">
               Nền tảng kết nối Tarot Reader hàng đầu Việt Nam. 
@@ -58,7 +58,7 @@ export function Footer() {
             <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <span>support@mystic-tarot.app</span>
+                <span>sageto.support@gmail.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
@@ -128,7 +128,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground text-center md:text-left">
-            © 2024 ZENVY. All rights reserved.
+            © 2024 SAGETO. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             {socialLinks.map((social) => (

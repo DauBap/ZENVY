@@ -153,7 +153,7 @@ export function AdminBookingsPage() {
                           ))}
                         </select>                        <Button size="sm" disabled={busyId === b.id}
                           onClick={() => updateBookingStatus(b.id, editStatus)}
-                          className="h-6 px-2 text-xs bg-purple-600 text-white">Lưu</Button>
+                          className="h-6 px-2 text-xs bg-[#4C583E] text-white">Lưu</Button>
                         <Button size="sm" variant="ghost" onClick={() => setEditId(null)}
                           className="h-6 px-2 text-xs">Hủy</Button>
                       </div>
@@ -181,7 +181,7 @@ export function AdminBookingsPage() {
                           </button>
                         )}
                         <button onClick={() => { setEditId(b.id); setEditStatus(b.status) }}
-                          className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
+                          className="text-xs text-[#768064] hover:text-[#4C583E] transition-colors">
                           Sửa
                         </button>
                       </div>

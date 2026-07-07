@@ -69,13 +69,13 @@ function timeAgo(iso: string) {
 function Avatar({ author, size = 40 }: { author: Author; size?: number }) {
   if (author.avatar) {
     return (
-      <div className="rounded-full overflow-hidden ring-2 ring-purple-500/30 shrink-0" style={{ width: size, height: size }}>
+      <div className="rounded-full overflow-hidden ring-2 ring-[#768064]/30 shrink-0" style={{ width: size, height: size }}>
         <Image src={author.avatar} alt={author.name} width={size} height={size} className="w-full h-full object-cover" unoptimized />
       </div>
     )
   }
   return (
-    <div className="rounded-full bg-purple-500/20 flex items-center justify-center shrink-0 text-purple-200 font-semibold"
+    <div className="rounded-full bg-[#768064]/20 flex items-center justify-center shrink-0 text-[#768064]/70 font-semibold"
       style={{ width: size, height: size, fontSize: size * 0.4 }}>
       {author.name.charAt(0).toUpperCase()}
     </div>
@@ -123,21 +123,21 @@ function MentionChip({ name, userId }: { name: string; userId: number }) {
     <Popover>
       <PopoverTrigger asChild>
         <button type="button" onClick={load}
-          className="text-purple-400 font-medium hover:underline">
+          className="text-[#768064] font-medium hover:underline">
           @{name}
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-64 bg-background/95 backdrop-blur-xl border-white/10 p-4">
         {!profile ? (
-          <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-purple-400" /></div>
+          <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-[#768064]" /></div>
         ) : (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               {profile.avatar ? (
                 <Image src={profile.avatar} alt={profile.name} width={48} height={48}
-                  className="w-12 h-12 rounded-full object-cover ring-2 ring-purple-500/30" unoptimized />
+                  className="w-12 h-12 rounded-full object-cover ring-2 ring-[#768064]/30" unoptimized />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-200 font-semibold text-lg">
+                <div className="w-12 h-12 rounded-full bg-[#768064]/20 flex items-center justify-center text-[#768064]/70 font-semibold text-lg">
                   {profile.name.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -161,7 +161,7 @@ function MentionChip({ name, userId }: { name: string; userId: number }) {
                 {profile.specialty.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {profile.specialty.slice(0, 4).map((s) => (
-                      <span key={s} className="px-2 py-0.5 text-[11px] rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/25">{s}</span>
+                      <span key={s} className="px-2 py-0.5 text-[11px] rounded-full bg-[#768064]/15 text-[#4C583E] border border-[#768064]/25">{s}</span>
                     ))}
                   </div>
                 )}
@@ -174,7 +174,7 @@ function MentionChip({ name, userId }: { name: string; userId: number }) {
                         </Button>
                       </Link>
                       <Link href={`/chat?reader=${profile.readerInfoId}`} className="flex-1">
-                        <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-500 text-white text-xs">
+                        <Button size="sm" className="w-full bg-[#4C583E] hover:bg-[#768064] text-white text-xs">
                           <MessageCircle className="w-3.5 h-3.5 mr-1" /> Trò chuyện
                         </Button>
                       </Link>
@@ -187,7 +187,7 @@ function MentionChip({ name, userId }: { name: string; userId: number }) {
             {/* Khách hàng: nút Nhắn tin chỉ hiện khi người xem là reader */}
             {!profile.isReader && viewerIsReader && profile.customerInfoId && (
               <Link href={`/chat?customer=${profile.customerInfoId}`} className="block">
-                <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-500 text-white text-xs">
+                <Button size="sm" className="w-full bg-[#4C583E] hover:bg-[#768064] text-white text-xs">
                   <MessageCircle className="w-3.5 h-3.5 mr-1" /> Nhắn tin
                 </Button>
               </Link>
@@ -260,7 +260,7 @@ function PostActionsMenu({
                 className={cn(
                   'w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors',
                   isEditing
-                    ? 'text-purple-300 bg-purple-500/10'
+                    ? 'text-[#4C583E] bg-[#768064]/10'
                     : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                 )}
               >
@@ -357,13 +357,13 @@ function MentionTextarea({
           {suggestions.map((u) => (
             <button key={u.id} onMouseDown={() => pickUser(u)}
               className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left transition-colors">
-              <div className="w-7 h-7 rounded-full bg-purple-500/20 shrink-0 overflow-hidden">
+              <div className="w-7 h-7 rounded-full bg-[#768064]/20 shrink-0 overflow-hidden">
                 {u.avatar
                   ? <Image src={u.avatar} alt={u.name} width={28} height={28} className="w-full h-full object-cover" unoptimized />
-                  : <span className="w-full h-full flex items-center justify-center text-xs text-purple-300">{u.name.charAt(0)}</span>}
+                  : <span className="w-full h-full flex items-center justify-center text-xs text-[#4C583E]">{u.name.charAt(0)}</span>}
               </div>
               <span className="text-sm text-foreground truncate">{u.name}</span>
-              {u.isReader && <span className="text-[10px] text-purple-400 ml-auto">Reader</span>}
+              {u.isReader && <span className="text-[10px] text-[#768064] ml-auto">Reader</span>}
             </button>
           ))}
         </div>
@@ -448,34 +448,30 @@ function PostModal({
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
+        className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="relative z-10 w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row rounded-2xl overflow-hidden bg-[#0f0a1a] border border-white/10 shadow-2xl"
+        className="relative z-10 w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row rounded-2xl overflow-hidden bg-card border border-white/10 shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Close button */}
         <button onClick={onClose}
-          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70">
+          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-background/80 flex items-center justify-center text-foreground hover:bg-background">
           <X className="w-4 h-4" />
         </button>
 
         {/* Left: image */}
         {post.imageUrl ? (
-          <div className="md:w-[55%] bg-black flex items-center justify-center min-h-[300px]">
+          <div className="md:w-[55%] bg-background flex items-center justify-center min-h-[300px]">
             <Image src={post.imageUrl} alt="post" width={800} height={800}
               className="w-full h-full object-contain max-h-[90vh]" unoptimized />
           </div>
         ) : (
-          <div className="hidden md:flex md:w-[45%] bg-gradient-to-br from-purple-900/40 to-indigo-900/40 items-center justify-center p-8">
-            <p className="text-foreground text-xl font-medium leading-relaxed text-center">
-              <RichContent text={post.content} />
-            </p>
-          </div>
+          <div className="hidden md:flex md:w-[45%] bg-gradient-to-br from-[#F7F3E8]/80 via-[#FBF5EC]/60 to-[#ECE0C8]/80 items-center justify-center p-8" />
         )}
 
         {/* Right: info + comments */}
@@ -488,7 +484,7 @@ function PostModal({
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-semibold text-foreground">{post.author.name}</span>
                   {post.author.isVerified && <ShieldCheck className="w-3.5 h-3.5 text-green-400" />}
-                  {post.author.isReader && <span className="px-1.5 py-0.5 text-[10px] rounded bg-purple-500/20 text-purple-300">Reader</span>}
+                  {post.author.isReader && <span className="px-1.5 py-0.5 text-[10px] rounded bg-[#768064]/20 text-[#4C583E]">Reader</span>}
                 </div>
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" /> {timeAgo(post.createdAt)}
@@ -512,7 +508,7 @@ function PostModal({
               <MentionTextarea value={editContent} onChange={setEditContent}
                 mentions={editMentions} onMentionsChange={setEditMentions}
                 placeholder="Nội dung bài viết..." maxLength={5000}
-                className="min-h-[80px] bg-white/5 border-white/10 focus:border-purple-500/50 resize-none text-sm" />
+                className="min-h-[80px] bg-white/5 border-white/10 focus:border-[#768064]/50 resize-none text-sm" />
               {editImage && (
                 <div className="relative inline-block">
                   <Image src={editImage} alt="edit" width={120} height={120} className="rounded-lg object-cover" unoptimized />
@@ -523,7 +519,7 @@ function PostModal({
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <button onClick={() => editFileRef.current?.click()} className="text-xs text-muted-foreground hover:text-purple-300 flex items-center gap-1">
+                <button onClick={() => editFileRef.current?.click()} className="text-xs text-muted-foreground hover:text-[#4C583E] flex items-center gap-1">
                   <ImagePlus className="w-4 h-4" /> Đổi ảnh
                 </button>
                 <input ref={editFileRef} type="file" accept="image/*" className="hidden"
@@ -534,7 +530,7 @@ function PostModal({
                 <div className="ml-auto flex gap-2">
                   <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Hủy</Button>
                   <Button size="sm" onClick={saveEdit}
-                    className="bg-purple-600 hover:bg-purple-500 text-white">
+                    className="bg-[#4C583E] hover:bg-[#768064] text-white">
                     <Check className="w-3.5 h-3.5 mr-1" /> Lưu
                   </Button>
                 </div>
@@ -553,7 +549,7 @@ function PostModal({
           {/* Comments list */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
             {loadingCmts ? (
-              <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-purple-400" /></div>
+              <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-[#768064]" /></div>
             ) : comments.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-8">Chưa có bình luận nào</p>
             ) : (
@@ -596,10 +592,10 @@ function PostModal({
                   <MentionTextarea value={draft} onChange={setDraft}
                     mentions={draftMentions} onMentionsChange={setDraftMentions}
                     placeholder="Bình luận... (@mention)" maxLength={2000}
-                    className="h-9 min-h-0 bg-white/5 border-white/10 focus:border-purple-500/50 resize-none text-sm py-1.5" />
+                    className="h-9 min-h-0 bg-white/5 border-white/10 focus:border-[#768064]/50 resize-none text-sm py-1.5" />
                 </div>
                 <Button size="sm" variant="ghost" onClick={submitComment}
-                  disabled={sending || !draft.trim()} className="text-purple-300 shrink-0">
+                  disabled={sending || !draft.trim()} className="text-[#4C583E] shrink-0">
                   {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </Button>
               </div>
@@ -634,7 +630,7 @@ function PostCard({
               <div className="flex items-center gap-1.5">
                 <span className="font-medium text-foreground">{post.author.name}</span>
                 {post.author.isVerified && <ShieldCheck className="w-4 h-4 text-green-400" />}
-                {post.author.isReader && <span className="px-1.5 py-0.5 text-[10px] rounded bg-purple-500/20 text-purple-300">Reader</span>}
+                {post.author.isReader && <span className="px-1.5 py-0.5 text-[10px] rounded bg-[#768064]/20 text-[#4C583E]">Reader</span>}
               </div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" /> {timeAgo(post.createdAt)}
@@ -672,7 +668,7 @@ function PostCard({
             <Heart className={cn('w-5 h-5', post.likedByMe && 'fill-current')} /> {post.likeCount}
           </button>
           <button onClick={onClick}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-purple-400 transition-colors">
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[#768064] transition-colors">
             <MessageCircle className="w-5 h-5" /> {post.commentCount}
           </button>
           <button onClick={() => onSave(post)} className="ml-auto transition-colors"
@@ -849,7 +845,7 @@ export function CommunityPage({ isLoggedIn }: { isLoggedIn: boolean }) {
                 mentions={mentions}
                 onMentionsChange={setMentions}
                 placeholder="Chia sẻ suy nghĩ của bạn... (dùng @ để tag người dùng)"
-                className="min-h-[80px] bg-white/5 border-white/10 focus:border-purple-500/50 resize-none mb-3 text-sm"
+                className="min-h-[80px] bg-white/5 border-white/10 focus:border-[#768064]/50 resize-none mb-3 text-sm"
                 maxLength={5000}
               />
               {image && (
@@ -864,7 +860,7 @@ export function CommunityPage({ isLoggedIn }: { isLoggedIn: boolean }) {
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-3">
                   <button type="button" onClick={() => fileRef.current?.click()}
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-purple-300 transition-colors">
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[#4C583E] transition-colors">
                     <ImagePlus className="w-4 h-4" /> Ảnh
                   </button>
                   <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
@@ -874,13 +870,13 @@ export function CommunityPage({ isLoggedIn }: { isLoggedIn: boolean }) {
                     className={cn(
                       'flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium transition-all border',
                       anonymous
-                        ? 'bg-purple-500/20 border-purple-500/40 text-purple-300'
-                        : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30'
+                        ? 'bg-[#768064]/20 border-[#768064]/40 text-[#4C583E]'
+                        : 'bg-white/5 border-white/10 text-muted-foreground hover:border-[#768064]/30'
                     )}
                   >
                     <span className={cn(
                       'w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 transition-colors',
-                      anonymous ? 'bg-purple-500 border-purple-500' : 'border-white/30'
+                      anonymous ? 'bg-[#768064] border-[#768064]' : 'border-white/30'
                     )}>
                       {anonymous && <Check className="w-2 h-2 text-white" />}
                     </span>
@@ -891,7 +887,7 @@ export function CommunityPage({ isLoggedIn }: { isLoggedIn: boolean }) {
                   </span>
                 </div>
                 <Button size="sm" disabled={posting || (!content.trim() && !image)} onClick={submitPost}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                  className="bg-gradient-to-r from-[#4C583E] to-[#2C3424] text-white">
                   {posting ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Đang đăng…</> : <><Send className="w-4 h-4 mr-1" />Đăng</>}
                 </Button>
               </div>
@@ -908,7 +904,7 @@ export function CommunityPage({ isLoggedIn }: { isLoggedIn: boolean }) {
                   {tab.label}
                   {activeTab === tab.id && (
                     <motion.div layoutId="community-tab"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#768064] to-[#4C583E]"
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }} />
                   )}
                 </button>
@@ -918,7 +914,7 @@ export function CommunityPage({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           {/* Feed */}
           {loading ? (
-            <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-purple-400" /></div>
+            <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-[#768064]" /></div>
           ) : posts.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               {activeTab === 'liked' ? 'Bạn chưa thích bài viết nào.' : activeTab === 'saved' ? 'Bạn chưa lưu bài viết nào.' : 'Chưa có bài viết nào.'}

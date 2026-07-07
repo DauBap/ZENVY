@@ -1,4 +1,4 @@
-import 'dotenv/config'
+﻿import 'dotenv/config'
 import { PrismaClient, Prisma } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
@@ -60,9 +60,9 @@ async function ensureUser(email: string, roleName: 'CUSTOMER' | 'READER' | 'ADMI
 
 async function main() {
   const accounts = [
-    { email: 'viet@zenvytest.com', roleName: 'READER' as const, displayName: 'Reader Viet' },
-    { email: 'admin@zenvytest.com', roleName: 'ADMIN' as const, displayName: 'Admin ZENVY' },
-    { email: 'customer@zenvytest.com', roleName: 'CUSTOMER' as const, displayName: 'Customer ZENVY' },
+    { email: 'viet@sagetotest.com', roleName: 'READER' as const, displayName: 'Reader Viet' },
+    { email: 'admin@sagetotest.com', roleName: 'ADMIN' as const, displayName: 'Admin SAGETO' },
+    { email: 'customer@sagetotest.com', roleName: 'CUSTOMER' as const, displayName: 'Customer SAGETO' },
   ]
 
   for (const account of accounts) {

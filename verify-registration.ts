@@ -1,4 +1,4 @@
-import 'dotenv/config'
+﻿import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
@@ -11,7 +11,7 @@ const prisma = new PrismaClient({
 async function main() {
   try {
     const user = await prisma.user.findUnique({
-      where: { email: 'test@zenvy.com' },
+      where: { email: 'test@sageto.com' },
       include: { customer_info: true, role: true },
     })
     

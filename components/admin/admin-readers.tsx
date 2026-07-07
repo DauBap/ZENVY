@@ -104,7 +104,7 @@ export function AdminReadersPage() {
                         <div className="w-8 h-8 rounded-full shrink-0"
                           style={{ backgroundImage: `url("${u.avatar}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-xs text-purple-300 shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[#768064]/20 flex items-center justify-center text-xs text-[#4C583E] shrink-0">
                           {u.name?.charAt(0) ?? '?'}
                         </div>
                       )}
@@ -160,7 +160,7 @@ export function AdminReadersPage() {
                   <div className="w-16 h-16 rounded-2xl shrink-0"
                     style={{ backgroundImage: `url("${detail.readerInfo.avatar_url}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                 ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center text-2xl text-purple-300">
+                  <div className="w-16 h-16 rounded-2xl bg-[#768064]/20 flex items-center justify-center text-2xl text-[#4C583E]">
                     {detail.readerInfo?.display_name?.charAt(0) ?? '?'}
                   </div>
                 )}

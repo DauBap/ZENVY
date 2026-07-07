@@ -1,4 +1,4 @@
-// Mock data for Tarot Booking Platform
+﻿// Mock data for Tarot Booking Platform
 
 export interface Reader {
   id: string
@@ -247,7 +247,7 @@ export const testimonials: Testimonial[] = [
     userName: 'Trần Minh Đức',
     userAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
     rating: 5,
-    comment: 'Đã dùng nhiều app tarot nhưng ZENVY là tốt nhất. Các reader ở đây đều được verify và rất chuyên nghiệp. Booking nhanh, chat tiện lợi!',
+    comment: 'Đã dùng nhiều app tarot nhưng SAGETO là tốt nhất. Các reader ở đây đều được verify và rất chuyên nghiệp. Booking nhanh, chat tiện lợi!',
     readerName: 'Đặng Mystic',
     verified: true,
   },
@@ -322,20 +322,23 @@ export const faqData = [
   },
 ]
 
-export const specialties = [
-  'Tình yêu',
-  'Sự nghiệp',
-  'Tài chính',
-  'Sức khỏe',
-  'Gia đình',
-  'Tâm linh',
-  'Kinh doanh',
-  'Đầu tư',
-  'Quyết định',
-  'Hôn nhân',
-  'Healing',
-  'Phong thủy',
-  'Lenormand',
-  'Oracle',
-  'Angel Cards',
-]
+// Load specialties from data file at runtime if possible; fallback to embedded list
+let _specialties: string[] | null = null
+
+export function getSpecialties(): string[] {
+  if (_specialties) return _specialties
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const data = require('../data/specialties.json')
+    _specialties = Array.isArray(data) ? data : []
+  } catch {
+    _specialties = [
+      'Tình yêu', 'Sự nghiệp', 'Tài chính', 'Sức khỏe', 'Gia đình', 'Tâm linh',
+      'Kinh doanh', 'Đầu tư', 'Quyết định', 'Hôn nhân', 'Healing', 'Phong thủy',
+      'Lenormand', 'Oracle', 'Angel Cards',
+    ]
+  }
+  return _specialties
+}
+
+export const specialties = getSpecialties()

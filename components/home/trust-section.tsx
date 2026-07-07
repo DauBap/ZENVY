@@ -15,8 +15,8 @@ export function TrustSection({ platformStats }: TrustSectionProps) {
       icon: MessageSquare,
       value: platformStats.totalSessions.toLocaleString(),
       label: 'Sessions hoàn thành',
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/20',
+      color: 'text-[#768064]',
+      bgColor: 'bg-[#768064]/20',
     },
     {
       icon: Star,

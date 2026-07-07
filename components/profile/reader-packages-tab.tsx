@@ -101,7 +101,7 @@ export function ReaderPackagesTab({ initial }: { initial: PackageItem[] }) {
       {items.map((pkg, idx) => (
         <GlassCard key={pkg.id ?? `new-${idx}`} className="p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-purple-400">
+            <div className="flex items-center gap-2 text-[#768064]">
               <Sparkles className="w-4 h-4" />
               <span className="text-sm font-medium text-foreground">
                 {pkg.id === null ? 'Gói mới' : pkg.name || 'Gói dịch vụ'}
@@ -159,12 +159,12 @@ export function ReaderPackagesTab({ initial }: { initial: PackageItem[] }) {
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input type="checkbox" checked={pkg.popular}
                 onChange={(e) => update(idx, { popular: e.target.checked })}
-                className="w-4 h-4 rounded accent-purple-500" />
+                className="w-4 h-4 rounded accent-[#A5B38B]" />
               <span className="text-sm text-muted-foreground">Đánh dấu &quot;Phổ biến&quot;</span>
             </label>
             <Button type="button" size="sm" disabled={busyKey === `save-${idx}`}
               onClick={() => save(idx)}
-              className="bg-purple-600 hover:bg-purple-500 text-white">
+              className="bg-[#4C583E] hover:bg-[#768064] text-white">
               {busyKey === `save-${idx}` ? (
                 <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Đang lưu…</>
               ) : (pkg.id === null ? 'Thêm gói' : 'Lưu')}
@@ -178,7 +178,7 @@ export function ReaderPackagesTab({ initial }: { initial: PackageItem[] }) {
         onClick={() => setItems((prev) => [...prev, emptyPackage()])}
         className={cn(
           'w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed transition-all',
-          'border-white/15 text-muted-foreground hover:border-purple-500/40 hover:text-purple-300 hover:bg-purple-500/5'
+          'border-white/15 text-muted-foreground hover:border-[#768064]/40 hover:text-[#4C583E] hover:bg-[#768064]/5'
         )}
       >
         <Plus className="w-4 h-4" /> Thêm gói dịch vụ

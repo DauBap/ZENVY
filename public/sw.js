@@ -1,4 +1,4 @@
-// ZENVY Service Worker — Web Push Notifications
+﻿// SAGETO Service Worker — Web Push Notifications
 // Phiên bản: 1.0.0
 
 self.addEventListener('install', (event) => {
@@ -15,10 +15,10 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {}
   } catch {
-    data = { title: 'ZENVY', body: event.data ? event.data.text() : '' }
+    data = { title: 'SAGETO', body: event.data ? event.data.text() : '' }
   }
 
-  const title = data.title || 'ZENVY Thông báo'
+  const title = data.title || 'SAGETO Thông báo'
   const options = {
     body: data.body || '',
     icon: data.icon || '/icon-light-32x32.png',
@@ -26,7 +26,7 @@ self.addEventListener('push', (event) => {
     data: { link: data.link || '/' },
     vibrate: [200, 100, 200],
     requireInteraction: false,
-    tag: 'zenvy-notification',  // replace cùng tag thay vì stack
+    tag: 'sageto-notification',  // replace cùng tag thay vì stack
   }
 
   event.waitUntil(

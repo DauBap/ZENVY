@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { createNotificationForAdmins } from '@/lib/notifications'
 import { Prisma } from '@prisma/client'
 
 // GET /api/reader/withdrawals — lịch sử rút tiền của reader
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
 
   const reader = await prisma.readerInfo.findUnique({
     where: { user_id: Number(session.sub) },
-    select: { id: true, bank_name: true, bank_account: true, bank_owner_name: true },
+    select: { id: true, display_name: true, bank_name: true, bank_account: true, bank_owner_name: true },
   })
   if (!reader) return NextResponse.json({ error: 'Không tìm thấy reader.' }, { status: 404 })
 
@@ -136,6 +137,13 @@ export async function POST(request: NextRequest) {
       status: 'PENDING',
     },
   })
+
+  await createNotificationForAdmins({
+    title: 'Yêu cầu rút tiền mới',
+    content: `Reader ${reader.display_name || 'không tên'} vừa gửi yêu cầu rút ${amount.toLocaleString('vi-VN')}đ. `,
+    type: 'SYSTEM',
+    link: '/admin/withdrawals',
+  }).catch(() => {})
 
   return NextResponse.json({ success: true, id: withdrawal.id }, { status: 201 })
 }

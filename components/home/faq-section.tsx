@@ -45,9 +45,9 @@ export function FAQSection({ faqData }: FAQSectionProps) {
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm px-6 data-[state=open]:border-purple-500/30 data-[state=open]:bg-purple-500/5 transition-all"
+                className="border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm px-6 data-[state=open]:border-[#768064]/30 data-[state=open]:bg-[#768064]/5 transition-all"
               >
-                <AccordionTrigger className="text-left text-foreground hover:text-purple-300 hover:no-underline py-5">
+                <AccordionTrigger className="text-left text-foreground hover:text-[#4C583E] hover:no-underline py-5">
                   {faq.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
@@ -71,7 +71,7 @@ export function FAQSection({ faqData }: FAQSectionProps) {
           </p>
           <a
             href="/contact"
-            className="inline-flex items-center text-purple-400 hover:text-purple-300 font-medium"
+            className="inline-flex items-center text-[#768064] hover:text-[#4C583E] font-medium"
           >
             Liên hệ hỗ trợ →
           </a>

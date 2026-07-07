@@ -37,7 +37,7 @@ export function FeaturedReaders({ readers }: FeaturedReadersProps) {
           <Link href="/readers">
             <Button
               variant="outline"
-              className="border-purple-500/30 hover:bg-purple-500/10 group"
+              className="border-[#768064]/30 hover:bg-[#768064]/10 group"
             >
               Xem tất cả
               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -84,9 +84,9 @@ export function FeaturedReaders({ readers }: FeaturedReadersProps) {
               size="lg"
               className={cn(
                 'h-14 px-8',
-                'bg-gradient-to-r from-purple-600 to-indigo-600',
-                'hover:from-purple-500 hover:to-indigo-500',
-                'text-white shadow-xl shadow-purple-500/30',
+                'bg-gradient-to-r from-[#4C583E] to-[#2C3424]',
+                'hover:from-[#768064] hover:to-[#4C583E]',
+                'text-white shadow-xl shadow-[#768064]/20',
                 'group'
               )}
             >

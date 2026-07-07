@@ -25,7 +25,7 @@ export function FloatingElements() {
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {/* Gradient orbs */}
       <motion.div
-        className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-purple-500/20 blur-3xl"
+        className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-[#768064]/20 blur-3xl"
         animate={{
           x: [0, 30, 0],
           y: [0, -20, 0],
@@ -38,7 +38,7 @@ export function FloatingElements() {
         }}
       />
       <motion.div
-        className="absolute top-1/3 -left-40 w-80 h-80 rounded-full bg-indigo-500/15 blur-3xl"
+        className="absolute top-1/3 -left-40 w-80 h-80 rounded-full bg-[#768064]/15 blur-3xl"
         animate={{
           x: [0, -20, 0],
           y: [0, 30, 0],
@@ -136,11 +136,11 @@ export function CosmicBackground() {
   return (
     <div className="fixed inset-0 -z-10">
       {/* Base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0510] via-[#0f0a1a] to-[#0a0815]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#F7F3E8] via-[#FAF0E1] to-[#EFE2CC]" />
       
       {/* Cosmic gradient overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#A5B38B]/15 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-[#768064]/10 via-transparent to-transparent" />
       
       {/* Noise texture */}
       <div className="absolute inset-0 opacity-[0.015] bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E')]" />

@@ -178,7 +178,7 @@ export function ReaderWithdrawalTab() {
 
   if (loading) return (
     <GlassCard className="p-8 flex justify-center">
-      <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
+      <Loader2 className="w-6 h-6 animate-spin text-[#768064]" />
     </GlassCard>
   )
 
@@ -193,7 +193,7 @@ export function ReaderWithdrawalTab() {
       {/* Bank info */}
       <GlassCard className="p-6 space-y-4">
         <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-purple-400" />
+          <Building2 className="w-4 h-4 text-[#768064]" />
           Thông tin ngân hàng ATM
         </h3>
         <p className="text-sm italic text-yellow-400/90 flex items-center gap-1.5">
@@ -246,7 +246,7 @@ export function ReaderWithdrawalTab() {
         </div>
 
         <Button onClick={saveBank} disabled={savingBank} size="sm"
-          className="bg-purple-600 hover:bg-purple-500 text-white">
+          className="bg-[#4C583E] hover:bg-[#768064] text-white">
           {savingBank ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Đang lưu…</> : 'Lưu thông tin'}
         </Button>
       </GlassCard>
@@ -254,7 +254,7 @@ export function ReaderWithdrawalTab() {
       {/* Withdrawal form */}
       <GlassCard className="p-6 space-y-4">
         <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-          <ArrowDownToLine className="w-4 h-4 text-purple-400" />
+          <ArrowDownToLine className="w-4 h-4 text-[#768064]" />
           Yêu cầu rút tiền
         </h3>
         <div className="space-y-1.5">
@@ -280,7 +280,7 @@ export function ReaderWithdrawalTab() {
         )}
         <Button onClick={requestWithdrawal}
           disabled={submitting || requestedAmt < 100000 || requestedAmt > availableBalance}
-          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white w-full">
+          className="bg-gradient-to-r from-[#4C583E] to-[#2C3424] text-white w-full">
           {submitting
             ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Đang gửi…</>
             : <><Banknote className="w-4 h-4 mr-2" />Gửi yêu cầu rút tiền</>}
@@ -293,7 +293,7 @@ export function ReaderWithdrawalTab() {
       {/* Withdrawal history */}
       <GlassCard className="p-6">
         <h3 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
-          <CreditCard className="w-4 h-4 text-purple-400" />
+          <CreditCard className="w-4 h-4 text-[#768064]" />
           Lịch sử rút tiền
         </h3>
         {(data?.withdrawals ?? []).length === 0 ? (

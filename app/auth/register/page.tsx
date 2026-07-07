@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
@@ -44,15 +44,15 @@ function LoginModal({ email, onClose }: { email: string; onClose: () => void }) 
         className="relative z-10 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
         <div className="relative overflow-hidden rounded-2xl p-8 bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_60px_rgba(168,85,247,0.25)]">
           <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"><X className="w-5 h-5" /></button>
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/10 via-transparent to-indigo-500/10 pointer-events-none" />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#768064]/10 via-transparent to-[#4C583E]/10 pointer-events-none" />
           {sparkles.map((s, i) => (
             <motion.span key={i} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: [0, 1, 0.5], scale: 1 }}
               transition={{ delay: [0.25, 0.4, 0.5, 0.35][i], duration: 0.5 }}
-              className="absolute text-purple-300/50 text-lg pointer-events-none select-none" style={s}>✦</motion.span>
+              className="absolute text-[#4C583E]/50 text-lg pointer-events-none select-none" style={s}>✦</motion.span>
           ))}
           <motion.div initial={{ scale: 0, rotate: 20 }} animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.05 }}
-            className="mx-auto mb-5 w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/40">
+            className="mx-auto mb-5 w-16 h-16 rounded-full bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center shadow-lg shadow-[#768064]/20">
             <LogIn className="w-8 h-8 text-white" />
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -65,8 +65,8 @@ function LoginModal({ email, onClose }: { email: string; onClose: () => void }) 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
-                <div className="flex items-center pl-10 pr-10 h-10 rounded-md text-sm bg-purple-500/10 border border-purple-500/30 text-foreground/80 cursor-default overflow-hidden">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#768064]" />
+                <div className="flex items-center pl-10 pr-10 h-10 rounded-md text-sm bg-[#768064]/10 border border-[#768064]/30 text-foreground/80 cursor-default overflow-hidden">
                   <span className="truncate">{email}</span>
                 </div>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2"><Check className="w-4 h-4 text-green-400" /></div>
@@ -78,7 +78,7 @@ function LoginModal({ email, onClose }: { email: string; onClose: () => void }) 
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input ref={passwordRef} type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password}
                   onChange={(e) => { setPassword(e.target.value); setError('') }}
-                  className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-purple-500/50" required />
+                  className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-[#768064]/50" required />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -93,12 +93,12 @@ function LoginModal({ email, onClose }: { email: string; onClose: () => void }) 
               </div>
             </div>
             <Button type="submit" disabled={isLoading || !password}
-              className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-500/25">
+              className="w-full h-11 bg-gradient-to-r from-[#4C583E] to-[#2C3424] hover:from-[#768064] hover:to-[#4C583E] text-white shadow-lg shadow-[#768064]/20">
               {isLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 : <><Sparkles className="w-4 h-4 mr-2" />Bắt đầu khám phá</>}
             </Button>
             <div className="text-center pt-1">
-              <Link href="/auth/forgot-password" className="text-xs text-purple-400 hover:text-purple-300 transition-colors">Quên mật khẩu?</Link>
+              <Link href="/auth/forgot-password" className="text-xs text-[#768064] hover:text-[#4C583E] transition-colors">Quên mật khẩu?</Link>
             </div>
           </motion.form>
         </div>
@@ -126,16 +126,16 @@ function SuccessModal({ name, onClose, onLoginClick }: { name: string; onClose: 
           <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/10 via-transparent to-indigo-500/10 pointer-events-none" />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#768064]/10 via-transparent to-[#4C583E]/10 pointer-events-none" />
           {positions.map((s, i) => (
             <motion.span key={i} initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: [0, 1, 0.6], scale: 1 }}
               transition={{ delay: [0.3, 0.45, 0.55, 0.4][i], duration: 0.6 }}
-              className="absolute text-purple-300/60 text-xl pointer-events-none select-none" style={s}>✦</motion.span>
+              className="absolute text-[#4C583E]/60 text-xl pointer-events-none select-none" style={s}>✦</motion.span>
           ))}
           <motion.div initial={{ scale: 0, rotate: -30 }} animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.1 }}
-            className="mx-auto mb-5 w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/40">
+            className="mx-auto mb-5 w-20 h-20 rounded-full bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center shadow-lg shadow-[#768064]/20">
             <ShieldCheck className="w-10 h-10 text-white" />
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
@@ -155,7 +155,7 @@ function SuccessModal({ name, onClose, onLoginClick }: { name: string; onClose: 
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
             <Button onClick={onLoginClick}
-              className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-500/25">
+              className="w-full h-11 bg-gradient-to-r from-[#4C583E] to-[#2C3424] hover:from-[#768064] hover:to-[#4C583E] text-white shadow-lg shadow-[#768064]/20">
               <Sparkles className="w-4 h-4 mr-2" />Khám phá ngay
             </Button>
           </motion.div>
@@ -252,13 +252,13 @@ export default function RegisterPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
           {/* Logo */}
           <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center">
               <span className="text-3xl">☽</span>
             </div>
-            <span className="text-2xl font-bold gradient-text">ZENVY</span>
+            <span className="text-2xl font-bold gradient-text">SAGETO</span>
           </Link>
 
-          <GlassCard className="p-8" glow="purple">
+          <GlassCard className="p-8" glow="olive">
             <div className="text-center mb-8">
               <h1 className="text-2xl font-bold text-foreground mb-2">Tạo tài khoản mới</h1>
               <p className="text-muted-foreground">Bắt đầu hành trình khám phá bản thân</p>
@@ -285,7 +285,7 @@ export default function RegisterPage() {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input type="text" placeholder="Nguyễn Văn A" value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 focus:border-purple-500/50" required />
+                    className="pl-10 bg-white/5 border-white/10 focus:border-[#768064]/50" required />
                 </div>
               </div>
 
@@ -304,7 +304,7 @@ export default function RegisterPage() {
                     onChange={(e) => { setEmail(e.target.value) }}
                     onBlur={() => setEmailTouched(true)}
                     className={cn(
-                      'pl-10 pr-10 bg-white/5 border-white/10 focus:border-purple-500/50 transition-colors',
+                      'pl-10 pr-10 bg-white/5 border-white/10 focus:border-[#768064]/50 transition-colors',
                       emailError && 'border-red-500/50 focus:border-red-500/70',
                       isValidEmail(email) && email && !emailError && 'border-green-500/40 focus:border-green-500/60'
                     )}
@@ -342,7 +342,7 @@ export default function RegisterPage() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-purple-500/50"
+                    className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-[#768064]/50"
                     required
                   />
                   <button
@@ -389,7 +389,7 @@ export default function RegisterPage() {
                     onChange={(e) => { setConfirmPassword(e.target.value) }}
                     onBlur={() => setConfirmTouched(true)}
                     className={cn(
-                      'pl-10 pr-10 bg-white/5 border-white/10 focus:border-purple-500/50 transition-colors',
+                      'pl-10 pr-10 bg-white/5 border-white/10 focus:border-[#768064]/50 transition-colors',
                       confirmError && 'border-red-500/50 focus:border-red-500/70',
                       confirmPassword && passwordsMatch && !confirmError && 'border-green-500/40 focus:border-green-500/60'
                     )}
@@ -428,19 +428,19 @@ export default function RegisterPage() {
                   className={cn(
                     'w-5 h-5 rounded border flex items-center justify-center shrink-0 mt-0.5 transition-colors',
                     agreed
-                      ? 'bg-purple-600 border-purple-600'
-                      : 'border-white/20 hover:border-purple-500/50'
+                      ? 'bg-[#4C583E] border-[#A5B38B]'
+                      : 'border-white/20 hover:border-[#768064]/50'
                   )}
                 >
                   {agreed && <Check className="w-3 h-3 text-white" />}
                 </div>
                 <span className="text-sm text-muted-foreground">
                   Tôi đồng ý với{' '}
-                  <Link href="/terms" className="text-purple-400 hover:text-purple-300">
+                  <Link href="/terms" className="text-[#768064] hover:text-[#4C583E]">
                     Điều khoản sử dụng
                   </Link>
                   {' '}và{' '}
-                  <Link href="/privacy" className="text-purple-400 hover:text-purple-300">
+                  <Link href="/privacy" className="text-[#768064] hover:text-[#4C583E]">
                     Chính sách bảo mật
                   </Link>
                 </span>
@@ -452,9 +452,9 @@ export default function RegisterPage() {
                 disabled={isLoading || !agreed}
                 className={cn(
                   'w-full h-12',
-                  'bg-gradient-to-r from-purple-600 to-indigo-600',
-                  'hover:from-purple-500 hover:to-indigo-500',
-                  'text-white shadow-lg shadow-purple-500/25'
+                  'bg-gradient-to-r from-[#4C583E] to-[#2C3424]',
+                  'hover:from-[#768064] hover:to-[#4C583E]',
+                  'text-white shadow-lg shadow-[#768064]/20'
                 )}
               >
                 {isLoading ? (
@@ -469,8 +469,8 @@ export default function RegisterPage() {
             </form>
 
             {/* Benefits */}
-            <div className="mt-6 p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
-              <p className="text-sm text-purple-300 font-medium mb-2">Khi đăng ký, bạn sẽ nhận được:</p>
+            <div className="mt-6 p-4 rounded-xl bg-[#768064]/10 border border-[#768064]/20">
+              <p className="text-sm text-[#4C583E] font-medium mb-2">Khi đăng ký, bạn sẽ nhận được:</p>
               <ul className="space-y-1.5 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
                   <span className="text-green-400">✓</span>
@@ -490,7 +490,7 @@ export default function RegisterPage() {
             {/* Login Link */}
             <p className="text-center text-sm text-muted-foreground mt-6">
               Đã có tài khoản?{' '}
-              <Link href="/auth/login" className="text-purple-400 hover:text-purple-300 font-medium">
+              <Link href="/auth/login" className="text-[#768064] hover:text-[#4C583E] font-medium">
                 Đăng nhập
               </Link>
             </p>

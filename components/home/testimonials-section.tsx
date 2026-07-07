@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef } from 'react'
 import Image from 'next/image'
@@ -31,7 +31,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
             Người dùng <span className="gradient-text">nói gì</span> về chúng tôi
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Hàng ngàn người đã tìm thấy sự rõ ràng và guidance thông qua ZENVY
+            Hàng ngàn người đã tìm thấy sự rõ ràng và guidance thông qua SAGETO
           </p>
         </motion.div>
 
@@ -44,9 +44,9 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <GlassCard className="p-6 h-full flex flex-col" glow="purple">
+              <GlassCard className="p-6 h-full flex flex-col" glow="olive">
                 {/* Quote Icon */}
-                <Quote className="w-8 h-8 text-purple-400/50 mb-4" />
+                <Quote className="w-8 h-8 text-[#768064]/50 mb-4" />
 
                 {/* Rating */}
                 <StarRating rating={testimonial.rating} size="sm" className="mb-4" />
