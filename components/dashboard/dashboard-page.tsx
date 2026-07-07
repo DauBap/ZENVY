@@ -125,11 +125,11 @@ function ReaderEarningsWidget({ total, count, items }: ReaderEarningsWidgetProps
       {/* Tổng quan */}
       <div>
         <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 mb-4">
-          <CreditCard className="w-5 h-5 text-purple-400" />
+          <CreditCard className="w-5 h-5 text-[#768064]" />
           Thu nhập tích lũy
         </h2>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+          <div className="p-4 rounded-xl bg-[#768064]/10 border border-[#768064]/20">
             <div className="text-sm text-muted-foreground mb-1">Tổng thu nhập</div>
             <div className="text-3xl font-bold gradient-text">{formatVnd(total)}</div>
           </div>
@@ -145,7 +145,7 @@ function ReaderEarningsWidget({ total, count, items }: ReaderEarningsWidgetProps
         <h3 className="text-base font-semibold text-foreground mb-3">Lịch sử giao dịch</h3>
         {items.length === 0 ? (
           <div className="text-center py-8">
-            <CreditCard className="w-10 h-10 text-purple-400/30 mx-auto mb-3" />
+            <CreditCard className="w-10 h-10 text-[#768064]/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">Chưa có giao dịch nào. Hoàn thành phiên đầu tiên để bắt đầu thu nhập!</p>
           </div>
         ) : (
@@ -153,7 +153,7 @@ function ReaderEarningsWidget({ total, count, items }: ReaderEarningsWidgetProps
             <div className="space-y-2">
               {displayItems.map((e) => (
                 <div key={e.id}
-                  className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/20 transition-all">
+                  className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-[#768064]/20 transition-all">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center shrink-0">
                       <CreditCard className="w-4 h-4 text-green-400" />
@@ -177,7 +177,7 @@ function ReaderEarningsWidget({ total, count, items }: ReaderEarningsWidgetProps
             {items.length > 5 && (
               <button
                 onClick={() => setShowAll(v => !v)}
-                className="mt-3 w-full text-sm text-purple-400 hover:text-purple-300 transition-colors py-2">
+                className="mt-3 w-full text-sm text-[#768064] hover:text-[#4C583E] transition-colors py-2">
                 {showAll ? 'Thu gọn ▲' : `Xem thêm ${items.length - 5} giao dịch ▼`}
               </button>
             )}
@@ -204,7 +204,7 @@ function FavoritesTab() {
   if (loading) return (
     <GlassCard className="p-6">
       <div className="flex justify-center py-12">
-        <div className="w-6 h-6 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-[#768064]/30 border-t-[#A5B38B] rounded-full animate-spin" />
       </div>
     </GlassCard>
   )
@@ -216,7 +216,7 @@ function FavoritesTab() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {readers.map((r) => (
             <Link key={r.id} href={`/readers/${r.id}`}>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all group cursor-pointer">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-[#768064]/30 transition-all group cursor-pointer">
                 <div className="w-12 h-12 rounded-xl shrink-0"
                   style={{ backgroundImage: `url("${r.avatar}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                 <div className="flex-1 min-w-0">
@@ -232,7 +232,7 @@ function FavoritesTab() {
         </div>
       ) : (
         <div className="text-center py-12">
-          <Heart className="w-12 h-12 text-purple-400/30 mx-auto mb-4" />
+          <Heart className="w-12 h-12 text-[#768064]/30 mx-auto mb-4" />
           <p className="text-muted-foreground mb-4">Chưa có reader yêu thích</p>
           <Link href="/readers"><Button variant="outline">Khám phá Readers</Button></Link>
         </div>
@@ -379,14 +379,6 @@ export function DashboardPage({
               <p className="text-muted-foreground">Quản lý lịch hẹn và hoạt động của bạn</p>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="icon" className="relative border-white/10">
-                <Bell className="w-5 h-5" />
-                {upcomingBookings.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
-                    {upcomingBookings.length}
-                  </span>
-                )}
-              </Button>
               <Link href="/profile">
                 <Button variant="outline" size="icon" className="border-white/10">
                   <Settings className="w-5 h-5" />
@@ -404,7 +396,7 @@ export function DashboardPage({
                   {navTabs.map((tab) => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                       className={cn('w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all',
-                        activeTab === tab.id ? 'bg-purple-500/20 text-purple-300' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground')}>
+                        activeTab === tab.id ? 'bg-[#768064]/20 text-[#4C583E]' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground')}>
                       <tab.icon className="w-5 h-5" />
                       <span className="font-medium">{tab.label}</span>
                     </button>
@@ -459,9 +451,9 @@ export function DashboardPage({
                                 <div className="font-medium text-foreground">{partnerName}</div>
                                 <div className="text-sm text-muted-foreground">{pkgLabel}</div>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <Calendar className="w-4 h-4 text-purple-400" />
+                                  <Calendar className="w-4 h-4 text-[#768064]" />
                                   <span className="text-sm text-foreground">{b.date}</span>
-                                  <Clock className="w-4 h-4 text-purple-400 ml-2" />
+                                  <Clock className="w-4 h-4 text-[#768064] ml-2" />
                                   <span className="text-sm text-foreground">{b.time}</span>
                                 </div>
                               </div>
@@ -471,7 +463,7 @@ export function DashboardPage({
                                 {status.label}
                               </span>
                               <Link href={`/chat?${isReader ? 'customer' : 'reader'}=${b.counterparty?.id}&booking=${b.id}`}>
-                                <Button size="sm" className="bg-purple-600 hover:bg-purple-500 text-white">
+                                <Button size="sm" className="bg-[#4C583E] hover:bg-[#768064] text-white">
                                   <MessageSquare className="w-4 h-4 mr-1" /> Chat
                                 </Button>
                               </Link>
@@ -545,7 +537,7 @@ export function DashboardPage({
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <Moon className="w-12 h-12 text-purple-400/30 mx-auto mb-4" />
+                      <Moon className="w-12 h-12 text-[#768064]/30 mx-auto mb-4" />
                       <p className="text-muted-foreground mb-4">
                         {isReader ? 'Chưa có khách đặt lịch' : 'Bạn chưa có lịch hẹn nào'}
                       </p>
@@ -570,8 +562,8 @@ export function DashboardPage({
                           className={cn(
                             'px-3 py-1.5 text-xs rounded-full border transition-colors',
                             historyFilter === f.id
-                              ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
-                              : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30'
+                              ? 'bg-[#768064]/20 border-[#768064]/50 text-[#4C583E]'
+                              : 'bg-white/5 border-white/10 text-muted-foreground hover:border-[#768064]/30'
                           )}
                         >
                           {f.label}
@@ -622,7 +614,7 @@ export function DashboardPage({
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <History className="w-12 h-12 text-purple-400/30 mx-auto mb-4" />
+                      <History className="w-12 h-12 text-[#768064]/30 mx-auto mb-4" />
                       <p className="text-muted-foreground">
                         {historyFilter === 'ALL' ? 'Chưa có lịch sử cuộc hẹn' : 'Không có cuộc hẹn nào ở trạng thái này'}
                       </p>
@@ -641,7 +633,7 @@ export function DashboardPage({
                 <GlassCard className="p-6">
                   <h2 className="text-xl font-semibold text-foreground mb-6">Lịch sử AI Tarot</h2>
                   <div className="text-center py-12">
-                    <Sparkles className="w-12 h-12 text-purple-400/30 mx-auto mb-4" />
+                    <Sparkles className="w-12 h-12 text-[#768064]/30 mx-auto mb-4" />
                     <p className="text-muted-foreground mb-4">Chưa có lịch sử AI Tarot</p>
                     <Link href="/ai-tarot"><Button>Thử AI Tarot ngay</Button></Link>
                   </div>
@@ -675,7 +667,7 @@ export function DashboardPage({
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <CreditCard className="w-12 h-12 text-purple-400/30 mx-auto mb-4" />
+                      <CreditCard className="w-12 h-12 text-[#768064]/30 mx-auto mb-4" />
                       <p className="text-muted-foreground">Chưa có giao dịch nào </p>
                     </div>
                   )}
@@ -803,7 +795,7 @@ export function DashboardPage({
             placeholder="Chia sẻ cảm nhận của bạn (tuỳ chọn)…"
             rows={3}
             maxLength={1000}
-            className="bg-white/5 border-white/10 focus:border-purple-500/50 resize-none"
+            className="bg-white/5 border-white/10 focus:border-[#768064]/50 resize-none"
           />
 
           <DialogFooter>
@@ -811,7 +803,7 @@ export function DashboardPage({
             <Button
               disabled={submittingReview}
               onClick={submitReview}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white"
+              className="bg-gradient-to-r from-[#4C583E] to-[#2C3424] text-white"
             >
               {submittingReview ? 'Đang gửi…' : 'Gửi đánh giá'}
             </Button>

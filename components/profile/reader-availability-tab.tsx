@@ -18,11 +18,11 @@ export interface AvailabilityItem {
 
 export function ReaderAvailabilityTab({ initial }: { initial: AvailabilityItem[] }) {
   const router = useRouter()
-  const [items, setItems] = useState<AvailabilityItem[]>(initial)
+  const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
+  const todayVN = new Date(Date.now() + ICT_OFFSET_MS).toISOString().split('T')[0]
+  const [items, setItems] = useState<AvailabilityItem[]>(() => initial.filter((it) => it.date >= todayVN))
   const [newDate, setNewDate] = useState('')
   const [busy, setBusy] = useState(false)
-  
-  const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
   
   function isSlotPast(dateStr: string, slot: string) {
     const nowUtcMs = Date.now()
@@ -36,6 +36,10 @@ export function ReaderAvailabilityTab({ initial }: { initial: AvailabilityItem[]
 
   function addDate() {
     if (!newDate) { toast.error('Vui lòng chọn ngày.'); return }
+    if (newDate < todayVN) {
+      toast.error('Không thể thêm ngày đã qua.')
+      return
+    }
     if (items.some((it) => it.date === newDate)) {
       toast.error('Ngày này đã có trong danh sách.')
       return
@@ -90,7 +94,7 @@ export function ReaderAvailabilityTab({ initial }: { initial: AvailabilityItem[]
     <div className="space-y-4">
       {/* Thêm ngày */}
       <GlassCard className="p-5">
-        <div className="flex items-center gap-2 mb-3 text-purple-400">
+        <div className="flex items-center gap-2 mb-3 text-[#768064]">
           <Calendar className="w-4 h-4" />
           <span className="text-sm font-medium text-foreground">Thêm ngày trống</span>
         </div>
@@ -98,7 +102,7 @@ export function ReaderAvailabilityTab({ initial }: { initial: AvailabilityItem[]
           <div className="flex-1">
             <DatePicker value={newDate} onChange={setNewDate} placeholder="Chọn ngày" />
           </div>
-          <Button type="button" onClick={addDate} className="bg-purple-600 hover:bg-purple-500 text-white shrink-0">
+          <Button type="button" onClick={addDate} className="bg-[#4C583E] hover:bg-[#768064] text-white shrink-0">
             <Plus className="w-4 h-4 mr-1" /> Thêm
           </Button>
         </div>
@@ -127,10 +131,10 @@ export function ReaderAvailabilityTab({ initial }: { initial: AvailabilityItem[]
                     className={cn(
                       'py-2 rounded-lg text-sm text-center transition-all border',
                       active
-                        ? 'bg-purple-500/20 border-purple-500/50 text-foreground'
+                        ? 'bg-[#768064]/20 border-[#768064]/50 text-foreground'
                         : disabled
                           ? 'opacity-50 cursor-not-allowed bg-white/3 border-white/5 text-muted-foreground'
-                          : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30'
+                          : 'bg-white/5 border-white/10 text-muted-foreground hover:border-[#768064]/30'
                     )}>
                     {slot}
                   </button>
@@ -146,7 +150,7 @@ export function ReaderAvailabilityTab({ initial }: { initial: AvailabilityItem[]
 
       <div className="flex justify-end">
         <Button type="button" onClick={saveAll} disabled={busy}
-          className="bg-purple-600 hover:bg-purple-500 text-white">
+          className="bg-[#4C583E] hover:bg-[#768064] text-white">
           {busy ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Đang lưu…</>
           ) : (

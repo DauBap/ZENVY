@@ -1,4 +1,4 @@
-import 'dotenv/config'
+﻿import 'dotenv/config'
 import { PrismaClient, Prisma } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
@@ -19,12 +19,12 @@ async function main() {
     create: { name: 'READER', description: 'READER role' },
   })
 
-  const baseEmail = 'reader_account@zenvy.com'
+  const baseEmail = 'reader_account@sageto.com'
   let email = baseEmail
   let suffix = 1
   while (await prisma.user.findUnique({ where: { email } })) {
     suffix += 1
-    email = `reader_account_${suffix}@zenvy.com`
+    email = `reader_account_${suffix}@sageto.com`
   }
 
   const password = 'Reader@123456'

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -57,13 +57,13 @@ export default function LoginPage() {
         >
           {/* Logo */}
           <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center">
               <span className="text-3xl">☽</span>
             </div>
-            <span className="text-2xl font-bold gradient-text">ZENVY</span>
+            <span className="text-2xl font-bold gradient-text">SAGETO</span>
           </Link>
 
-          <GlassCard className="p-8" glow="purple">
+          <GlassCard className="p-8" glow="olive">
             <div className="text-center mb-8">
               <h1 className="text-2xl font-bold text-foreground mb-2">Chào mừng trở lại</h1>
               <p className="text-muted-foreground">Đăng nhập để tiếp tục hành trình của bạn</p>
@@ -80,7 +80,7 @@ export default function LoginPage() {
                     placeholder="email@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 focus:border-purple-500/50"
+                    className="pl-10 bg-white/5 border-white/10 focus:border-[#768064]/50"
                     required
                   />
                 </div>
@@ -90,7 +90,7 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-foreground">Mật khẩu <span className="text-red-400">*</span></label>
-                  <Link href="/auth/forgot-password" className="text-xs text-purple-400 hover:text-purple-300">
+                  <Link href="/auth/forgot-password" className="text-xs text-[#768064] hover:text-[#4C583E]">
                     Quên mật khẩu?
                   </Link>
                 </div>
@@ -101,7 +101,7 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-purple-500/50"
+                    className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-[#768064]/50"
                     required
                   />
                   <button
@@ -126,9 +126,9 @@ export default function LoginPage() {
                 disabled={isLoading}
                 className={cn(
                   'w-full h-12',
-                  'bg-gradient-to-r from-purple-600 to-indigo-600',
-                  'hover:from-purple-500 hover:to-indigo-500',
-                  'text-white shadow-lg shadow-purple-500/25'
+                  'bg-gradient-to-r from-[#4C583E] to-[#2C3424]',
+                  'hover:from-[#768064] hover:to-[#4C583E]',
+                  'text-white shadow-lg shadow-[#768064]/20'
                 )}
               >
                 {isLoading ? (
@@ -186,7 +186,7 @@ export default function LoginPage() {
             {/* Register Link */}
             <p className="text-center text-sm text-muted-foreground mt-8">
               Chưa có tài khoản?{' '}
-              <Link href="/auth/register" className="text-purple-400 hover:text-purple-300 font-medium">
+              <Link href="/auth/register" className="text-[#768064] hover:text-[#4C583E] font-medium">
                 Đăng ký miễn phí
               </Link>
             </p>

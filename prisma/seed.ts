@@ -1,10 +1,3 @@
-/**
- * ZENVY — Seed Script
- * Tạo tài khoản demo: Admin, Customer, Reader
- *
- * Chạy: npx prisma db seed
- */
-
 import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
@@ -86,7 +79,7 @@ async function main() {
         email: readerEmail,
         password_hash: await bcrypt.hash(readerPassword, SALT),
         role_id: readerRole.id,
-        status: 'ACTIVE',          // ACTIVE để login được ngay
+        status: 'ACTIVE',
         reader_info: {
           create: {
             display_name:    'Luna Mystique (Demo)',
@@ -95,7 +88,7 @@ async function main() {
             specialty:       ['Tình cảm', 'Sự nghiệp', 'Tâm linh'],
             avatar_url:      '/placeholder-user.jpg',
             facebook_link:   'https://facebook.com/zenvy.demo',
-            verified:        true,   // true để hiện trên trang /readers
+            verified:        true,
             price_per_session: 150000,
             rating:          4.8,
           },
@@ -117,30 +110,9 @@ async function main() {
     if (existingPkgs === 0) {
       await prisma.package.createMany({
         data: [
-          {
-            reader_id:   readerUser.reader_info.id,
-            name:        'Bói 1 lá',
-            duration:    30,
-            price:       100000,
-            description: 'Giải đáp 1 câu hỏi nhanh trong 30 phút.',
-            popular:     false,
-          },
-          {
-            reader_id:   readerUser.reader_info.id,
-            name:        'Trải bài Celtic Cross',
-            duration:    60,
-            price:       200000,
-            description: 'Trải bài 10 lá toàn diện — tình cảm, sự nghiệp, tài chính.',
-            popular:     true,
-          },
-          {
-            reader_id:   readerUser.reader_info.id,
-            name:        'Phiên VIP',
-            duration:    90,
-            price:       350000,
-            description: 'Phiên cao cấp 90 phút, bao gồm cả giải bài và tư vấn chuyên sâu.',
-            popular:     false,
-          },
+          { reader_id: readerUser.reader_info.id, name: 'Bói 1 lá',           duration: 30, price: 100000, description: 'Giải đáp 1 câu hỏi nhanh trong 30 phút.',                             popular: false },
+          { reader_id: readerUser.reader_info.id, name: 'Trải bài Celtic Cross', duration: 60, price: 200000, description: 'Trải bài 10 lá toàn diện — tình cảm, sự nghiệp, tài chính.', popular: true  },
+          { reader_id: readerUser.reader_info.id, name: 'Phiên VIP',          duration: 90, price: 350000, description: 'Phiên cao cấp 90 phút, bao gồm cả giải bài và tư vấn chuyên sâu.',  popular: false },
         ],
       })
       console.log('✅ Packages demo đã được tạo cho Reader')

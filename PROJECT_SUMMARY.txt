@@ -1,7 +1,7 @@
-PROJECT SUMMARY
+﻿PROJECT SUMMARY
 ===============
 
-This file is the reference guide for the ZENVY Next.js project. It is intended to be the first-pass document for understanding the main architecture, route map, shared UI modules, and where to find key code.
+This file is the reference guide for the SAGETO Next.js project. It is intended to be the first-pass document for understanding the main architecture, route map, shared UI modules, and where to find key code.
 
 ---
 

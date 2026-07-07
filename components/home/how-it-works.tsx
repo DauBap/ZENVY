@@ -9,17 +9,17 @@ const steps = [
     icon: Search,
     title: 'Chọn Reader',
     description: 'Tìm kiếm và chọn Reader phù hợp với nhu cầu của bạn. Xem profile, reviews và specialties.',
-    color: 'from-purple-500 to-indigo-500',
-    iconBg: 'bg-purple-500/20',
-    iconColor: 'text-purple-400',
+    color: 'from-[#768064] to-[#4C583E]',
+    iconBg: 'bg-[#768064]/20',
+    iconColor: 'text-[#4C583E]',
   },
   {
     icon: Calendar,
     title: 'Đặt lịch',
     description: 'Chọn gói dịch vụ và khung giờ phù hợp. Thanh toán an toàn trong vài giây.',
-    color: 'from-indigo-500 to-blue-500',
-    iconBg: 'bg-indigo-500/20',
-    iconColor: 'text-indigo-400',
+    color: 'from-[#768064] to-[#2C3424]',
+    iconBg: 'bg-[#768064]/20',
+    iconColor: 'text-[#4C583E]',
   },
   {
     icon: Sparkles,
@@ -35,7 +35,7 @@ export function HowItWorks() {
   return (
     <section className="py-16 lg:py-24 relative">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#A5B38B]/10 to-transparent pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
@@ -65,9 +65,9 @@ export function HowItWorks() {
               transition={{ duration: 0.5, delay: index * 0.15 }}
               className="relative"
             >
-              <GlassCard className="p-6 lg:p-8 h-full" glow="purple">
+              <GlassCard className="p-6 lg:p-8 h-full" glow="olive">
                 {/* Step number */}
-                <div className="absolute -top-4 -left-4 w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-purple-500/30">
+                <div className="absolute -top-4 -left-4 w-10 h-10 rounded-xl bg-gradient-to-br from-[#4C583E] to-[#2C3424] flex items-center justify-center text-white font-bold shadow-lg shadow-[#768064]/20">
                   {index + 1}
                 </div>
 
@@ -88,7 +88,7 @@ export function HowItWorks() {
                 {index < steps.length - 1 && (
                   <div className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10">
                     <div className="w-8 h-8 rounded-full bg-background border border-white/10 flex items-center justify-center">
-                      <ArrowRight className="w-4 h-4 text-purple-400" />
+                      <ArrowRight className="w-4 h-4 text-[#768064]" />
                     </div>
                   </div>
                 )}
@@ -98,7 +98,7 @@ export function HowItWorks() {
               {index < steps.length - 1 && (
                 <div className="flex md:hidden justify-center my-4">
                   <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center rotate-90">
-                    <ArrowRight className="w-4 h-4 text-purple-400" />
+                    <ArrowRight className="w-4 h-4 text-[#768064]" />
                   </div>
                 </div>
               )}

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
-import { createNotification } from '@/lib/notifications'
+import { createNotificationForAdmins } from '@/lib/notifications'
+import { notifyAdminNewBooking } from '@/lib/email'
 
 // POST /api/bookings — tạo booking mới
 export async function POST(request: NextRequest) {
@@ -122,14 +123,28 @@ export async function POST(request: NextRequest) {
       booking = await prisma.booking.create(bookingCreatePayload)
     }
 
-    // Gửi thông báo cho reader
-    createNotification({
-      userId: booking.reader.user_id,
-      title: 'Khách hàng mới đặt lịch 📅',
-      content: `Gói ${booking.package.name} - ${new Date(booking.date).toLocaleDateString('vi-VN')} lúc ${booking.time}`,
-      type: 'BOOKING_CONFIRMED',
-      link: '/dashboard',
+    // Gửi thông báo cho admin để duyệt trước khi booking được chuyển tới reader
+    createNotificationForAdmins({
+      title: 'Có lịch hẹn mới cần duyệt',
+      content: `Khách hàng vừa đặt lịch cho gói ${booking.package.name} vào ${new Date(booking.date).toLocaleDateString('vi-VN')} lúc ${booking.time}. `,
+      type: 'SYSTEM',
+      link: '/admin/bookings',
     }).catch(() => {})
+
+    // ✅ Gửi email thông báo cho admin
+    const user = await prisma.user.findUnique({
+      where: { id: Number(session.sub) },
+      select: { name: true },
+    })
+
+    await notifyAdminNewBooking({
+      customerName: user?.name || customerInfo.fullname || 'Guest',
+      readerName: booking.reader.display_name || 'Unknown Reader',
+      date: new Date(booking.date).toISOString().split('T')[0],
+      time: booking.time,
+      bookingId: booking.id,
+      adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
+    }).catch((err) => console.error('Email error:', err))
 
     return NextResponse.json({ success: true, booking }, { status: 201 })
   } catch (error) {

@@ -16,8 +16,6 @@ import { FAQSection } from '@/components/home/faq-section'
 import type { SerializedPlatformStat } from '@/lib/serializers'
 
 export default async function HomePage() {
-  redirect('/readers')
-
   // Fetch all data in parallel from the database
   const [dbReaders, dbStat, dbTestimonials, dbFAQs] = await Promise.allSettled([
     prisma.readerInfo.findMany({

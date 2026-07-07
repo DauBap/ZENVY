@@ -18,7 +18,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
     : reader.pricePerSession
 
   const priceDisplay = minPrice >= 1000
-    ? `${(minPrice / 1000).toFixed(0)}K`
+    ? `${(minPrice / 1000).toFixed(0)}k`
     : `${minPrice}`
 
   return (
@@ -33,7 +33,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
         <div className={cn(
           'relative rounded-[18px] overflow-hidden cursor-pointer',
           'transition-all duration-300',
-          'bg-[#0f0a1a]'
+          'bg-card border-[var(--border)] shadow-sm hover:shadow-lg hover:border-[var(--ring)]'
         )}>
 
           {/* ── Ảnh background ── */}
@@ -65,7 +65,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
 
             {/* Rating pill — góc dưới trái */}
             <div className="absolute bottom-3 left-3 z-20">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-600/90 backdrop-blur-sm text-white text-xs font-semibold shadow-lg">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#4C583E]/90 backdrop-blur-sm text-white text-xs font-semibold shadow-lg">
                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                 <span>{Number(reader.rating).toFixed(2)}</span>
                 <span className="text-white/70">({(reader.reviewCount ?? 0).toLocaleString()})</span>
@@ -74,7 +74,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
           </div>
 
           {/* ── Info bên dưới ── */}
-          <div className="px-3 pt-2.5 pb-3 bg-white/[0.03]">
+          <div className="px-3 pt-2.5 pb-3 bg-background/90">
             {/* Tên + verified */}
             <div className="flex items-center gap-1.5 mb-2">
               <span className="font-bold text-foreground text-sm truncate">{reader.name}</span>
@@ -83,7 +83,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
 
             {/* Giá */}
             <div className="flex items-center gap-1">
-              <Heart className="w-4 h-4 fill-purple-400 text-purple-400 shrink-0" />
+              <Heart className="w-4 h-4 fill-[#A5B38B] text-[#768064] shrink-0" />
               <span className="text-lg font-bold text-foreground">{priceDisplay}</span>
               <span className="text-xs text-muted-foreground">/H</span>
             </div>
@@ -98,7 +98,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
 // ─── Skeleton ──────────────────────────────────────────────────────────────────
 export function ReaderCardSkeleton() {
   return (
-    <div className="rounded-[18px] overflow-hidden border border-white/10 bg-[#0f0a1a]">
+    <div className="rounded-[18px] overflow-hidden border-[var(--border)] bg-background">
       <div className="w-full aspect-[3/4] skeleton" />
       <div className="px-3 pt-2.5 pb-3 space-y-2">
         <div className="h-4 w-2/3 skeleton rounded" />

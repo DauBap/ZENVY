@@ -1,4 +1,4 @@
-# Product
+﻿# Product
 
 ## Register
 
@@ -12,7 +12,7 @@ Công việc cần hoàn thành: tìm được reader phù hợp và đáng tin,
 
 ## Product Purpose
 
-ZENVY là nền tảng kết nối khách hàng với các Tarot reader đã được xác minh. Sản phẩm tồn tại để biến việc "xem Tarot" — vốn gắn với hình ảnh bói toán thiếu tin cậy — thành một dịch vụ tư vấn chuyên nghiệp, minh bạch và an toàn: reader có hồ sơ rõ ràng, đánh giá thật, lịch trống công khai, và quy trình đặt lịch/thanh toán đáng tin.
+SAGETO là nền tảng kết nối khách hàng với các Tarot reader đã được xác minh. Sản phẩm tồn tại để biến việc "xem Tarot" — vốn gắn với hình ảnh bói toán thiếu tin cậy — thành một dịch vụ tư vấn chuyên nghiệp, minh bạch và an toàn: reader có hồ sơ rõ ràng, đánh giá thật, lịch trống công khai, và quy trình đặt lịch/thanh toán đáng tin.
 
 Thành công nghĩa là khách hàng tìm được reader phù hợp nhanh chóng, tin tưởng đủ để đặt lịch, và quay lại. Mỗi màn hình phục vụ một nhiệm vụ rõ ràng: khám phá reader → xem hồ sơ → đặt lịch → quản lý lịch hẹn.
 

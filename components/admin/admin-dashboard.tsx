@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -22,7 +22,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 export function AdminDashboard({ stats, recentBookings }: { stats: any; recentBookings: any[] }) {
   const cards = [
-    { label: 'Người dùng', value: stats.totalUsers.toLocaleString(), sub: `${stats.totalReaders} readers`, icon: Users, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { label: 'Người dùng', value: stats.totalUsers.toLocaleString(), sub: `${stats.totalReaders} readers`, icon: Users, color: 'text-[#768064]', bg: 'bg-[#768064]/10' },
     { label: 'Lịch hẹn hôm nay', value: stats.todayBookings.toLocaleString(), sub: `${stats.totalBookings} tổng`, icon: Calendar, color: 'text-blue-400', bg: 'bg-blue-500/10' },
     { label: 'Hoàn thành', value: `${stats.completionRate}%`, sub: `${stats.completedBookings} phiên`, icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/10' },
     { label: 'Doanh thu', value: `${(stats.totalRevenue / 1_000_000).toFixed(1)}k`, sub: `${stats.totalReviews} đánh giá`, icon: DollarSign, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
@@ -34,7 +34,7 @@ export function AdminDashboard({ stats, recentBookings }: { stats: any; recentBo
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Tổng quan hệ thống ZENVY</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Tổng quan hệ thống SAGETO</p>
       </div>
 
       {/* Stats grid */}
@@ -58,7 +58,7 @@ export function AdminDashboard({ stats, recentBookings }: { stats: any; recentBo
         <GlassCard className="overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
             <h2 className="font-semibold text-foreground">Lịch hẹn gần đây</h2>
-            <Link href="/admin/bookings" className="flex items-center gap-1 text-sm text-purple-400 hover:text-purple-300">
+            <Link href="/admin/bookings" className="flex items-center gap-1 text-sm text-[#768064] hover:text-[#4C583E]">
               Xem tất cả <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
@@ -97,7 +97,7 @@ export function AdminDashboard({ stats, recentBookings }: { stats: any; recentBo
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
         className="grid sm:grid-cols-3 gap-4">
         {[
-          { href: '/admin/users',    label: 'Quản lý người dùng', icon: Users,    color: 'bg-purple-500/10 text-purple-400' },
+          { href: '/admin/users',    label: 'Quản lý người dùng', icon: Users,    color: 'bg-[#768064]/10 text-[#768064]' },
           { href: '/admin/bookings', label: 'Quản lý lịch hẹn',   icon: Calendar, color: 'bg-blue-500/10 text-blue-400' },
           { href: '/admin/payments', label: 'Lịch sử thanh toán',  icon: DollarSign, color: 'bg-green-500/10 text-green-400' },
         ].map(l => (

@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from 'next'
+﻿import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthModalProvider } from '@/contexts/auth-modal-context'
@@ -18,22 +18,22 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'ZENVY | Nền Tảng Booking Tarot Cao Cấp',
+  title: 'SAGETO | Nền Tảng Booking Tarot Cao Cấp',
   description: 'Kết nối với các Tarot Reader được xác minh. Đặt lịch tư vấn, chat realtime, và khám phá AI Tarot miễn phí.',
   keywords: ['tarot', 'booking', 'tarot reader', 'tư vấn tarot', 'xem bói', 'bói bài'],
-  authors: [{ name: 'ZENVY' }],
-  creator: 'ZENVY',
+  authors: [{ name: 'SAGETO' }],
+  creator: 'SAGETO',
   openGraph: {
     type: 'website',
     locale: 'vi_VN',
     url: 'https://mystic-tarot.app',
-    title: 'ZENVY | Nền Tảng Booking Tarot Cao Cấp',
+    title: 'SAGETO | Nền Tảng Booking Tarot Cao Cấp',
     description: 'Kết nối với các Tarot Reader được xác minh',
-    siteName: 'ZENVY',
+    siteName: 'SAGETO',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ZENVY',
+    title: 'SAGETO',
     description: 'Nền Tảng Booking Tarot Cao Cấp',
   },
 }

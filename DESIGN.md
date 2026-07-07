@@ -1,5 +1,5 @@
----
-name: ZENVY
+﻿---
+name: SAGETO
 description: Nền tảng đặt lịch xem Tarot cao cấp — tinh tế, uy tín, sâu lắng
 colors:
   primary: "oklch(0.65 0.2 280)"
@@ -74,13 +74,13 @@ components:
     padding: "12px 16px"
 ---
 
-# Design System: ZENVY
+# Design System: SAGETO
 
 ## 1. Overview
 
 **Creative North Star: "Đài quan sát lúc nửa đêm"**
 
-ZENVY sống trong một không gian tối, tĩnh và sâu — như đứng trước một đài thiên văn vào lúc nửa đêm, nơi sự huyền bí được cảm nhận qua chiều sâu và ánh sáng có chủ đích, không phải qua sự ồn ào. Nền tím-đen vũ trụ (oklch 0.08) làm phông cho chữ sáng và hai điểm nhấn được kiểm soát chặt: tím huyền (primary) cho hành động, vàng kim (accent) cho sự tin cậy và uy tín. Cảm giác tổng thể là **cao cấp và tinh tế**, không phải bói toán đường phố.
+SAGETO sống trong một không gian tối, tĩnh và sâu — như đứng trước một đài thiên văn vào lúc nửa đêm, nơi sự huyền bí được cảm nhận qua chiều sâu và ánh sáng có chủ đích, không phải qua sự ồn ào. Nền tím-đen vũ trụ (oklch 0.08) làm phông cho chữ sáng và hai điểm nhấn được kiểm soát chặt: tím huyền (primary) cho hành động, vàng kim (accent) cho sự tin cậy và uy tín. Cảm giác tổng thể là **cao cấp và tinh tế**, không phải bói toán đường phố.
 
 Hệ thống dùng glassmorphism và hiệu ứng glow như gia vị, không phải chủ đề. Bề mặt phẳng ở trạng thái nghỉ; chiều sâu xuất hiện khi tương tác. Bo góc rộng và nhất quán (12px) tạo sự mềm mại sang trọng. Typography ghép Playfair Display (serif hiển thị, gợi nghi thức và chiều sâu) với Inter (sans thân bài, hiện đại và dễ đọc) trên trục tương phản serif/sans.
 
@@ -174,7 +174,7 @@ Hệ thống tối ưu cho nền tối: chiều sâu tạo bằng **lớp tông 
 - Header trong suốt/glass ở đỉnh; mobile có MobileNav dạng thanh dưới. Chữ sáng, trạng thái active dùng tím.
 
 ### Signature: Glass Card + Cosmic Background
-Card kính nổi trên nền vũ trụ động (sao lấp lánh, gradient dịch chuyển) là chữ ký thị giác của ZENVY. Hiệu ứng phải tinh tế — gợi chiều sâu, không phải sân khấu ảo thuật.
+Card kính nổi trên nền vũ trụ động (sao lấp lánh, gradient dịch chuyển) là chữ ký thị giác của SAGETO. Hiệu ứng phải tinh tế — gợi chiều sâu, không phải sân khấu ảo thuật.
 
 ## 6. Do's and Don'ts
 

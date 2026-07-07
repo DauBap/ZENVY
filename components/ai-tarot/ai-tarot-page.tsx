@@ -74,9 +74,9 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-8"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-4">
-              <Sparkles className="w-4 h-4 text-purple-400" />
-              <span className="text-sm text-purple-300">AI Tarot - Miễn phí</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#768064]/10 border border-[#768064]/20 mb-4">
+              <Sparkles className="w-4 h-4 text-[#768064]" />
+              <span className="text-sm text-[#4C583E]">AI Tarot - Miễn phí</span>
             </div>
             <h1 className="text-3xl lg:text-5xl font-bold text-foreground mb-4">
               Khám phá <span className="gradient-text">thông điệp</span> từ vũ trụ
@@ -103,7 +103,7 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
                     placeholder="Ví dụ: Mối quan hệ hiện tại của tôi sẽ đi về đâu?"
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
-                    className="min-h-[100px] bg-white/5 border-white/10 focus:border-purple-500/50 resize-none"
+                    className="min-h-[100px] bg-white/5 border-white/10 focus:border-[#768064]/50 resize-none"
                   />
                 </div>
 
@@ -120,8 +120,8 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
                         className={cn(
                           'p-4 rounded-xl text-center transition-all border',
                           selectedSpread === s.id
-                            ? 'bg-purple-500/20 border-purple-500/50'
-                            : 'bg-white/5 border-white/10 hover:border-purple-500/30'
+                            ? 'bg-[#768064]/20 border-[#768064]/50'
+                            : 'bg-white/5 border-white/10 hover:border-[#768064]/30'
                         )}
                       >
                         <div className="text-2xl mb-1">
@@ -140,9 +140,9 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
                   disabled={!question.trim()}
                   className={cn(
                     'w-full h-14 text-lg',
-                    'bg-gradient-to-r from-purple-600 to-indigo-600',
-                    'hover:from-purple-500 hover:to-indigo-500',
-                    'text-white shadow-xl shadow-purple-500/30'
+                    'bg-gradient-to-r from-[#4C583E] to-[#2C3424]',
+                    'hover:from-[#768064] hover:to-[#4C583E]',
+                    'text-white shadow-xl shadow-[#768064]/20'
                   )}
                 >
                   <Shuffle className="w-5 h-5 mr-2" />
@@ -179,11 +179,11 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
                       <div className={cn(
                         'w-28 h-44 sm:w-36 sm:h-56 rounded-xl transition-all duration-500',
                         'shadow-2xl',
-                        flippedCards.includes(index) ? 'shadow-amber-500/20' : 'shadow-purple-500/30'
+                        flippedCards.includes(index) ? 'shadow-amber-500/20' : 'shadow-[#768064]/20'
                       )}>
                         {/* Card Back */}
                         <div className={cn(
-                          'absolute inset-0 rounded-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-800',
+                          'absolute inset-0 rounded-xl bg-gradient-to-br from-[#4C583E] via-[#4C583E] to-[#2C3424]',
                           'flex flex-col items-center justify-center p-4',
                           'backface-hidden',
                           flippedCards.includes(index) && 'hidden'
@@ -245,7 +245,7 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
                   >
                     <GlassCard className="p-6">
                       <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-purple-400" />
+                        <Sparkles className="w-5 h-5 text-[#768064]" />
                         Diễn giải AI
                       </h3>
                       <div className="space-y-4 text-muted-foreground leading-relaxed">
@@ -256,7 +256,7 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
                           <div key={card.id} className="p-4 rounded-xl bg-white/5 border border-white/10">
                             <div className="font-medium text-foreground mb-1">
                               {selectedSpread === 'three' && (
-                                <span className="text-purple-400">
+                                <span className="text-[#768064]">
                                   {index === 0 ? 'Quá khứ' : index === 1 ? 'Hiện tại' : 'Tương lai'}:{' '}
                                 </span>
                               )}
@@ -265,7 +265,7 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
                             <p className="text-sm">{card.meaning}</p>
                           </div>
                         ))}
-                        <p className="text-sm italic border-l-2 border-purple-500/50 pl-4">
+                        <p className="text-sm italic border-l-2 border-[#768064]/50 pl-4">
                           Lưu ý: Đây là diễn giải từ AI. Để có insight sâu sắc và cá nhân hóa hơn, 
                           hãy đặt lịch với các Tarot Reader chuyên nghiệp của chúng tôi.
                         </p>
@@ -284,8 +284,8 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
                         <Link href="/readers" className="flex-1">
                           <Button
                             className={cn(
-                              'w-full bg-gradient-to-r from-purple-600 to-indigo-600',
-                              'hover:from-purple-500 hover:to-indigo-500',
+                              'w-full bg-gradient-to-r from-[#4C583E] to-[#2C3424]',
+                              'hover:from-[#768064] hover:to-[#4C583E]',
                               'text-white'
                             )}
                           >

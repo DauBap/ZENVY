@@ -404,10 +404,10 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                   onClick={() => { setSessionBookingId(null); openConversation(c.id) }}
                   className={cn(
                     'w-full flex items-center gap-3 p-4 text-left transition-colors',
-                    activeId === c.id ? 'bg-purple-500/20' : 'hover:bg-white/5'
+                    activeId === c.id ? 'bg-[#768064]/20' : 'hover:bg-white/5'
                   )}
                 >
-                  <div className="w-12 h-12 rounded-full ring-1 ring-white/10 shrink-0 bg-purple-500/20 flex items-center justify-center text-purple-200 font-semibold"
+                  <div className="w-12 h-12 rounded-full ring-1 ring-white/10 shrink-0 bg-[#768064]/20 flex items-center justify-center text-[#768064]/70 font-semibold"
                     style={c.avatar ? { backgroundImage: `url("${c.avatar}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
                     {!c.avatar && c.name.charAt(0).toUpperCase()}
                   </div>
@@ -426,7 +426,7 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                           </span>
                         )}
                         {c.unread > 0 && (
-                          <span className="shrink-0 w-5 h-5 rounded-full bg-purple-500 text-white text-xs flex items-center justify-center">{c.unread}</span>
+                          <span className="shrink-0 w-5 h-5 rounded-full bg-[#768064] text-white text-xs flex items-center justify-center">{c.unread}</span>
                         )}
                       </div>
                     </div>
@@ -447,7 +447,7 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                     <button onClick={() => setActiveId(null)} className="lg:hidden shrink-0">
                       <ChevronLeft className="w-5 h-5 text-muted-foreground" />
                     </button>
-                    <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-200 font-semibold shrink-0"
+                    <div className="w-10 h-10 rounded-full bg-[#768064]/20 flex items-center justify-center text-[#768064]/70 font-semibold shrink-0"
                       style={active.avatar ? { backgroundImage: `url("${active.avatar}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
                       {!active.avatar && active.name.charAt(0).toUpperCase()}
                     </div>
@@ -508,8 +508,8 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                     className={cn(
                       'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
                       sessionBookingId === null
-                        ? 'bg-purple-500/20 border-purple-500/50 text-purple-200'
-                        : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30'
+                        ? 'bg-[#768064]/20 border-[#768064]/50 text-[#768064]/70'
+                        : 'bg-white/5 border-white/10 text-muted-foreground hover:border-[#768064]/30'
                     )}
                   >
                     Tin nhắn
@@ -522,8 +522,8 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                           className={cn(
                             'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
                             sessionBookingId !== null
-                              ? 'bg-purple-500/20 border-purple-500/50 text-purple-200'
-                              : 'bg-white/5 border-white/10 text-muted-foreground hover:border-purple-500/30'
+                              ? 'bg-[#768064]/20 border-[#768064]/50 text-[#768064]/70'
+                              : 'bg-white/5 border-white/10 text-muted-foreground hover:border-[#768064]/30'
                           )}
                         >
                           {activeSession ? apptLabel(activeSession) : 'Cuộc hẹn'}
@@ -558,7 +558,7 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
 
                 {/* Banner chi tiết phiên đang xem */}
                 {sessionBookingId && activeSession && (
-                  <div className="px-4 py-2 bg-purple-500/10 border-b border-purple-500/20 text-xs text-purple-200 flex items-center justify-between gap-2">
+                  <div className="px-4 py-2 bg-[#768064]/10 border-b border-[#768064]/20 text-xs text-[#768064]/70 flex items-center justify-between gap-2">
                     <span className="truncate">
                       {apptLabel(activeSession)} · {activeSession.packageName || 'Tarot'}
                       <span className={cn('ml-2 px-1.5 py-0.5 rounded text-[10px]', PHASE_LABEL[activeSession.phase].className)}>
@@ -588,7 +588,7 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                         <div className={cn(
                           'max-w-[75%] rounded-2xl px-4 py-2.5',
                           msg.mine
-                            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-sm'
+                            ? 'bg-gradient-to-r from-[#4C583E] to-[#2C3424] text-white rounded-br-sm'
                             : 'bg-white/10 text-foreground rounded-bl-sm'
                         )}>
                           {msg.type === 'IMAGE' && msg.mediaUrl && (
@@ -631,7 +631,7 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                         {/* Ảnh */}
                         <button type="button" onClick={() => fileRef.current?.click()} disabled={sending}
                           title="Gửi ảnh"
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-purple-300 hover:bg-white/5 transition-colors shrink-0">
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-[#4C583E] hover:bg-white/5 transition-colors shrink-0">
                           <ImagePlus className="w-5 h-5" />
                         </button>
                         <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} className="hidden" />
@@ -640,7 +640,7 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                         <Popover>
                           <PopoverTrigger asChild>
                             <button type="button" title="Emoji"
-                              className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-purple-300 hover:bg-white/5 transition-colors shrink-0">
+                              className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-[#4C583E] hover:bg-white/5 transition-colors shrink-0">
                               <Smile className="w-5 h-5" />
                             </button>
                           </PopoverTrigger>
@@ -658,7 +658,7 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                         <Popover>
                           <PopoverTrigger asChild>
                             <button type="button" title="Sticker"
-                              className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-purple-300 hover:bg-white/5 transition-colors shrink-0">
+                              className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-[#4C583E] hover:bg-white/5 transition-colors shrink-0">
                               <Sticker className="w-5 h-5" />
                             </button>
                           </PopoverTrigger>
@@ -677,7 +677,7 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                           title={recording ? 'Dừng & gửi' : 'Ghi âm'}
                           className={cn(
                             'w-9 h-9 rounded-full flex items-center justify-center transition-colors shrink-0',
-                            recording ? 'bg-red-500/20 text-red-400 animate-pulse' : 'text-muted-foreground hover:text-purple-300 hover:bg-white/5'
+                            recording ? 'bg-red-500/20 text-red-400 animate-pulse' : 'text-muted-foreground hover:text-[#4C583E] hover:bg-white/5'
                           )}>
                           {recording ? <Square className="w-4 h-4 fill-current" /> : <Mic className="w-5 h-5" />}
                         </button>
@@ -687,10 +687,10 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                           value={draft}
                           onChange={(e) => setDraft(e.target.value)}
                           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText() } }}
-                          className="flex-1 bg-white/5 border-white/10 focus:border-purple-500/50"
+                          className="flex-1 bg-white/5 border-white/10 focus:border-[#768064]/50"
                         />
                         <Button size="icon" onClick={sendText} disabled={!draft.trim() || sending}
-                          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shrink-0">
+                          className="bg-gradient-to-r from-[#4C583E] to-[#2C3424] text-white shrink-0">
                           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         </Button>
                       </div>
@@ -700,7 +700,7 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                <MessageSquare className="w-12 h-12 text-purple-400/30 mb-4" />
+                <MessageSquare className="w-12 h-12 text-[#768064]/30 mb-4" />
                 <p className="text-muted-foreground mb-4">Chọn một cuộc trò chuyện để bắt đầu.</p>
                 {!isReader && (
                   <Link href="/readers"><Button variant="outline" className="border-white/10">Tìm Reader</Button></Link>

@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
+import { notifyAdminPaymentConfirm } from '@/lib/email'
 
 // ===========================================================================
 // FLOW:
@@ -42,8 +43,9 @@ export async function PATCH(
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
-        customer: { select: { user_id: true } },
+        customer: { select: { user_id: true, fullname: true } },
         reader: { select: { user_id: true } },
+        package: { select: { price: true } },
       },
     })
     if (!booking) return NextResponse.json({ error: 'Không tìm thấy lịch hẹn.' }, { status: 404 })
@@ -79,6 +81,23 @@ export async function PATCH(
         if (booking.status !== 'PENDING')
           return NextResponse.json({ error: 'Chỉ xác nhận thanh toán cho lịch đang chờ.' }, { status: 409 })
         await prisma.booking.update({ where: { id: bookingId }, data: { status: 'PAYMENT_CONFIRMED' } })
+
+        createNotification({
+          userId: booking.reader.user_id,
+          title: 'Có lịch hẹn mới cần xác nhận',
+          content: `Lịch hẹn vào ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} đã được admin duyệt thanh toán. Bạn có thể xác nhận trong dashboard.`,
+          type: 'BOOKING_CONFIRMED',
+          link: '/dashboard',
+        }).catch(() => {})
+
+        await notifyAdminPaymentConfirm({
+          customerName: booking.customer?.fullname || 'Khách hàng',
+          amount: booking.package?.price ?? 0,
+          method: 'Bank transfer',
+          paymentId: booking.id,
+          adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
+        }).catch((err) => console.error('Email error:', err))
+
         return NextResponse.json({ success: true, booking: { id: bookingId, status: 'PAYMENT_CONFIRMED' } })
       }
 
@@ -139,11 +158,10 @@ export async function PATCH(
         return NextResponse.json({ error: 'Không có quyền.' }, { status: 403 })
 
       if (action === 'confirm') {
-        // Reader xác nhận booking — chấp nhận cả PENDING (khách vừa đặt)
-        // và PAYMENT_CONFIRMED (admin đã duyệt TT) → CONFIRMED
-        if (booking.status !== 'PENDING' && booking.status !== 'PAYMENT_CONFIRMED')
+        // Reader chỉ được xác nhận sau khi admin đã duyệt thanh toán
+        if (booking.status !== 'PAYMENT_CONFIRMED')
           return NextResponse.json({
-            error: 'Chỉ xác nhận được lịch đang chờ hoặc đã duyệt thanh toán.',
+            error: 'Chỉ xác nhận được lịch đã được admin duyệt thanh toán.',
           }, { status: 409 })
 
         await prisma.booking.update({ where: { id: bookingId }, data: { status: 'CONFIRMED' } })
@@ -218,7 +236,7 @@ export async function PATCH(
         createNotification({
           userId: booking.reader.user_id,
           title: 'Thu nhập đã được cộng 💰',
-          content: `Phiên hẹn ngày ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} hoàn thành. ${(amount / 1000).toFixed(0)}k₫ đã được cộng vào số dư.`,
+          content: `Phiên hẹn ngày ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} hoàn thành. ${(amount / 1000).toFixed(0)}k đã được cộng vào số dư.`,
           type: 'BOOKING_COMPLETED',
           link: '/dashboard',
         }).catch(() => {})
