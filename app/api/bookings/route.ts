@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { createNotificationForAdmins } from '@/lib/notifications'
+import { notifyAdminNewBooking } from '@/lib/email'
 
 // POST /api/bookings — tạo booking mới
 export async function POST(request: NextRequest) {
@@ -129,6 +130,21 @@ export async function POST(request: NextRequest) {
       type: 'SYSTEM',
       link: '/admin/bookings',
     }).catch(() => {})
+
+    // ✅ Gửi email thông báo cho admin
+    const user = await prisma.user.findUnique({
+      where: { id: Number(session.sub) },
+      select: { name: true },
+    })
+
+    await notifyAdminNewBooking({
+      customerName: user?.name || customerInfo.fullname || 'Guest',
+      readerName: booking.reader.display_name || 'Unknown Reader',
+      date: new Date(booking.date).toISOString().split('T')[0],
+      time: booking.time,
+      bookingId: booking.id,
+      adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
+    }).catch((err) => console.error('Email error:', err))
 
     return NextResponse.json({ success: true, booking }, { status: 201 })
   } catch (error) {

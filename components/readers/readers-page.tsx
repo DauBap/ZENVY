@@ -44,6 +44,14 @@ function ReaderScrollSection({
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
   }
 
+  // Kiểm tra scroll state khi component mount hoặc readers thay đổi
+  useEffect(() => {
+    updateScrollState()
+    // Delay để đảm bảo DOM đã render
+    const timer = setTimeout(updateScrollState, 100)
+    return () => clearTimeout(timer)
+  }, [readers])
+
   const scroll = (dir: 'left' | 'right') => {
     if (!scrollRef.current) return
     scrollRef.current.scrollBy({ left: dir === 'left' ? -320 : 320, behavior: 'smooth' })
@@ -80,8 +88,8 @@ function ReaderScrollSection({
             className={cn(
               'w-8 h-8 rounded-full border flex items-center justify-center transition-all',
               canScrollLeft
-                ? 'bg-white/5 border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/10'
-                : 'bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed'
+                ? 'bg-white/10 border-white/30 text-foreground hover:text-white hover:bg-black/15'
+                : 'bg-black/[0.05] border-white/10 text-black/30 cursor-not-allowed'
             )}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -92,8 +100,8 @@ function ReaderScrollSection({
             className={cn(
               'w-8 h-8 rounded-full border flex items-center justify-center transition-all',
               canScrollRight
-                ? 'bg-white/5 border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/10'
-                : 'bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed'
+                ? 'bg-white/10 border-white/30 text-foreground hover:text-white hover:bg-black/15'
+                : 'bg-black/[0.05] border-white/10 text-black/30 cursor-not-allowed'
             )}
           >
             <ChevronRight className="w-4 h-4" />
@@ -215,6 +223,10 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
     setSortBy('newest')
   }
 
+  const handleSortMenuToggle = () => {
+    setShowSortMenu(prev => !prev)
+  }
+
   const activeSortLabel = SORT_OPTIONS.find((o) => o.value === sortBy)?.label
 
   return (
@@ -261,7 +273,7 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
 
           {/* Search + Filter + Sort */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mb-6">
-            <GlassCard className="p-4">
+            <GlassCard className="p-4 overflow-visible">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -272,12 +284,12 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
                     className="pl-10 bg-white/5 border-[var(--border)] focus:border-[var(--ring)]"
                   />
                 </div>
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex gap-3 flex-wrap relative">
                   {/* Sort dropdown */}
                   <div className="relative">
                     <Button
                       variant="outline"
-                      onClick={() => setShowSortMenu(!showSortMenu)}
+                      onClick={handleSortMenuToggle}
                       className={cn('border-[var(--border)] gap-2', showSortMenu && 'bg-[#768064]/20 border-[#768064]/30 text-[#768064]')}
                     >
                       <ArrowUpDown className="w-4 h-4" />
@@ -285,7 +297,7 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
                     </Button>
 
                     {showSortMenu && (
-                      <div className="absolute right-0 top-full mt-2 w-44 z-50 rounded-xl bg-background/95 backdrop-blur-xl border-[var(--border)] shadow-xl overflow-hidden">
+                      <div className="absolute right-0 top-full mt-2 w-44 z-[200] rounded-lg bg-background border border-[var(--border)] shadow-2xl overflow-hidden">
                         {SORT_OPTIONS.map((opt) => (
                           <button
                             key={opt.value}

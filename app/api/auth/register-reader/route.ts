@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createNotificationForAdmins } from '@/lib/notifications'
+import { notifyAdminReaderRegistration } from '@/lib/email'
 import bcrypt from 'bcryptjs'
 
 const MAX_AVATAR_LEN = 1_500_000
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-const FACEBOOK_REGEX = /^https?:\/\/(www\.)?(facebook\.com|fb\.com)\/[A-Za-z0-9_.]+\/?$/i
 function isValidEmail(value: string) { return EMAIL_REGEX.test(value.trim()) }
-function isValidFacebook(value: string) { return FACEBOOK_REGEX.test(value.trim()) }
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,8 +47,6 @@ export async function POST(request: NextRequest) {
       !isValidEmail(normalizedEmail) ||
       !password ||
       !name ||
-      !normalizedFacebook ||
-      !isValidFacebook(normalizedFacebook) ||
       !normalizedPhone ||
       !description ||
       typeof experienceYear !== 'number' ||
@@ -107,6 +104,15 @@ export async function POST(request: NextRequest) {
       type: 'SYSTEM',
       link: '/admin/readers',
     }).catch(() => {})
+
+    await notifyAdminReaderRegistration({
+      readerName: name,
+      email: normalizedEmail,
+      phone: normalizedPhone,
+      experienceYear,
+      specialties: specialty,
+      adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
+    }).catch((err) => console.error('Email error:', err))
 
     return NextResponse.json({
       success: true,

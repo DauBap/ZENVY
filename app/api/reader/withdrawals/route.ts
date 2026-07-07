@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { createNotificationForAdmins } from '@/lib/notifications'
+import { notifyAdminWithdrawal } from '@/lib/email'
 import { Prisma } from '@prisma/client'
 
 // GET /api/reader/withdrawals — lịch sử rút tiền của reader
@@ -144,6 +145,14 @@ export async function POST(request: NextRequest) {
     type: 'SYSTEM',
     link: '/admin/withdrawals',
   }).catch(() => {})
+
+  await notifyAdminWithdrawal({
+    readerName: reader.display_name || 'Reader',
+    amount,
+    bankAccount: reader.bank_account || 'N/A',
+    withdrawalId: withdrawal.id,
+    adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
+  }).catch((err) => console.error('Email error:', err))
 
   return NextResponse.json({ success: true, id: withdrawal.id }, { status: 201 })
 }

@@ -31,10 +31,8 @@ const footerLinks = {
 }
 
 const socialLinks = [
-  { icon: Facebook, href: 'https://facebook.com', label: 'Facebook' },
+  { icon: Facebook, href: 'https://www.facebook.com/profile.php?id=61591467853035', label: 'Facebook' },
   { icon: Instagram, href: 'https://instagram.com', label: 'Instagram' },
-  { icon: Youtube, href: 'https://youtube.com', label: 'Youtube' },
-  { icon: Twitter, href: 'https://twitter.com', label: 'Twitter' },
 ]
 
 export function Footer() {
@@ -62,7 +60,7 @@ export function Footer() {
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <span>1900 1234</span>
+                <span>058 602 3244</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
@@ -128,7 +126,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground text-center md:text-left">
-            © 2024 SAGETO. All rights reserved.
+            © 2026 SAGETO. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             {socialLinks.map((social) => (

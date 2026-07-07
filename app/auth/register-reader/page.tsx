@@ -15,9 +15,7 @@ import { specialties } from '@/lib/data'
 import { cn } from '@/lib/utils'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-const FACEBOOK_REGEX = /^https?:\/\/(www\.)?(facebook\.com|fb\.com)\/[A-Za-z0-9_.]+\/?$/i
 function isValidEmail(v: string) { return EMAIL_REGEX.test(v.trim()) }
-function isValidFacebook(v: string) { return FACEBOOK_REGEX.test(v.trim()) }
 
 export default function RegisterReaderPage() {
   const [name, setName] = useState('')
@@ -53,15 +51,12 @@ export default function RegisterReaderPage() {
   }, [showSpecialtyMenu])
 
   const emailError = email.length > 0 && !isValidEmail(email)
-  const facebookError = facebookLink.length > 0 && !isValidFacebook(facebookLink)
   const passwordsMatch = password === confirmPassword
   const isFormValid =
     email.trim().length > 0 &&
     isValidEmail(email) &&
     password.length >= 6 &&
     passwordsMatch &&
-    facebookLink.trim().length > 0 &&
-    isValidFacebook(facebookLink) &&
     name.trim().length > 0 &&
     phone.trim().length > 0 &&
     description.trim().length > 20 &&
@@ -108,6 +103,18 @@ export default function RegisterReaderPage() {
 
       setSuccessMessage('Yêu cầu trở thành Reader đã được gửi. Admin sẽ duyệt và kích hoạt trong thời gian sớm nhất.')
       setShowSuccessDialog(true)
+      setName('')
+      setEmail('')
+      setPassword('')
+      setConfirmPassword('')
+      setFacebookLink('')
+      setPhone('')
+      setDescription('')
+      setExperienceYear('1')
+      setAvatarDataUrl(null)
+      setAvatarName('')
+      setSelectedSpecialties([])
+      setAgreed(false)
     } catch (error) {
       console.error(error)
       setServerError('Đã xảy ra lỗi. Vui lòng thử lại.')
@@ -216,15 +223,13 @@ export default function RegisterReaderPage() {
               <div className="space-y-8">
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="block text-sm font-medium text-foreground">
-                  Link Facebook để liên hệ <span className="text-red-400">*</span>
+                  Link Facebook để liên hệ
                   <Input
-                    type="url"
+                    type="text"
                     value={facebookLink}
                     onChange={(e) => setFacebookLink(e.target.value)}
                     className="mt-2 bg-white/5 border-[var(--border)]"
-                    required
                   />
-                  {facebookError && <p className="mt-2 text-xs text-red-400">Nhập link Facebook hợp lệ.</p>}
                 </label>
                 <label className="block text-sm font-medium text-foreground">
                   Số điện thoại <span className="text-red-400">*</span>
@@ -264,7 +269,7 @@ export default function RegisterReaderPage() {
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="block text-sm font-medium text-foreground">
-                  <div className="mb-2">Chủ đề <span className="text-muted-foreground font-normal">(tối đa 8)</span></div>
+                  <div className="mb-2">Chủ đề <span className="text-red-400">*</span> <span className="text-muted-foreground font-normal">(tối đa 8)</span></div>
                   
                   {selectedSpecialties.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-2">
@@ -327,7 +332,7 @@ export default function RegisterReaderPage() {
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="block text-sm font-medium text-foreground">
-                  Chân dung
+                  Chân dung <span className="text-red-400">*</span>
                   <div className="mt-2 rounded-3xl border-2 border-dashed border-[#768064]/20 bg-gradient-to-br from-white/5 to-transparent p-5 text-center transition hover:border-[#A5B38B]/70 hover:bg-white/10">
                     <div className="mx-auto mb-4 h-24 w-24 overflow-hidden rounded-3xl bg-white/5 shadow-inner shadow-black/10">
                       {avatarDataUrl ? (
@@ -367,7 +372,7 @@ export default function RegisterReaderPage() {
                   </div>
                 </label>
                 <label className="block text-sm font-medium text-foreground">
-                  Mô tả bản thân
+                  Mô tả bản thân <span className="text-red-400">*</span>
                   <Textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -418,11 +423,11 @@ export default function RegisterReaderPage() {
               </div>
               <DialogTitle className="text-center text-xl">Đăng ký thành công!</DialogTitle>
               <DialogDescription className="text-center">
-                <p className="mt-4 text-sm">Yêu cầu của bạn đã được gửi đến admin.</p>
-                <p className="mt-2 text-sm">Admin sẽ kiểm tra hồ sơ của bạn và gửi kết quả qua email trong thời gian sớm nhất.</p>
-                <p className="mt-3 text-xs text-yellow-400">
+                <div className="mt-4 text-sm">Yêu cầu của bạn đã được gửi đến admin.</div>
+                <div className="mt-2 text-sm">Admin sẽ kiểm tra hồ sơ của bạn và gửi kết quả qua email trong thời gian sớm nhất.</div>
+                <div className="mt-3 text-xs text-yellow-400">
                   ⏱️ Thời gian xử lý: 1-3 ngày làm việc
-                </p>
+                </div>
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="mt-6 flex flex-col gap-3 sm:flex-col">

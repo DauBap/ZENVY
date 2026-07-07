@@ -18,7 +18,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
     : reader.pricePerSession
 
   const priceDisplay = minPrice >= 1000
-    ? `${(minPrice / 1000).toFixed(0)}K`
+    ? `${(minPrice / 1000).toFixed(0)}k`
     : `${minPrice}`
 
   return (

@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
+import { notifyAdminPaymentConfirm } from '@/lib/email'
 
 // ===========================================================================
 // FLOW:
@@ -42,8 +43,9 @@ export async function PATCH(
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
-        customer: { select: { user_id: true } },
+        customer: { select: { user_id: true, fullname: true } },
         reader: { select: { user_id: true } },
+        package: { select: { price: true } },
       },
     })
     if (!booking) return NextResponse.json({ error: 'Không tìm thấy lịch hẹn.' }, { status: 404 })
@@ -87,6 +89,14 @@ export async function PATCH(
           type: 'BOOKING_CONFIRMED',
           link: '/dashboard',
         }).catch(() => {})
+
+        await notifyAdminPaymentConfirm({
+          customerName: booking.customer?.fullname || 'Khách hàng',
+          amount: booking.package?.price ?? 0,
+          method: 'Bank transfer',
+          paymentId: booking.id,
+          adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
+        }).catch((err) => console.error('Email error:', err))
 
         return NextResponse.json({ success: true, booking: { id: bookingId, status: 'PAYMENT_CONFIRMED' } })
       }
@@ -226,7 +236,7 @@ export async function PATCH(
         createNotification({
           userId: booking.reader.user_id,
           title: 'Thu nhập đã được cộng 💰',
-          content: `Phiên hẹn ngày ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} hoàn thành. ${(amount / 1000).toFixed(0)}k₫ đã được cộng vào số dư.`,
+          content: `Phiên hẹn ngày ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} hoàn thành. ${(amount / 1000).toFixed(0)}k đã được cộng vào số dư.`,
           type: 'BOOKING_COMPLETED',
           link: '/dashboard',
         }).catch(() => {})

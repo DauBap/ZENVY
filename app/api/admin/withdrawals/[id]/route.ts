@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { notifyAdminWithdrawal } from '@/lib/email'
 
 // PATCH /api/admin/withdrawals/[id] — approve hoặc reject
 export async function PATCH(
