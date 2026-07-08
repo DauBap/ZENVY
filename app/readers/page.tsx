@@ -21,7 +21,13 @@ export default async function ReadersRoutePage() {
       orderBy: { rating: 'desc' },
       include: {
         packages: true,
-        _count: { select: { reviews: true, session_reviews: true } },
+        _count: {
+          select: {
+            reviews: true,
+            session_reviews: true,
+            bookings: { where: { status: 'COMPLETED' } },
+          },
+        },
       },
     })
 
@@ -35,7 +41,13 @@ export default async function ReadersRoutePage() {
         orderBy: { rating: 'desc' },
         include: {
           packages: true,
-          _count: { select: { reviews: true, session_reviews: true } },
+          _count: {
+            select: {
+              reviews: true,
+              session_reviews: true,
+              bookings: { where: { status: 'COMPLETED' } },
+            },
+          },
         },
       })
       readers = serializeReaders(updatedReaders)

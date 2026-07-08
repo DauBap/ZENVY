@@ -8,7 +8,7 @@ import { Star as StarIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import {
   Calendar, Clock, Heart, Bell, History, CreditCard, Banknote,
-  Sparkles, MessageSquare, Settings, LogOut, Moon, Star,
+  Sparkles, MessageSquare, Settings, LogOut, Moon, Star, ExternalLink,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { MobileNav } from '@/components/layout/mobile-nav'
@@ -29,6 +29,7 @@ import { ReaderWithdrawalTab } from '@/components/profile/reader-withdrawal-tab'
 import { cn, formatAmountK } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { SerializedReader } from '@/lib/serializers'
+import { generateGoogleCalendarLink } from '@/lib/google-calendar'
 
 interface DashboardPageProps {
   readers: SerializedReader[]
@@ -509,6 +510,35 @@ export function DashboardPage({
                                   onClick={() => setCancelTarget(b)}>
                                   Hủy lịch
                                 </Button>
+                              )}
+                              {/* Google Calendar button — hiển thị khi CONFIRMED */}
+                              {b.status === 'CONFIRMED' && (
+                                <a
+                                  href={generateGoogleCalendarLink({
+                                    date: b.date,
+                                    time: b.time,
+                                    durationMinutes: b.package?.duration ?? 30,
+                                    partnerName: b.counterparty?.name ?? (isReader ? 'Khách hàng' : 'Reader'),
+                                    packageName: b.package?.name ?? 'Tarot Session',
+                                    bookingId: b.id,
+                                  })}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 gap-1.5 whitespace-nowrap"
+                                  >
+                                    {/* Google Calendar icon SVG */}
+                                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                                      <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                                      <path d="M16 2v4M8 2v4M3 9h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                      <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                    </svg>
+                                    Lưu vào GG Calendar
+                                  </Button>
+                                </a>
                               )}
                             </div>
                           </div>

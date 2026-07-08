@@ -1,140 +1,136 @@
-﻿import 'dotenv/config'
-import { PrismaClient, Prisma } from '@prisma/client'
+import 'dotenv/config'
+import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
-import { readers, tarotCards, faqData, platformStats, testimonials } from '../lib/data'
 
 const databaseUrl = process.env.DATABASE_URL
-if (!databaseUrl) throw new Error('DATABASE_URL is not defined in the environment')
+if (!databaseUrl) throw new Error('DATABASE_URL is not defined')
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: databaseUrl }),
 })
 
-const READER_PASSWORD = 'Reader@123456'
-
 async function main() {
-  console.log('Start seeding...')
+  console.log('🌱 Bắt đầu seed tài khoản demo ZENVY...\n')
 
-  // 1. Roles
-  for (const roleName of ['CUSTOMER', 'READER', 'ADMIN']) {
-    await prisma.role.upsert({
-      where: { name: roleName },
-      update: {},
-      create: { name: roleName, description: `${roleName} role` },
-    })
-  }
-  const readerRole = await prisma.role.findUniqueOrThrow({ where: { name: 'READER' } })
+  const SALT = 10
 
-  // Hash password một lần dùng chung cho tất cả demo reader
-  const hashedPassword = await bcrypt.hash(READER_PASSWORD, 10)
+  // ── 1. Upsert Roles ─────────────────────────────────────────────────────────
+  const [adminRole, customerRole, readerRole] = await Promise.all([
+    prisma.role.upsert({ where: { name: 'ADMIN' },    update: {}, create: { name: 'ADMIN',    description: 'Administrator' } }),
+    prisma.role.upsert({ where: { name: 'CUSTOMER' }, update: {}, create: { name: 'CUSTOMER', description: 'Customer role' } }),
+    prisma.role.upsert({ where: { name: 'READER' },   update: {}, create: { name: 'READER',   description: 'Reader role'   } }),
+  ])
+  console.log('✅ Roles đã sẵn sàng')
 
-  // 2. Readers
-  for (const reader of readers) {
-    const email = `reader_${reader.id}@sageto.com`
-    const expYear = parseInt(reader.experience.match(/\d+/)?.[0] ?? '0', 10)
+  // ── 2. Admin ─────────────────────────────────────────────────────────────────
+  const adminEmail    = 'admin@zenvy.vn'
+  const adminPassword = 'Admin@123'
 
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: { password_hash: hashedPassword }, // cập nhật hash nếu đã seed trước
-      create: {
-        email,
-        password_hash: hashedPassword,
-        role_id: readerRole.id,
+  const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } })
+  if (existingAdmin) {
+    console.log(`⚠️  Admin (${adminEmail}) đã tồn tại — bỏ qua`)
+  } else {
+    await prisma.user.create({
+      data: {
+        email: adminEmail,
+        password_hash: await bcrypt.hash(adminPassword, SALT),
+        role_id: adminRole.id,
         status: 'ACTIVE',
       },
     })
-
-    const readerInfo = await prisma.readerInfo.upsert({
-      where: { user_id: user.id },
-      create: {
-        user_id: user.id,
-        display_name: reader.name,
-        description: reader.fullBio,
-        experience_year: expYear,
-        price_per_session: Math.round(reader.pricePerSession),
-        rating: new Prisma.Decimal(reader.rating.toString()),
-        verified: reader.isVerified,
-        avatar_url: reader.avatar,
-      },
-      update: {
-        display_name: reader.name,
-        description: reader.fullBio,
-        experience_year: expYear,
-        price_per_session: Math.round(reader.pricePerSession),
-        rating: new Prisma.Decimal(reader.rating.toString()),
-        verified: reader.isVerified,
-        avatar_url: reader.avatar,
-      },
-    })
-
-    // Packages (xóa cũ rồi tạo lại để tránh duplicate)
-    await prisma.package.deleteMany({ where: { reader_id: readerInfo.id } })
-    for (const { id: _id, ...pkg } of reader.packages) {
-      await prisma.package.create({ data: { ...pkg, reader_id: readerInfo.id } })
-    }
-
-    // Reviews
-    await prisma.reviews.deleteMany({ where: { reader_id: readerInfo.id } })
-    for (const { id: _id, userId: _uid, ...review } of reader.reviews) {
-      await prisma.reviews.create({
-        data: { ...review, date: new Date(review.date), reader_id: readerInfo.id },
-      })
-    }
-
-    // Availability
-    await prisma.availability.deleteMany({ where: { reader_id: readerInfo.id } })
-    for (const avail of reader.availability) {
-      await prisma.availability.create({
-        data: { date: new Date(avail.date), slots: avail.slots, reader_id: readerInfo.id },
-      })
-    }
-
-    console.log(`✓ Reader: ${reader.name} (${email} / ${READER_PASSWORD})`)
+    console.log(`✅ Admin tạo thành công: ${adminEmail}`)
   }
 
-  // 3. Tarot Cards
-  await prisma.tarotCard.createMany({
-    data: tarotCards.map(({ id: _id, ...card }) => ({ ...card })),
-    skipDuplicates: true,
-  })
-  console.log('✓ Tarot Cards')
+  // ── 3. Customer ──────────────────────────────────────────────────────────────
+  const customerEmail    = 'customer@zenvy.vn'
+  const customerPassword = 'Customer@123'
 
-  // 4. FAQs
-  await prisma.fAQ.createMany({
-    data: faqData.map((f) => ({ question: f.question, answer: f.answer })),
-    skipDuplicates: true,
-  })
-  console.log('✓ FAQs')
-
-  // 5. Platform Stats
-  const existingStat = await prisma.platformStat.findFirst()
-  if (!existingStat) {
-    await prisma.platformStat.create({
+  const existingCustomer = await prisma.user.findUnique({ where: { email: customerEmail } })
+  if (existingCustomer) {
+    console.log(`⚠️  Customer (${customerEmail}) đã tồn tại — bỏ qua`)
+  } else {
+    await prisma.user.create({
       data: {
-        totalSessions: platformStats.totalSessions,
-        averageRating: new Prisma.Decimal(platformStats.averageRating.toString()),
-        verifiedReaders: platformStats.verifiedReaders,
-        avgResponseTime: platformStats.avgResponseTime,
-        satisfactionRate: platformStats.satisfactionRate,
-        onlineReaders: platformStats.onlineReaders,
+        email: customerEmail,
+        password_hash: await bcrypt.hash(customerPassword, SALT),
+        role_id: customerRole.id,
+        status: 'ACTIVE',
+        customer_info: {
+          create: {
+            fullname: 'Nguyễn Văn Demo',
+          },
+        },
       },
     })
-    console.log('✓ Platform Stats')
+    console.log(`✅ Customer tạo thành công: ${customerEmail}`)
   }
 
-  // 6. Testimonials
-  await prisma.testimonial.createMany({
-    data: testimonials.map(({ id: _id, ...t }) => ({ ...t })),
-    skipDuplicates: true,
-  })
-  console.log('✓ Testimonials')
+  // ── 4. Reader ─────────────────────────────────────────────────────────────────
+  const readerEmail    = 'reader@zenvy.vn'
+  const readerPassword = 'Reader@123'
 
-  console.log('\n🌙 Seeding finished.')
-  console.log(`\nDemo reader accounts: reader_1@sageto.com ... reader_6@sageto.com`)
-  console.log(`Password: ${READER_PASSWORD}`)
+  const existingReader = await prisma.user.findUnique({ where: { email: readerEmail } })
+  if (existingReader) {
+    console.log(`⚠️  Reader (${readerEmail}) đã tồn tại — bỏ qua`)
+  } else {
+    await prisma.user.create({
+      data: {
+        email: readerEmail,
+        password_hash: await bcrypt.hash(readerPassword, SALT),
+        role_id: readerRole.id,
+        status: 'ACTIVE',
+        reader_info: {
+          create: {
+            display_name:    'Luna Mystique (Demo)',
+            description:     'Reader Tarot demo với hơn 5 năm kinh nghiệm. Chuyên giải bài tình cảm, sự nghiệp và tâm linh.',
+            experience_year: 5,
+            specialty:       ['Tình cảm', 'Sự nghiệp', 'Tâm linh'],
+            avatar_url:      '/placeholder-user.jpg',
+            facebook_link:   'https://facebook.com/zenvy.demo',
+            verified:        true,
+            price_per_session: 150000,
+            rating:          4.8,
+          },
+        },
+      },
+      include: { reader_info: true },
+    })
+    console.log(`✅ Reader tạo thành công: ${readerEmail}`)
+  }
+
+  // ── 5. Thêm Package demo cho Reader ──────────────────────────────────────────
+  const readerUser = await prisma.user.findUnique({
+    where: { email: readerEmail },
+    include: { reader_info: true },
+  })
+
+  if (readerUser?.reader_info) {
+    const existingPkgs = await prisma.package.count({ where: { reader_id: readerUser.reader_info.id } })
+    if (existingPkgs === 0) {
+      await prisma.package.createMany({
+        data: [
+          { reader_id: readerUser.reader_info.id, name: 'Bói 1 lá',           duration: 30, price: 100000, description: 'Giải đáp 1 câu hỏi nhanh trong 30 phút.',                             popular: false },
+          { reader_id: readerUser.reader_info.id, name: 'Trải bài Celtic Cross', duration: 60, price: 200000, description: 'Trải bài 10 lá toàn diện — tình cảm, sự nghiệp, tài chính.', popular: true  },
+          { reader_id: readerUser.reader_info.id, name: 'Phiên VIP',          duration: 90, price: 350000, description: 'Phiên cao cấp 90 phút, bao gồm cả giải bài và tư vấn chuyên sâu.',  popular: false },
+        ],
+      })
+      console.log('✅ Packages demo đã được tạo cho Reader')
+    } else {
+      console.log('⚠️  Packages đã tồn tại — bỏ qua')
+    }
+  }
+
+  console.log('\n🎉 Seed hoàn tất!\n')
+  console.log('─────────────────────────────────────────────')
+  console.log('  Vai trò   │ Email                │ Mật khẩu    ')
+  console.log('─────────────────────────────────────────────')
+  console.log('  ADMIN     │ admin@zenvy.vn        │ Admin@123   ')
+  console.log('  CUSTOMER  │ customer@zenvy.vn     │ Customer@123')
+  console.log('  READER    │ reader@zenvy.vn       │ Reader@123  ')
+  console.log('─────────────────────────────────────────────\n')
 }
 
 main()
-  .catch((e) => { console.error(e); process.exit(1) })
-  .finally(() => prisma.$disconnect())
+  .catch((e) => { console.error('❌ Seed thất bại:', e); process.exit(1) })
+  .finally(async () => { await prisma.$disconnect() })
