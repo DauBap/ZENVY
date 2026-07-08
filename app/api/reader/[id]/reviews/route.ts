@@ -22,7 +22,11 @@ export async function GET(
         include: {
           booking: {
             include: {
-              customer: { select: { fullname: true, avatar_url: true } },
+              requester: {
+                include: {
+                  customer_info: { select: { fullname: true, avatar_url: true } },
+                },
+              },
               package: { select: { name: true, duration: true } },
             },
           },
@@ -44,8 +48,8 @@ export async function GET(
       packageName: r.booking.package.name,
       packageDuration: r.booking.package.duration,
       customer: {
-        name: r.booking.customer.fullname ?? 'Khách hàng',
-        avatar: r.booking.customer.avatar_url ?? null,
+        name: r.booking.requester.customer_info?.fullname ?? 'Khách hàng',
+        avatar: r.booking.requester.customer_info?.avatar_url ?? null,
       },
     }))
 

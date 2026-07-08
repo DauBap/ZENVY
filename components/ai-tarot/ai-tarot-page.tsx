@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { Sparkles, Shuffle, Send, RotateCcw, ArrowRight } from 'lucide-react'
+import { Sparkles, Shuffle, RotateCcw, ArrowRight, Loader2 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { CosmicBackground } from '@/components/ui/floating-elements'
@@ -26,6 +26,9 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
   const [drawnCards, setDrawnCards] = useState<SerializedTarotCard[]>([])
   const [flippedCards, setFlippedCards] = useState<number[]>([])
   const [showResult, setShowResult] = useState(false)
+  const [interpretation, setInterpretation] = useState('')
+  const [isLoadingAI, setIsLoadingAI] = useState(false)
+  const [aiError, setAiError] = useState('')
 
   const spread = spreads.find(s => s.id === selectedSpread)!
 
@@ -45,11 +48,42 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
 
   const handleFlipCard = (index: number) => {
     if (!flippedCards.includes(index)) {
-      setFlippedCards([...flippedCards, index])
-      
-      if (flippedCards.length + 1 === drawnCards.length) {
-        setTimeout(() => setShowResult(true), 500)
+      const newFlipped = [...flippedCards, index]
+      setFlippedCards(newFlipped)
+
+      if (newFlipped.length === drawnCards.length) {
+        setTimeout(() => {
+          setShowResult(true)
+          fetchInterpretation(drawnCards)
+        }, 500)
       }
+    }
+  }
+
+  const fetchInterpretation = async (cards: SerializedTarotCard[]) => {
+    setIsLoadingAI(true)
+    setAiError('')
+    setInterpretation('')
+    try {
+      const res = await fetch('/api/ai-tarot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question,
+          spread: selectedSpread,
+          cards: cards.map(c => ({ name: c.name, meaning: c.meaning })),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setAiError(data.error ?? 'Lỗi AI. Vui lòng thử lại.')
+      } else {
+        setInterpretation(data.interpretation)
+      }
+    } catch {
+      setAiError('Lỗi kết nối. Vui lòng thử lại.')
+    } finally {
+      setIsLoadingAI(false)
     }
   }
 
@@ -59,6 +93,8 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
     setFlippedCards([])
     setShowResult(false)
     setQuestion('')
+    setInterpretation('')
+    setAiError('')
   }
 
   return (
@@ -248,28 +284,50 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
                         <Sparkles className="w-5 h-5 text-[#768064]" />
                         Diễn giải AI
                       </h3>
-                      <div className="space-y-4 text-muted-foreground leading-relaxed">
-                        <p>
-                          Dựa trên các lá bài bạn đã rút, đây là thông điệp từ vũ trụ dành cho bạn:
-                        </p>
+
+                      {/* Cards drawn summary */}
+                      <div className="space-y-2 mb-5">
                         {drawnCards.map((card, index) => (
-                          <div key={card.id} className="p-4 rounded-xl bg-white/5 border border-white/10">
-                            <div className="font-medium text-foreground mb-1">
-                              {selectedSpread === 'three' && (
-                                <span className="text-[#768064]">
-                                  {index === 0 ? 'Quá khứ' : index === 1 ? 'Hiện tại' : 'Tương lai'}:{' '}
-                                </span>
-                              )}
-                              {card.name}
-                            </div>
-                            <p className="text-sm">{card.meaning}</p>
+                          <div key={card.id} className="flex items-center gap-2 text-sm text-muted-foreground">
+                            {selectedSpread === 'three' && (
+                              <span className="text-[#768064] font-medium shrink-0">
+                                {index === 0 ? 'Quá khứ' : index === 1 ? 'Hiện tại' : 'Tương lai'}:
+                              </span>
+                            )}
+                            <span className="text-foreground font-medium">{card.name}</span>
                           </div>
                         ))}
-                        <p className="text-sm italic border-l-2 border-[#768064]/50 pl-4">
-                          Lưu ý: Đây là diễn giải từ AI. Để có insight sâu sắc và cá nhân hóa hơn, 
-                          hãy đặt lịch với các Tarot Reader chuyên nghiệp của chúng tôi.
-                        </p>
                       </div>
+
+                      {/* AI interpretation */}
+                      <div className="p-4 rounded-xl bg-white/5 border border-white/10 min-h-[120px]">
+                        {isLoadingAI ? (
+                          <div className="flex items-center gap-3 text-muted-foreground">
+                            <Loader2 className="w-4 h-4 animate-spin text-[#768064]" />
+                            <span className="text-sm">AI đang diễn giải trải bài của bạn…</span>
+                          </div>
+                        ) : aiError ? (
+                          <div className="space-y-3">
+                            <p className="text-sm text-red-400">{aiError}</p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-white/10"
+                              onClick={() => fetchInterpretation(drawnCards)}
+                            >
+                              Thử lại
+                            </Button>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                            {interpretation}
+                          </p>
+                        )}
+                      </div>
+
+                      <p className="text-xs italic text-muted-foreground/60 border-l-2 border-[#768064]/30 pl-3 mt-4">
+                        Để có insight sâu sắc và cá nhân hóa hơn, hãy đặt lịch với các Tarot Reader chuyên nghiệp.
+                      </p>
 
                       {/* Actions */}
                       <div className="flex flex-col sm:flex-row gap-3 mt-6">

@@ -6,9 +6,11 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, Calendar, CreditCard, Banknote,
   Settings, LogOut, Menu, X, ChevronRight, UserCheck, Sparkles,
+  Ticket,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
+import { NotificationBell } from '@/components/layout/notification-bell'
 import type { JWTPayload } from '@/lib/auth'
 
 const NAV = [
@@ -19,6 +21,7 @@ const NAV = [
   { href: '/admin/payments',    label: 'Thanh toán',           icon: CreditCard },
   { href: '/admin/withdrawals', label: 'Giải ngân & Rút tiền', icon: Banknote },
   { href: '/admin/specialties', label: 'Chủ đề',               icon: Sparkles },
+  { href: '/admin/coupons',     label: 'Mã giảm giá',          icon: Ticket },
 ]
 
 export function AdminShell({ children, session }: { children: React.ReactNode; session: JWTPayload }) {
@@ -103,7 +106,10 @@ export function AdminShell({ children, session }: { children: React.ReactNode; s
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1" />
-          <div className="text-sm text-muted-foreground hidden sm:block">{session.email}</div>
+          <div className="hidden sm:flex items-center gap-3">
+            <NotificationBell />
+            <div className="text-sm text-muted-foreground hidden md:block">{session.email}</div>
+          </div>
         </header>
 
         <main className="flex-1 p-4 lg:p-6">

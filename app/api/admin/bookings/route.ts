@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
       ...(dateTo && { date: { lte: new Date(dateTo) } }),
       ...(search && {
         OR: [
-          { customer: { user: { email: { contains: search, mode: 'insensitive' } } } },
-          { customer: { fullname: { contains: search, mode: 'insensitive' } } },
-          { reader: { display_name: { contains: search, mode: 'insensitive' } } },
+          { requester: { email: { contains: search, mode: 'insensitive' } } },
+          { requester: { customer_info: { fullname: { contains: search, mode: 'insensitive' } } } },
+          { provider: { reader_info: { display_name: { contains: search, mode: 'insensitive' } } } },
         ],
       }),
     }
@@ -36,8 +36,21 @@ export async function GET(request: NextRequest) {
         take: limit,
         orderBy: { created_at: 'desc' },
         include: {
-          customer: { select: { fullname: true, user: { select: { email: true } } } },
-          reader: { select: { display_name: true, avatar_url: true } },
+          requester: { 
+            select: { 
+              email: true,
+              customer_info: { 
+                select: { fullname: true } 
+              } 
+            } 
+          },
+          provider: { 
+            select: { 
+              reader_info: { 
+                select: { display_name: true, avatar_url: true } 
+              } 
+            } 
+          },
           package: { select: { name: true, duration: true, price: true } },
           review: { select: { rating: true, comment: true } },
         },
@@ -52,8 +65,14 @@ export async function GET(request: NextRequest) {
       status: b.status,
       cancelReason: b.cancel_reason,
       createdAt: b.created_at.toISOString(),
-      customer: { name: b.customer.fullname ?? '—', email: b.customer.user?.email ?? '' },
-      reader: { name: b.reader.display_name ?? '—', avatar: b.reader.avatar_url },
+      customer: { 
+        name: b.requester.customer_info?.fullname ?? '—', 
+        email: b.requester.email ?? '' 
+      },
+      reader: { 
+        name: b.provider.reader_info?.display_name ?? '—', 
+        avatar: b.provider.reader_info?.avatar_url 
+      },
       package: b.package,
       review: b.review,
     }))

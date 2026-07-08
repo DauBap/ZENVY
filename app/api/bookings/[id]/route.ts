@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
-import { notifyAdminPaymentConfirm } from '@/lib/email'
+import { formatAmountK } from '@/lib/utils'
 
 // ===========================================================================
 // FLOW:
@@ -42,39 +42,14 @@ export async function PATCH(
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
-      include: {
-        customer: { select: { user_id: true, fullname: true } },
-        reader: { select: { user_id: true } },
-        package: { select: { price: true } },
-      },
     })
     if (!booking) return NextResponse.json({ error: 'Không tìm thấy lịch hẹn.' }, { status: 404 })
 
     const userId = Number(session.sub)
-    const isCustomer = booking.customer?.user_id === userId
-    const isReader   = booking.reader?.user_id === userId
+    const isRequester = booking.requester_id === userId
+    const isProvider = booking.provider_id === userId
 
-    // ── CUSTOMER ─────────────────────────────────────────────────────────────
-    if (session.role === 'CUSTOMER') {
-      if (!isCustomer)
-        return NextResponse.json({ error: 'Không có quyền.' }, { status: 403 })
-      if (action !== 'cancel')
-        return NextResponse.json({ error: 'Khách hàng chỉ có thể hủy lịch.' }, { status: 403 })
-      if (booking.status === 'CANCELLED')
-        return NextResponse.json({ error: 'Lịch đã hủy trước đó.' }, { status: 409 })
-      if (booking.status === 'COMPLETED')
-        return NextResponse.json({ error: 'Không thể hủy lịch đã hoàn thành.' }, { status: 409 })
-
-      // Mọi trạng thái còn hiệu lực đều chỉ hủy được khi còn > 24h tới giờ hẹn
-      const appt = getAppointmentInstant(booking.date, booking.time)
-      if (appt.getTime() - Date.now() <= CANCEL_WINDOW_MS)
-        return NextResponse.json({ error: 'Chỉ có thể hủy lịch trước giờ hẹn ít nhất 24 giờ.' }, { status: 422 })
-
-      await prisma.booking.update({ where: { id: bookingId }, data: { status: 'CANCELLED', cancel_reason: null } })
-      return NextResponse.json({ success: true, booking: { id: bookingId, status: 'CANCELLED' } })
-    }
-
-    // ── ADMIN ─────────────────────────────────────────────────────────────────
+    // ── ADMIN — kiểm tra trước để không bị chặn bởi điều kiện CUSTOMER ────────
     if (session.role === 'ADMIN') {
       if (action === 'payment_confirm') {
         // Admin xác nhận đã nhận tiền → chuyển PENDING → PAYMENT_CONFIRMED
@@ -83,20 +58,12 @@ export async function PATCH(
         await prisma.booking.update({ where: { id: bookingId }, data: { status: 'PAYMENT_CONFIRMED' } })
 
         createNotification({
-          userId: booking.reader.user_id,
+          userId: booking.provider_id,
           title: 'Có lịch hẹn mới cần xác nhận',
           content: `Lịch hẹn vào ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} đã được admin duyệt thanh toán. Bạn có thể xác nhận trong dashboard.`,
           type: 'BOOKING_CONFIRMED',
           link: '/dashboard',
         }).catch(() => {})
-
-        await notifyAdminPaymentConfirm({
-          customerName: booking.customer?.fullname || 'Khách hàng',
-          amount: booking.package?.price ?? 0,
-          method: 'Bank transfer',
-          paymentId: booking.id,
-          adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
-        }).catch((err) => console.error('Email error:', err))
 
         return NextResponse.json({ success: true, booking: { id: bookingId, status: 'PAYMENT_CONFIRMED' } })
       }
@@ -111,7 +78,7 @@ export async function PATCH(
       }
 
       // Admin có thể force bất kỳ status hợp lệ (từ admin panel)
-      const validStatuses = ['PENDING','PAYMENT_CONFIRMED','CONFIRMED','COMPLETED','CANCELLED']
+      const validStatuses = ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED', 'COMPLETED', 'CANCELLED']
       if (body?.status && validStatuses.includes(body.status)) {
         await prisma.booking.update({
           where: { id: bookingId },
@@ -120,7 +87,7 @@ export async function PATCH(
 
         if (body.status === 'CONFIRMED') {
           createNotification({
-            userId: booking.customer.user_id,
+            userId: booking.requester_id,
             title: 'Lịch hẹn đã được xác nhận ✅',
             content: `Lịch hẹn của bạn đã được cập nhật sang trạng thái đã xác nhận.`,
             type: 'BOOKING_CONFIRMED',
@@ -130,7 +97,7 @@ export async function PATCH(
 
         if (body.status === 'COMPLETED') {
           createNotification({
-            userId: booking.customer.user_id,
+            userId: booking.requester_id,
             title: 'Phiên tarot đã hoàn thành 🌙',
             content: `Phiên hẹn đã được đánh dấu hoàn thành. Hãy để lại đánh giá cho reader nhé!`,
             type: 'BOOKING_COMPLETED',
@@ -138,7 +105,7 @@ export async function PATCH(
           }).catch(() => {})
 
           createNotification({
-            userId: booking.reader.user_id,
+            userId: booking.provider_id,
             title: 'Thu nhập đã được cộng 💰',
             content: `Phiên hẹn đã được hoàn thành và số dư của bạn đã được cập nhật.`,
             type: 'BOOKING_COMPLETED',
@@ -152,13 +119,29 @@ export async function PATCH(
       return NextResponse.json({ error: 'Hành động không hợp lệ.' }, { status: 400 })
     }
 
-    // ── READER ────────────────────────────────────────────────────────────────
-    if (session.role === 'READER') {
-      if (!isReader)
-        return NextResponse.json({ error: 'Không có quyền.' }, { status: 403 })
+    // ── CUSTOMER/REQUESTER ────────────────────────────────────────────────────
+    if (isRequester) {
+      if (action !== 'cancel')
+        return NextResponse.json({ error: 'Người yêu cầu chỉ có thể hủy lịch.' }, { status: 403 })
+      if (booking.status === 'CANCELLED')
+        return NextResponse.json({ error: 'Lịch đã hủy trước đó.' }, { status: 409 })
+      if (booking.status === 'COMPLETED')
+        return NextResponse.json({ error: 'Không thể hủy lịch đã hoàn thành.' }, { status: 409 })
+
+      // Mọi trạng thái còn hiệu lực đều chỉ hủy được khi còn > 24h tới giờ hẹn
+      const appt = getAppointmentInstant(booking.date, booking.time)
+      if (appt.getTime() - Date.now() <= CANCEL_WINDOW_MS)
+        return NextResponse.json({ error: 'Chỉ có thể hủy lịch trước giờ hẹn ít nhất 24 giờ.' }, { status: 422 })
+
+      await prisma.booking.update({ where: { id: bookingId }, data: { status: 'CANCELLED', cancel_reason: null } })
+      return NextResponse.json({ success: true, booking: { id: bookingId, status: 'CANCELLED' } })
+    }
+
+    // ── PROVIDER/READER ───────────────────────────────────────────────────────
+    if (isProvider) {
 
       if (action === 'confirm') {
-        // Reader chỉ được xác nhận sau khi admin đã duyệt thanh toán
+        // Provider chỉ được xác nhận sau khi admin đã duyệt thanh toán
         if (booking.status !== 'PAYMENT_CONFIRMED')
           return NextResponse.json({
             error: 'Chỉ xác nhận được lịch đã được admin duyệt thanh toán.',
@@ -166,9 +149,9 @@ export async function PATCH(
 
         await prisma.booking.update({ where: { id: bookingId }, data: { status: 'CONFIRMED' } })
 
-        // Thông báo cho customer
+        // Thông báo cho requester
         createNotification({
-          userId: booking.customer.user_id,
+          userId: booking.requester_id,
           title: 'Lịch hẹn đã được xác nhận ✅',
           content: `Reader đã xác nhận lịch hẹn của bạn vào ${booking.date.toISOString().split('T')[0]} lúc ${booking.time}.`,
           type: 'BOOKING_CONFIRMED',
@@ -189,6 +172,15 @@ export async function PATCH(
         })
         const amount = pkg?.price ?? 0
 
+        // Get provider's reader info
+        const providerReaderInfo = await prisma.readerInfo.findUnique({
+          where: { user_id: booking.provider_id },
+          select: { id: true },
+        })
+        if (!providerReaderInfo) {
+          return NextResponse.json({ error: 'Provider không phải là Reader.' }, { status: 400 })
+        }
+
         try {
           await prisma.$transaction(async (tx) => {
             // 1. Cập nhật booking → COMPLETED với optimistic lock (tránh double-complete)
@@ -203,14 +195,14 @@ export async function PATCH(
             await tx.readerEarning.create({
               data: {
                 booking_id: bookingId,
-                reader_id: booking.reader_id,
+                reader_id: providerReaderInfo.id,
                 amount,
               },
             })
 
             // 3. Cộng tiền vào balance của reader (atomic increment)
             await tx.readerInfo.update({
-              where: { id: booking.reader_id },
+              where: { id: providerReaderInfo.id },
               data: { balance: { increment: amount } },
             })
           })
@@ -223,20 +215,20 @@ export async function PATCH(
           throw e
         }
 
-        // Thông báo cho customer: phiên đã hoàn thành
+        // Thông báo cho requester: phiên đã hoàn thành
         createNotification({
-          userId: booking.customer.user_id,
+          userId: booking.requester_id,
           title: 'Phiên tarot đã hoàn thành 🌙',
           content: `Phiên hẹn ngày ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} đã hoàn thành. Hãy để lại đánh giá nhé!`,
           type: 'BOOKING_COMPLETED',
           link: '/dashboard',
         }).catch(() => {})
 
-        // Thông báo cho reader: đã ghi nhận thu nhập
+        // Thông báo cho provider: đã ghi nhận thu nhập
         createNotification({
-          userId: booking.reader.user_id,
+          userId: booking.provider_id,
           title: 'Thu nhập đã được cộng 💰',
-          content: `Phiên hẹn ngày ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} hoàn thành. ${(amount / 1000).toFixed(0)}k đã được cộng vào số dư.`,
+          content: `Phiên hẹn ngày ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} hoàn thành. ${formatAmountK(amount)} đã được cộng vào số dư.`,
           type: 'BOOKING_COMPLETED',
           link: '/dashboard',
         }).catch(() => {})
@@ -251,9 +243,9 @@ export async function PATCH(
           return NextResponse.json({ error: 'Vui lòng nhập lý do hủy.' }, { status: 400 })
         await prisma.booking.update({ where: { id: bookingId }, data: { status: 'CANCELLED', cancel_reason: reasonRaw } })
 
-        // Thông báo cho customer khi reader hủy
+        // Thông báo cho requester khi provider hủy
         createNotification({
-          userId: booking.customer.user_id,
+          userId: booking.requester_id,
           title: 'Lịch hẹn đã bị hủy ❌',
           content: `Lịch hẹn ngày ${booking.date.toISOString().split('T')[0]} lúc ${booking.time} đã bị hủy. Lý do: ${reasonRaw}`,
           type: 'BOOKING_CANCELLED',

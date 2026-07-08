@@ -18,12 +18,11 @@ export async function GET(request: NextRequest) {
 
     const pendingWhere: any = {
       role: { name: 'READER' },
-      status: 'INACTIVE',
-      reader_info: { isNot: null },
+      reader_info: { is: { status: 'PENDING' } },
       ...(search && {
         OR: [
           { email: { contains: search, mode: 'insensitive' } },
-          { reader_info: { display_name: { contains: search, mode: 'insensitive' } } },
+          { reader_info: { is: { display_name: { contains: search, mode: 'insensitive' } } } },
         ],
       }),
     }
@@ -37,13 +36,11 @@ export async function GET(request: NextRequest) {
             OR: [
               { email: { contains: search, mode: 'insensitive' } },
               { customer_info: { fullname: { contains: search, mode: 'insensitive' } } },
-              { reader_info: { display_name: { contains: search, mode: 'insensitive' } } },
+              { reader_info: { is: { display_name: { contains: search, mode: 'insensitive' } } } },
             ],
           }),
           NOT: {
-            role: { name: 'READER' },
-            status: 'INACTIVE',
-            reader_info: { isNot: null },
+            reader_info: { is: { status: 'PENDING' } },
           },
         }
 

@@ -25,8 +25,10 @@ model User {
   status                 UserStatus           @default(ACTIVE)
   created_at             DateTime             @default(now()) @db.Timestamp(6)
   updated_at             DateTime             @updatedAt @db.Timestamp(6)
-  conversations_customer Conversation[]       @relation("ConversationCustomer")
-  conversations_reader   Conversation[]       @relation("ConversationReader")
+  conversations_as_p1    Conversation[]       @relation("ConversationParticipant1")
+  conversations_as_p2    Conversation[]       @relation("ConversationParticipant2")
+  bookings_as_requester  Booking[]            @relation("BookingRequester")
+  bookings_as_provider   Booking[]            @relation("BookingProvider")
   customer_info          CustomerInfo?
   forum_comments         ForumComment[]
   forum_likes            ForumLike[]
@@ -82,7 +84,6 @@ model CustomerInfo {
   avatar_url String?
   created_at DateTime  @default(now()) @db.Timestamp(6)
   updated_at DateTime  @updatedAt @db.Timestamp(6)
-  bookings   Booking[]
   user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("customer_info")
@@ -94,16 +95,17 @@ model ReaderInfo {
   display_name      String?             @db.VarChar(100)
   description       String?
   experience_year   Int                 @default(0)
-  price_per_session Decimal             @default(0) @db.Decimal(12, 2)
+  price_per_session Int                 @default(0)
   rating            Decimal             @default(0.0) @db.Decimal(2, 1)
   verified          Boolean             @default(false)
   avatar_url        String?
   facebook_link     String?             @db.VarChar(255)
   specialty         String[]            @default([])
+  status            ReaderStatus        @default(PENDING)
   created_at        DateTime            @default(now()) @db.Timestamp(6)
   updated_at        DateTime            @updatedAt @db.Timestamp(6)
   /// Số dư tích lũy — cộng khi booking COMPLETED, trừ khi withdrawal APPROVED
-  balance           Decimal             @default(0) @db.Decimal(14, 2)
+  balance           Int                 @default(0)
   last_seen_at      DateTime?           @db.Timestamp(6)
   bank_account      String?             @db.VarChar(50)
   /// Thông tin ngân hàng để rút tiền
@@ -113,7 +115,6 @@ model ReaderInfo {
   voice_sample      String?
   bank_qr_code      String?
   availability      Availability[]
-  bookings          Booking[]
   packages          Package[]
   earnings          ReaderEarning[]
   favorites         ReaderFavorite[]
@@ -143,6 +144,12 @@ model Package {
   @@map("packages")
 }
 
+enum ReaderStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
 model Availability {
   id        Int        @id @default(autoincrement())
   date      DateTime   @db.Date
@@ -155,25 +162,31 @@ model Availability {
 }
 
 model Booking {
-  id            Int            @id @default(autoincrement())
-  customer_id   Int
-  reader_id     Int
-  package_id    Int
-  date          DateTime       @db.Date
-  time          String         @db.VarChar(10)
-  status        BookingStatus  @default(PENDING)
-  cancel_reason String?
-  created_at    DateTime       @default(now()) @db.Timestamp(6)
-  updated_at    DateTime       @updatedAt @db.Timestamp(6)
-  customer      CustomerInfo   @relation(fields: [customer_id], references: [id], onDelete: Cascade)
-  package       Package        @relation(fields: [package_id], references: [id], onDelete: Cascade)
-  reader        ReaderInfo     @relation(fields: [reader_id], references: [id], onDelete: Cascade)
-  messages      Message[]
-  earning       ReaderEarning?
-  review        SessionReview?
+  id              Int            @id @default(autoincrement())
+  requester_id    Int
+  provider_id     Int
+  requester_role  String         @db.VarChar(50)  // CUSTOMER, READER, ADMIN
+  provider_role   String         @db.VarChar(50)  // CUSTOMER, READER, ADMIN
+  package_id      Int
+  date            DateTime       @db.Date
+  time            String         @db.VarChar(10)
+  status          BookingStatus  @default(PENDING)
+  cancel_reason   String?
+  created_at      DateTime       @default(now()) @db.Timestamp(6)
+  updated_at      DateTime       @updatedAt @db.Timestamp(6)
+  requester       User           @relation("BookingRequester", fields: [requester_id], references: [id], onDelete: Cascade)
+  provider        User           @relation("BookingProvider", fields: [provider_id], references: [id], onDelete: Cascade)
+  package         Package        @relation(fields: [package_id], references: [id], onDelete: Cascade)
+  messages        Message[]
+  earning         ReaderEarning?
+  review          SessionReview?
+  coupon_id       Int?
+  coupon          Coupon?        @relation(fields: [coupon_id], references: [id])
+  discount_amount Int            @default(0)
+  final_price     Int?
 
-  @@index([customer_id])
-  @@index([reader_id])
+  @@index([requester_id])
+  @@index([provider_id])
   @@index([status])
   @@map("bookings")
 }
@@ -235,21 +248,23 @@ model PlatformStat {
 }
 
 model Conversation {
-  id                    Int       @id @default(autoincrement())
-  customer_user_id      Int
-  reader_user_id        Int
-  last_message_at       DateTime? @db.Timestamp(6)
-  customer_last_read_at DateTime? @db.Timestamp(6)
-  reader_last_read_at   DateTime? @db.Timestamp(6)
-  created_at            DateTime  @default(now()) @db.Timestamp(6)
-  updated_at            DateTime  @updatedAt @db.Timestamp(6)
-  customer              User      @relation("ConversationCustomer", fields: [customer_user_id], references: [id], onDelete: Cascade)
-  reader                User      @relation("ConversationReader", fields: [reader_user_id], references: [id], onDelete: Cascade)
-  messages              Message[]
+  id                      Int       @id @default(autoincrement())
+  participant_1_id        Int
+  participant_2_id        Int
+  participant_1_role      String    @db.VarChar(50)  // CUSTOMER, READER, ADMIN
+  participant_2_role      String    @db.VarChar(50)  // CUSTOMER, READER, ADMIN
+  last_message_at         DateTime? @db.Timestamp(6)
+  participant_1_last_read DateTime? @db.Timestamp(6)
+  participant_2_last_read DateTime? @db.Timestamp(6)
+  created_at              DateTime  @default(now()) @db.Timestamp(6)
+  updated_at              DateTime  @updatedAt @db.Timestamp(6)
+  participant_1           User      @relation("ConversationParticipant1", fields: [participant_1_id], references: [id], onDelete: Cascade)
+  participant_2           User      @relation("ConversationParticipant2", fields: [participant_2_id], references: [id], onDelete: Cascade)
+  messages                Message[]
 
-  @@unique([customer_user_id, reader_user_id])
-  @@index([customer_user_id])
-  @@index([reader_user_id])
+  @@unique([participant_1_id, participant_2_id])
+  @@index([participant_1_id])
+  @@index([participant_2_id])
   @@index([last_message_at])
   @@map("conversations")
 }
@@ -361,9 +376,9 @@ model ReaderFavorite {
 model WithdrawalRequest {
   id               Int              @id @default(autoincrement())
   reader_id        Int
-  amount_requested Decimal          @db.Decimal(14, 2)
+  amount_requested Int
   commission_rate  Decimal          @db.Decimal(5, 2)
-  amount_to_pay    Decimal          @db.Decimal(14, 2)
+  amount_to_pay    Int
   bank_name        String           @db.VarChar(100)
   bank_account     String           @db.VarChar(50)
   bank_owner_name  String           @db.VarChar(100)
@@ -469,4 +484,21 @@ model PushSubscription {
 
   @@index([user_id])
   @@map("push_subscriptions")
+}
+
+model Coupon {
+  id             Int       @id @default(autoincrement())
+  code           String    @unique @db.VarChar(50)
+  discount_type  String    @db.VarChar(20) // PERCENTAGE, FIXED
+  discount_value Int
+  max_uses       Int?      // Nullable means unlimited
+  used_count     Int       @default(0)
+  start_date     DateTime?
+  end_date       DateTime?
+  active         Boolean   @default(true)
+  created_at     DateTime  @default(now()) @db.Timestamp(6)
+  updated_at     DateTime  @updatedAt @db.Timestamp(6)
+  bookings       Booking[]
+
+  @@map("coupons")
 }

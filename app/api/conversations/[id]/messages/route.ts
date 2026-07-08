@@ -48,7 +48,7 @@ export async function GET(
 
     // Side-effect: đánh dấu đã đọc tới tin mới nhất
     if (messages.length > 0) {
-      const field = conv.customer_user_id === userId ? 'customer_last_read_at' : 'reader_last_read_at'
+      const field = conv.participant_1_id === userId ? 'participant_1_last_read' : 'participant_2_last_read'
       await prisma.conversation.update({
         where: { id: conversationId },
         data: { [field]: new Date() },
@@ -134,12 +134,11 @@ export async function POST(
       const bid = Number(body.bookingId)
       const booking = await prisma.booking.findUnique({
         where: { id: bid },
-        include: { customer: { select: { user_id: true } }, reader: { select: { user_id: true } } },
       })
       if (
         !booking ||
-        booking.customer.user_id !== conv.customer_user_id ||
-        booking.reader.user_id !== conv.reader_user_id
+        !((booking.requester_id === conv.participant_1_id && booking.provider_id === conv.participant_2_id) ||
+          (booking.requester_id === conv.participant_2_id && booking.provider_id === conv.participant_1_id))
       ) {
         return NextResponse.json({ error: 'Lịch hẹn không hợp lệ.' }, { status: 400 })
       }
@@ -156,7 +155,7 @@ export async function POST(
       bookingId = bid
     }
 
-    const readField = conv.customer_user_id === userId ? 'customer_last_read_at' : 'reader_last_read_at'
+    const readField = conv.participant_1_id === userId ? 'participant_1_last_read' : 'participant_2_last_read'
 
     const [message] = await prisma.$transaction([
       prisma.message.create({
@@ -176,7 +175,7 @@ export async function POST(
     ])
 
     // Gửi thông báo cho người nhận tin nhắn
-    const counterpartUserId = conv.customer_user_id === userId ? conv.reader_user_id : conv.customer_user_id
+    const counterpartUserId = conv.participant_1_id === userId ? conv.participant_2_id : conv.participant_1_id
     // Không gửi notification cho tin nhắn - chỉ lưu trong DB
     // if (counterpartUserId !== userId) {
     //   createNotification({ ... })

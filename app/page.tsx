@@ -22,6 +22,10 @@ export default async function HomePage() {
       where: { verified: true }, // Chỉ lấy readers đã được duyệt
       orderBy: { rating: 'desc' },
       take: 10,
+      include: {
+        packages: true,
+        _count: { select: { reviews: true, session_reviews: true } },
+      },
     }),
     prisma.platformStat.findFirst(),
     prisma.testimonial.findMany({ take: 4 }),

@@ -11,13 +11,13 @@ export async function GET(_request: NextRequest) {
 
     const userId = Number(session.sub)
     const conversationIds = await prisma.conversation.findMany({
-      where: { OR: [{ customer_user_id: userId }, { reader_user_id: userId }] },
-      select: { id: true, customer_last_read_at: true, reader_last_read_at: true, customer_user_id: true, reader_user_id: true },
+      where: { OR: [{ participant_1_id: userId }, { participant_2_id: userId }] },
+      select: { id: true, participant_1_last_read: true, participant_2_last_read: true, participant_1_id: true, participant_2_id: true },
     })
 
     const counts = await Promise.all(
       conversationIds.map(async (conv) => {
-        const myLastRead = conv.customer_user_id === userId ? conv.customer_last_read_at : conv.reader_last_read_at
+        const myLastRead = conv.participant_1_id === userId ? conv.participant_1_last_read : conv.participant_2_last_read
         return prisma.message.count({
           where: {
             conversation_id: conv.id,

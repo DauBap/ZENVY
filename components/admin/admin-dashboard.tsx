@@ -25,7 +25,7 @@ export function AdminDashboard({ stats, recentBookings }: { stats: any; recentBo
     { label: 'Người dùng', value: stats.totalUsers.toLocaleString(), sub: `${stats.totalReaders} readers`, icon: Users, color: 'text-[#768064]', bg: 'bg-[#768064]/10' },
     { label: 'Lịch hẹn hôm nay', value: stats.todayBookings.toLocaleString(), sub: `${stats.totalBookings} tổng`, icon: Calendar, color: 'text-blue-400', bg: 'bg-blue-500/10' },
     { label: 'Hoàn thành', value: `${stats.completionRate}%`, sub: `${stats.completedBookings} phiên`, icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/10' },
-    { label: 'Doanh thu', value: `${(stats.totalRevenue / 1_000_000).toFixed(1)}k`, sub: `${stats.totalReviews} đánh giá`, icon: DollarSign, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+    { label: 'Doanh thu', value: formatAmountK(stats.totalRevenue), sub: `${stats.totalReviews} đánh giá`, icon: DollarSign, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
     { label: 'Đánh giá TB', value: stats.avgRating.toFixed(1), sub: `/ 5.0`, icon: Star, color: 'text-amber-400', bg: 'bg-amber-500/10' },
     { label: 'Chờ xác nhận', value: stats.pendingBookings.toLocaleString(), sub: `${stats.cancelledBookings} đã hủy`, icon: Clock, color: 'text-orange-400', bg: 'bg-orange-500/10' },
   ]

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { createNotificationForAdmins } from '@/lib/notifications'
 import { notifyAdminWithdrawal } from '@/lib/email'
+import { formatAmountK } from '@/lib/utils'
 import { Prisma } from '@prisma/client'
 
 // GET /api/reader/withdrawals — lịch sử rút tiền của reader
@@ -13,7 +14,7 @@ export async function GET() {
 
   const reader = await prisma.readerInfo.findUnique({
     where: { user_id: Number(session.sub) },
-    select: { id: true, bank_name: true, bank_account: true, bank_owner_name: true },
+    select: { id: true, bank_name: true, bank_account: true, bank_owner_name: true, bank_qr_code: true },
   })
   if (!reader) return NextResponse.json({ withdrawals: [], balance: 0 })
 
@@ -122,16 +123,16 @@ export async function POST(request: NextRequest) {
 
   if (amount > available) {
     return NextResponse.json({
-      error: `Số dư khả dụng không đủ. Khả dụng: ${available.toLocaleString('vi-VN')}k`,
+      error: `Số dư khả dụng không đủ. Khả dụng: ${formatAmountK(available)}`,
     }, { status: 422 })
   }
 
   const withdrawal = await prisma.withdrawalRequest.create({
     data: {
       reader_id: reader.id,
-      amount_requested: new Prisma.Decimal(amount),
+      amount_requested: amount,
       commission_rate: new Prisma.Decimal(commissionRate),
-      amount_to_pay: new Prisma.Decimal(amountToPay),
+      amount_to_pay: amountToPay,
       bank_name: reader.bank_name,
       bank_account: reader.bank_account,
       bank_owner_name: reader.bank_owner_name,
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest) {
 
   await createNotificationForAdmins({
     title: 'Yêu cầu rút tiền mới',
-    content: `Reader ${reader.display_name || 'không tên'} vừa gửi yêu cầu rút ${amount.toLocaleString('vi-VN')}đ. `,
+    content: `Reader ${reader.display_name || 'không tên'} vừa gửi yêu cầu rút ${formatAmountK(amount)}. `,
     type: 'SYSTEM',
     link: '/admin/withdrawals',
   }).catch(() => {})

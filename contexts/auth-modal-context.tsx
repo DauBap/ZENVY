@@ -11,6 +11,7 @@ export interface AuthUser {
   name: string
   role: string
   avatar: string | null
+  readerStatus?: string | null
 }
 
 interface AuthModalContextValue {
@@ -47,7 +48,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsLoadingUser(false))
   }, [])
 
-  useHeartbeat(user?.role === 'READER')
+  useHeartbeat(user?.role === 'READER' && user?.readerStatus === 'ACTIVE')
 
   const openLogin = useCallback((email = '') => {
     setPrefillEmail(email)

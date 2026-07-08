@@ -24,8 +24,8 @@ export async function getUserDisplay(userId: number): Promise<{ name: string; av
 
 // Kiểm tra userId có phải participant của conversation không
 export function isParticipant(
-  conv: { customer_user_id: number; reader_user_id: number },
+  conv: { participant_1_id: number; participant_2_id: number },
   userId: number
 ): boolean {
-  return conv.customer_user_id === userId || conv.reader_user_id === userId
+  return conv.participant_1_id === userId || conv.participant_2_id === userId
 }

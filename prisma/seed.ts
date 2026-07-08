@@ -52,7 +52,7 @@ async function main() {
         display_name: reader.name,
         description: reader.fullBio,
         experience_year: expYear,
-        price_per_session: new Prisma.Decimal(reader.pricePerSession.toString()),
+        price_per_session: Math.round(reader.pricePerSession),
         rating: new Prisma.Decimal(reader.rating.toString()),
         verified: reader.isVerified,
         avatar_url: reader.avatar,
@@ -61,7 +61,7 @@ async function main() {
         display_name: reader.name,
         description: reader.fullBio,
         experience_year: expYear,
-        price_per_session: new Prisma.Decimal(reader.pricePerSession.toString()),
+        price_per_session: Math.round(reader.pricePerSession),
         rating: new Prisma.Decimal(reader.rating.toString()),
         verified: reader.isVerified,
         avatar_url: reader.avatar,
@@ -75,9 +75,9 @@ async function main() {
     }
 
     // Reviews
-    await prisma.review.deleteMany({ where: { reader_id: readerInfo.id } })
+    await prisma.reviews.deleteMany({ where: { reader_id: readerInfo.id } })
     for (const { id: _id, userId: _uid, ...review } of reader.reviews) {
-      await prisma.review.create({
+      await prisma.reviews.create({
         data: { ...review, date: new Date(review.date), reader_id: readerInfo.id },
       })
     }

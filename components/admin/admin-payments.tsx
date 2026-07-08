@@ -62,7 +62,7 @@ export function AdminPaymentsPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Tổng doanh thu', value: `${(totalRevenue / 1_000_000).toFixed(2)}k`, icon: DollarSign, color: 'text-green-400', bg: 'bg-green-500/10' },
+          { label: 'Tổng doanh thu', value: formatAmountK(totalRevenue), icon: DollarSign, color: 'text-green-400', bg: 'bg-green-500/10' },
           { label: 'Giao dịch', value: (data?.total ?? 0).toLocaleString(), icon: TrendingUp, color: 'text-blue-400', bg: 'bg-blue-500/10' },
           { label: 'Reader nổi bật', value: topReaders[0]?.name ?? '—', icon: Star, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
         ].map(c => (
@@ -95,7 +95,7 @@ export function AdminPaymentsPage() {
                 )}
                 <span className="text-sm text-foreground flex-1">{r.name}</span>
                 <span className="text-sm text-muted-foreground">{r.sessionCount} phiên</span>
-                <span className="text-sm font-semibold text-green-400">{(Number(r.totalEarnings) / 1_000_000).toFixed(2)}k</span>
+                <span className="text-sm font-semibold text-green-400">{formatAmountK(Number(r.totalEarnings))}</span>
               </div>
             ))}
           </div>

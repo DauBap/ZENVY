@@ -22,7 +22,12 @@ export async function GET(request: NextRequest) {
         reader: { select: { display_name: true } },
         booking: {
           include: {
-            customer: { select: { fullname: true, user: { select: { email: true } } } },
+            requester: {
+              select: {
+                email: true,
+                customer_info: { select: { fullname: true } },
+              },
+            },
             package: { select: { name: true, price: true, duration: true } },
           },
         },
@@ -35,8 +40,8 @@ export async function GET(request: NextRequest) {
       e.id,
       e.booking_id,
       e.reader.display_name ?? '',
-      e.booking.customer.fullname ?? '',
-      e.booking.customer.user?.email ?? '',
+      e.booking.requester.customer_info?.fullname ?? '',
+      e.booking.requester.email ?? '',
       e.booking.package.name,
       `${e.booking.package.duration} phút`,
       e.amount,

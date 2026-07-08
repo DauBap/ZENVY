@@ -6,7 +6,11 @@ export async function PATCH(req: Request) {
   try {
     const session = await getSession()
     if (!session || !session.sub) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    if (session.role !== 'READER') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const userId = Number(session.sub)
+    const readerInfo = await prisma.readerInfo.findUnique({ where: { user_id: userId } })
+    const isReader = session.role === 'READER' || readerInfo?.status === 'ACTIVE'
+    if (!isReader) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await req.json().catch(() => null)
     if (!body || typeof body.voice !== 'string') {
@@ -19,8 +23,6 @@ export async function PATCH(req: Request) {
     if (voice.length > 2_000_000) {
       return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
     }
-
-    const userId = Number(session.sub)
 
     const updated = await prisma.readerInfo.upsert({
       where: { user_id: userId },
@@ -39,9 +41,12 @@ export async function DELETE(req: Request) {
   try {
     const session = await getSession()
     if (!session || !session.sub) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    if (session.role !== 'READER') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const userId = Number(session.sub)
+    const readerInfo = await prisma.readerInfo.findUnique({ where: { user_id: userId } })
+    const isReader = session.role === 'READER' || readerInfo?.status === 'ACTIVE'
+    if (!isReader) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     await prisma.readerInfo.update({
       where: { user_id: userId },
       data: { voice_sample: null },

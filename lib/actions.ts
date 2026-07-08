@@ -15,7 +15,7 @@ export async function getReaders(options: {
   try {
     const readers = await prisma.readerInfo.findMany({
       where: {
-        verified: true, // Chỉ lấy readers đã được duyệt
+        status: 'ACTIVE', // Chỉ lấy readers đã được admin duyệt
         user: { status: 'ACTIVE' },
       },
       include: {

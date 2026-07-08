@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createNotification } from '@/lib/notifications'
 import { getSession } from '@/lib/auth'
 
 export async function GET(
@@ -25,8 +26,8 @@ export async function GET(
 
     // Booking count
     const bookingCount = user.role.name === 'CUSTOMER'
-      ? await prisma.booking.count({ where: { customer: { user_id: user.id } } })
-      : await prisma.booking.count({ where: { reader: { user_id: user.id } } })
+      ? await prisma.booking.count({ where: { requester_id: user.id } })
+      : await prisma.booking.count({ where: { provider_id: user.id } })
 
     return NextResponse.json({
       id: user.id,
@@ -61,28 +62,39 @@ export async function PATCH(
 
     const { id } = await params
     const body = await request.json()
-    const { status, verified, approve } = body
+    const { status, verified, approve, reason } = body
 
     const updates: any = {}
-    if (approve) {
-      updates.status = 'ACTIVE'
-    } else if (status && ['ACTIVE', 'INACTIVE', 'BANNED'].includes(status)) {
+    if (status && ['ACTIVE', 'INACTIVE', 'BANNED'].includes(status)) {
       updates.status = status
     }
 
     const user = await prisma.user.update({ where: { id: Number(id) }, data: updates })
 
-    // Toggle reader verified or approve pending reader
+    // If admin approves, activate reader_info status only — verified must be set manually
     if (approve) {
-      await prisma.readerInfo.updateMany({
-        where: { user_id: Number(id) },
-        data: { verified: true },
-      })
-    } else if (typeof verified === 'boolean') {
-      await prisma.readerInfo.updateMany({
-        where: { user_id: Number(id) },
-        data: { verified },
-      })
+      await prisma.readerInfo.updateMany({ where: { user_id: Number(id) }, data: { status: 'ACTIVE' } })
+    }
+
+    // Toggle reader verified manually if provided
+    if (typeof verified === 'boolean') {
+      await prisma.readerInfo.updateMany({ where: { user_id: Number(id) }, data: { verified } })
+    }
+
+    // Notify user when admin provides a reason on approval
+    try {
+      if (approve) {
+        const uid = Number(id)
+        await createNotification({
+          userId: uid,
+          title: 'Yêu cầu Reader đã được duyệt',
+          content: reason ? `Yêu cầu của bạn đã được duyệt. Ghi chú: ${reason}` : 'Yêu cầu của bạn đã được duyệt.',
+          type: 'SYSTEM',
+          link: '/profile',
+        })
+      }
+    } catch (err) {
+      console.error('Notify user on approve failed:', err)
     }
 
     return NextResponse.json({ success: true, status: user.status })
@@ -102,7 +114,26 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { id } = await params
-    await prisma.user.delete({ where: { id: Number(id) } })
+    // read optional reason from body to notify user
+    const body = await _req.json().catch(() => ({}))
+    const reason: string | undefined = body?.reason
+    try {
+      if (reason) {
+        const uid = Number(id)
+        await createNotification({
+          userId: uid,
+          title: 'Yêu cầu Reader bị từ chối',
+          content: `Yêu cầu của bạn đã bị từ chối. Lý do: ${reason}`,
+          type: 'SYSTEM',
+          link: '/profile',
+        })
+      }
+    } catch (err) {
+      console.error('Notify user on reject failed:', err)
+    }
+
+    // Instead of deleting the user, mark reader_info status as SUSPENDED so user account remains usable
+    await prisma.readerInfo.updateMany({ where: { user_id: Number(id) }, data: { status: 'SUSPENDED' } })
     return NextResponse.json({ success: true })
   } catch (e) {
     console.error('Admin delete user error:', e)

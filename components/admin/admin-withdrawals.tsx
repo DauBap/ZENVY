@@ -112,7 +112,7 @@ export function AdminWithdrawalsPage() {
               value={editRate}
               onChange={e => setEditRate(e.target.value)}
               className="w-24 bg-white/5 border-white/10 text-center"
-              placeholder="VD: 10"c
+              placeholder="VD: 10"
               type="number"
               min={0}
               max={100}

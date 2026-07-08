@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { ChatClient } from '@/components/chat/chat-page'
 
@@ -17,10 +18,31 @@ export default async function ChatPage({
   const initialCustomerId = sp.customer ? Number(sp.customer) : null
   const initialBookingId = sp.booking ? Number(sp.booking) : null
 
+  let currentRole = session.role
+  let currentReaderStatus: string | null = null
+
+  if (session.role === 'READER') {
+    const readerInfo = await prisma.readerInfo.findUnique({
+      where: { user_id: Number(session.sub) },
+      select: { status: true },
+    })
+    currentReaderStatus = readerInfo?.status ?? null
+  } else {
+    const readerInfo = await prisma.readerInfo.findUnique({
+      where: { user_id: Number(session.sub) },
+      select: { status: true },
+    })
+    if (readerInfo?.status === 'ACTIVE') {
+      currentRole = 'READER'
+      currentReaderStatus = 'ACTIVE'
+    }
+  }
+
   return (
     <ChatClient
       currentUserId={Number(session.sub)}
-      currentRole={session.role}
+      currentRole={currentRole}
+      currentReaderStatus={currentReaderStatus}
       initialReaderId={Number.isInteger(initialReaderId) ? initialReaderId : null}
       initialCustomerId={Number.isInteger(initialCustomerId) ? initialCustomerId : null}
       initialBookingId={Number.isInteger(initialBookingId) ? initialBookingId : null}

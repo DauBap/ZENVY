@@ -14,15 +14,16 @@ export async function POST(
 
     const { id } = await params
     const bookingId = Number(id)
+    const userId = Number(session.sub)
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
-      include: { customer: true, review: true },
+      include: { review: true },
     })
 
     if (!booking) return NextResponse.json({ error: 'Không tìm thấy lịch hẹn.' }, { status: 404 })
-    if (booking.customer.user_id !== Number(session.sub))
-      return NextResponse.json({ error: 'Bạn không phải khách hàng của phiên này.' }, { status: 403 })
+    if (booking.requester_id !== userId)
+      return NextResponse.json({ error: 'Bạn không phải người yêu cầu của phiên này.' }, { status: 403 })
     if (booking.status !== 'COMPLETED')
       return NextResponse.json({ error: 'Chỉ đánh giá được phiên đã hoàn thành.' }, { status: 400 })
     if (booking.review)
@@ -35,18 +36,27 @@ export async function POST(
     if (!Number.isInteger(rating) || rating < 1 || rating > 5)
       return NextResponse.json({ error: 'Số sao phải từ 1 đến 5.' }, { status: 400 })
 
+    // Get provider's reader info
+    const providerReaderInfo = await prisma.readerInfo.findUnique({
+      where: { user_id: booking.provider_id },
+      select: { id: true },
+    })
+    if (!providerReaderInfo) {
+      return NextResponse.json({ error: 'Provider không phải là Reader.' }, { status: 400 })
+    }
+
     // Tạo review
     const review = await prisma.sessionReview.create({
       data: {
         booking_id: bookingId,
-        reader_id: booking.reader_id,
+        reader_id: providerReaderInfo.id,
         rating,
         comment: comment || null,
       },
     })
 
     // Cập nhật rating trung bình của reader (gộp cả 2 nguồn review)
-    await recomputeReaderRating(booking.reader_id)
+    await recomputeReaderRating(providerReaderInfo.id)
 
     return NextResponse.json({ success: true, review }, { status: 201 })
   } catch (e) {

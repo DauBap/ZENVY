@@ -15,7 +15,7 @@ import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { VerifiedBadge } from '@/components/ui/verified-badge'
 import { AudioPlayer } from '@/components/ui/audio-player'
-import { cn } from '@/lib/utils'
+import { cn, formatAmountK } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { SerializedReader } from '@/lib/serializers'
 
@@ -32,8 +32,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
   const [isTogglingFav, setIsTogglingFav] = useState(false)
   const { user, openLogin } = useAuthModal()
   const isOwner = user?.id === (reader as any).user_id
-  // Reader không được đặt lịch / nhắn tin với reader khác
-  const isReaderViewer = user?.role === 'READER'
+  // isReaderViewer đã bị bỏ — reader có thể tương tác với reader khác như user thường
   const [stats, setStats] = useState<{
     followCount: number
     totalBookings: number
@@ -97,6 +96,14 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
   const [reviewPage, setReviewPage] = useState(1)
   const [reviewTotalPages, setReviewTotalPages] = useState(1)
 
+  // Fetch review stats ngay khi load để hiển thị rating đúng ở mọi nơi
+  useEffect(() => {
+    fetch(`/api/reader/${reader.id}/reviews?page=1`)
+      .then(r => r.json())
+      .then(d => { setReviewStats(d.stats ?? null) })
+      .catch(() => {})
+  }, [reader.id])
+
   useEffect(() => {
     if (activeTab !== 'Đánh giá') return
     setLoadingReviews(true)
@@ -112,13 +119,25 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
   }, [activeTab, reader.id, reviewPage])
 
   const pkg = reader.packages?.find((p) => p.id === selectedPkg)
-  const todayVN = new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const nowVN = new Date(Date.now() + 7 * 60 * 60 * 1000)
+  const todayVN = nowVN.toISOString().split('T')[0]
+  // Giờ hiện tại theo giờ VN, dạng "HH:MM" để so sánh chuỗi với slot
+  const currentTimeVN = `${String(nowVN.getUTCHours()).padStart(2, '0')}:${String(nowVN.getUTCMinutes()).padStart(2, '0')}`
   const futureAvailability = (reader.availability ?? [])
     .map((a) => ({
       ...a,
       date: String(a.date).split('T')[0],
     }))
     .filter((a) => a.date >= todayVN)
+    .map((a) => ({
+      ...a,
+      // Với ngày hôm nay: chỉ giữ slot chưa qua giờ hiện tại
+      slots: a.date === todayVN
+        ? a.slots.filter((slot) => slot > currentTimeVN)
+        : a.slots,
+    }))
+    // Bỏ ngày không còn slot nào (hôm nay mà hết giờ)
+    .filter((a) => a.slots.length > 0)
     .slice(0, 3)
 
   // Recorder state (owner only)
@@ -260,7 +279,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                   {[
                     { value: (stats?.followCount ?? favCount).toLocaleString(), label: 'Theo dõi' },
                     { value: stats ? `${stats.completionRate}%` : '—', label: 'Tỉ lệ hoàn thành' },
-                    { value: `⭐ ${Number(reader.rating).toFixed(2)}`, label: 'Điểm đánh giá' },
+                    { value: `⭐ ${(reviewStats?.average ?? reader.rating).toFixed(1)}`, label: 'Điểm đánh giá' },
                     { value: stats ? `${stats.reviewCount}` : '0', label: 'Lượt đánh giá' },
                   ].map((s) => (
                     <div key={s.label} className="text-center">
@@ -270,37 +289,30 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                   ))}
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex items-center gap-3 shrink-0">
-                  <button
-                    onClick={toggleFav}
-                    disabled={isTogglingFav || isReaderViewer}
-                    title={isReaderViewer ? 'Reader không thể theo dõi reader khác' : undefined}
-                    className={cn(
-                      'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-60',
-                      isFav
-                        ? 'bg-red-500/80 text-white'
-                        : 'bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm'
-                    )}
-                  >
-                    <Heart className={cn('w-4 h-4', isFav && 'fill-white')} />
-                    {isFav ? 'Đã theo dõi' : 'Theo dõi'}
-                  </button>
-                  {isReaderViewer ? (
-                    <button disabled title="Reader không thể nhắn tin với reader khác"
-                      className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white/10 text-white/40 cursor-not-allowed border-[var(--border)]">
-                      <MessageCircle className="w-4 h-4" />
-                      Trò chuyện
+                {/* Action buttons — ẩn khi xem profile của chính mình */}
+                {!isOwner && (
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      onClick={toggleFav}
+                      disabled={isTogglingFav}
+                      className={cn(
+                        'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-60',
+                        isFav
+                          ? 'bg-red-500/80 text-white'
+                          : 'bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm'
+                      )}
+                    >
+                      <Heart className={cn('w-4 h-4', isFav && 'fill-white')} />
+                      {isFav ? 'Đã theo dõi' : 'Theo dõi'}
                     </button>
-                  ) : (
                     <Link href={`/chat?reader=${reader.id}`}>
                       <button className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white/15 hover:bg-white/25 text-white backdrop-blur-sm transition-all border-[var(--border)]">
                         <MessageCircle className="w-4 h-4" />
                         Trò chuyện
                       </button>
                     </Link>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -337,21 +349,22 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                       </div>
                     )}
 
-                    {/* Fav button */}
-                    <button
-                      onClick={toggleFav}
-                      disabled={isTogglingFav || isReaderViewer}
-                      title={isReaderViewer ? 'Reader không thể theo dõi reader khác' : undefined}
-                      className="absolute top-3 left-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-all disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <Heart className={cn('w-4 h-4 transition-colors', isFav ? 'fill-red-500 text-red-500' : 'text-white')} />
-                    </button>
+                    {/* Fav button — ẩn khi xem profile của chính mình */}
+                    {!isOwner && (
+                      <button
+                        onClick={toggleFav}
+                        disabled={isTogglingFav}
+                        className="absolute top-3 left-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <Heart className={cn('w-4 h-4 transition-colors', isFav ? 'fill-red-500 text-red-500' : 'text-white')} />
+                      </button>
+                    )}
 
                     {/* Rating overlay */}
                     <div className="absolute bottom-3 left-3">
                       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#4C583E]/90 backdrop-blur-sm">
                         <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-white text-xs font-bold">{Number(reader.rating).toFixed(2)}</span>
+                        <span className="text-white text-xs font-bold">{(reviewStats?.average ?? reader.rating).toFixed(1)}</span>
                         <span className="text-white/60 text-xs">({stats ? stats.reviewCount : reader.totalSessions} đánh giá)</span>
                       </div>
                     </div>
@@ -391,13 +404,13 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
 
                     {/* CTA */}
                     <div className="flex flex-col gap-2">
-                      {isReaderViewer ? (
+                      {isOwner ? (
                         <>
-                          <Button disabled title="Reader không thể đặt lịch với reader khác"
+                          <Button disabled title="Bạn không thể đặt lịch cho chính mình"
                             className="w-full bg-white/10 text-white/40 cursor-not-allowed">
                             <Calendar className="w-4 h-4 mr-2" /> Đặt lịch ngay
                           </Button>
-                          <Button disabled variant="outline" title="Reader không thể nhắn tin với reader khác"
+                          <Button disabled variant="outline" title="Bạn không thể nhắn tin với chính mình"
                             className="w-full border-white/10 text-white/40 cursor-not-allowed">
                             <MessageCircle className="w-4 h-4 mr-2" /> Nhắn tin
                           </Button>
@@ -532,8 +545,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                             <p className="text-sm text-muted-foreground">{p.description}</p>
                           </div>
                           <div className="shrink-0 text-right">
-                            <div className="text-xl font-bold gradient-text">{(p.price / 1000).toFixed(0)}k</div>
-                            <div className="text-xs text-muted-foreground">VNĐ</div>
+                            <div className="text-xl font-bold gradient-text">{formatAmountK(p.price)}</div>
                           </div>
                         </div>
                       </button>
@@ -576,11 +588,10 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                         <div className="font-semibold text-foreground">{pkg.name} · {pkg.duration} phút</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold gradient-text">{(pkg.price / 1000).toFixed(0)}k</div>
+                        <div className="text-2xl font-bold gradient-text">{formatAmountK(pkg.price)}</div>
                       </div>
-                      {isReaderViewer ? (
-                        <Button disabled title="Reader không thể đặt lịch với reader khác"
-                          className="bg-white/10 text-white/40 cursor-not-allowed shrink-0">
+                      {isOwner ? (
+                        <Button disabled title="Bạn không thể đặt lịch cho chính mình" className="bg-white/10 text-white/40 cursor-not-allowed shrink-0">
                           Đặt lịch
                         </Button>
                       ) : user ? (
@@ -606,11 +617,11 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                     <div className="flex items-center gap-6">
                       <div className="text-center">
                         <div className="text-5xl font-bold gradient-text">
-                          {Number(reader.rating).toFixed(1)}
+                          {(reviewStats?.average ?? reader.rating).toFixed(1)}
                         </div>
                         <div className="flex gap-0.5 justify-center mt-1">
                           {[1,2,3,4,5].map((s) => (
-                            <Star key={s} className={cn('w-4 h-4', s <= Math.round(Number(reader.rating)) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20')} />
+                            <Star key={s} className={cn('w-4 h-4', s <= Math.round(reviewStats?.average ?? reader.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20')} />
                           ))}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
@@ -746,7 +757,7 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                       {[
                         { icon: Shield, label: 'Kinh nghiệm', value: `${reader.experience_year} năm` },
                         { icon: Clock, label: 'Hoàn thành', value: stats ? `${stats.completedBookings} phiên` : '—' },
-                        { icon: Star, label: 'Đánh giá', value: `${Number(reader.rating).toFixed(1)} / 5.0${stats ? ` (${stats.reviewCount})` : ''}` },
+                        { icon: Star, label: 'Đánh giá', value: `${(reviewStats?.average ?? reader.rating).toFixed(1)} / 5.0${reviewStats ? ` (${reviewStats.count})` : stats ? ` (${stats.reviewCount})` : ''}` },
                         { icon: Sparkles, label: 'Chuyên môn', value: reader.specialty.join(', ') || 'Tarot' },
                       ].map(({ icon: Icon, label, value }) => (
                         <div key={label} className="flex items-center gap-3 text-sm">

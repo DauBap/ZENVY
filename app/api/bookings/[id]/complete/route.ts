@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
 
-// POST /api/bookings/[id]/complete — Reader đánh dấu hoàn thành phiên
+// POST /api/bookings/[id]/complete — Provider đánh dấu hoàn thành phiên
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -11,26 +11,32 @@ export async function POST(
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'Vui lòng đăng nhập.' }, { status: 401 })
-    if (session.role !== 'READER') return NextResponse.json({ error: 'Chỉ reader mới thực hiện được.' }, { status: 403 })
 
     const { id } = await params
     const bookingId = Number(id)
+    const userId = Number(session.sub)
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
-      include: {
-        customer: { select: { user_id: true } },
-        reader: { select: { user_id: true } },
-      },
+      include: { package: true },
     })
 
     if (!booking) return NextResponse.json({ error: 'Không tìm thấy lịch hẹn.' }, { status: 404 })
-    if (booking.reader.user_id !== Number(session.sub))
+    if (booking.provider_id !== userId)
       return NextResponse.json({ error: 'Không có quyền.' }, { status: 403 })
     if (booking.status === 'COMPLETED')
       return NextResponse.json({ error: 'Phiên đã hoàn thành trước đó.' }, { status: 400 })
     if (booking.status === 'CANCELLED')
       return NextResponse.json({ error: 'Phiên đã bị hủy.' }, { status: 400 })
+
+    // Get provider's reader info
+    const providerReaderInfo = await prisma.readerInfo.findUnique({
+      where: { user_id: booking.provider_id },
+      select: { id: true },
+    })
+    if (!providerReaderInfo) {
+      return NextResponse.json({ error: 'Provider không phải là Reader.' }, { status: 400 })
+    }
 
     // Đánh dấu COMPLETED
     const updated = await prisma.booking.update({
@@ -44,13 +50,13 @@ export async function POST(
       update: {},
       create: {
         booking_id: bookingId,
-        reader_id: booking.reader_id,
-        amount: booking.package_id, // sẽ override bên dưới
+        reader_id: providerReaderInfo.id,
+        amount: booking.package.price ?? 0, // Use actual price
       },
     }).catch(() => {}) // ignore nếu đã có
 
     createNotification({
-      userId: booking.customer.user_id,
+      userId: booking.requester_id,
       title: 'Phiên tarot đã hoàn thành 🌙',
       content: 'Phiên hẹn của bạn đã được đánh dấu hoàn thành. Hãy để lại đánh giá cho reader nhé!',
       type: 'BOOKING_COMPLETED',
@@ -58,7 +64,7 @@ export async function POST(
     }).catch(() => {})
 
     createNotification({
-      userId: booking.reader.user_id,
+      userId: booking.provider_id,
       title: 'Thu nhập đã được cộng 💰',
       content: 'Phiên hẹn đã hoàn thành và số dư của bạn đã được cập nhật.',
       type: 'BOOKING_COMPLETED',
