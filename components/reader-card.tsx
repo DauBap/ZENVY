@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Star, Heart } from 'lucide-react'
 import { VerifiedBadge } from '@/components/ui/verified-badge'
 import type { SerializedReader } from '@/lib/serializers'
-import { cn } from '@/lib/utils'
+import { cn, formatAmountK } from '@/lib/utils'
 
 interface ReaderCardProps {
   reader: SerializedReader
@@ -17,9 +17,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
     ? Math.min(...reader.packages.map((p) => p.price))
     : reader.pricePerSession
 
-  const priceDisplay = minPrice >= 1000
-    ? `${(minPrice / 1000).toFixed(0)}k`
-    : `${minPrice}`
+  const priceDisplay = formatAmountK(minPrice)
 
   return (
     <motion.div
@@ -67,7 +65,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
             <div className="absolute bottom-3 left-3 z-20">
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#4C583E]/90 backdrop-blur-sm text-white text-xs font-semibold shadow-lg">
                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                <span>{Number(reader.rating).toFixed(2)}</span>
+                <span>{Number(reader.rating).toFixed(1)}</span>
                 <span className="text-white/70">({(reader.reviewCount ?? 0).toLocaleString()})</span>
               </div>
             </div>

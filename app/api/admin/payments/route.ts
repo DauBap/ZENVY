@@ -33,7 +33,13 @@ export async function GET(request: NextRequest) {
           reader: { select: { display_name: true, avatar_url: true } },
           booking: {
             include: {
-              customer: { select: { fullname: true } },
+              requester: {
+                include: {
+                  customer_info: {
+                    select: { fullname: true },
+                  },
+                },
+              },
               package: { select: { name: true, price: true } },
             },
           },
@@ -74,7 +80,7 @@ export async function GET(request: NextRequest) {
       amount: e.amount,
       createdAt: e.created_at.toISOString(),
       reader: { name: e.reader.display_name ?? '—', avatar: e.reader.avatar_url },
-      customer: { name: e.booking.customer.fullname ?? '—' },
+      customer: { name: e.booking.requester.customer_info?.fullname ?? '—' },
       package: e.booking.package,
     }))
 

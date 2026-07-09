@@ -27,9 +27,16 @@ export async function PATCH(request: NextRequest) {
 
     let newName: string
     let newAvatar: string | null = null
+    let readerStatus: string | null = null
+
+    const readerInfo = await prisma.readerInfo.findUnique({
+      where: { user_id: userId },
+      select: { status: true },
+    })
+    const isActiveReader = readerInfo?.status === 'ACTIVE'
 
     // ── CUSTOMER ──────────────────────────────────────────────────────────────
-    if (session.role === 'CUSTOMER') {
+    if (session.role === 'CUSTOMER' && !isActiveReader) {
       const fullname = typeof body.fullname === 'string' ? body.fullname.trim() : ''
       if (!fullname) {
         return NextResponse.json({ error: 'Vui lòng nhập họ tên.' }, { status: 400 })
@@ -59,7 +66,7 @@ export async function PATCH(request: NextRequest) {
       newAvatar = updated.avatar_url
     }
     // ── READER ──────────────────────────────────────────────────────────────
-    else if (session.role === 'READER') {
+    else if (session.role === 'READER' || isActiveReader) {
       const displayName = typeof body.display_name === 'string' ? body.display_name.trim() : ''
       if (!displayName) {
         return NextResponse.json({ error: 'Vui lòng nhập tên hiển thị.' }, { status: 400 })
@@ -98,6 +105,7 @@ export async function PATCH(request: NextRequest) {
       })
       newName = updated.display_name ?? session.name
       newAvatar = updated.avatar_url
+      readerStatus = updated.status
     } else {
       return NextResponse.json({ error: 'Vai trò không được hỗ trợ.' }, { status: 403 })
     }
@@ -118,6 +126,7 @@ export async function PATCH(request: NextRequest) {
         name: newName,
         role: session.role,
         avatar: newAvatar,
+        readerStatus,
       },
     })
     response.cookies.set(cookieOptions.name, token, cookieOptions)

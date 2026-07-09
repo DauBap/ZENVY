@@ -30,7 +30,15 @@ export async function GET() {
             id: true,
             date: true,
             time: true,
-            customer: { select: { fullname: true } },
+            requester: {
+              select: {
+                customer_info: {
+                  select: {
+                    fullname: true,
+                  },
+                },
+              },
+            },
             package: { select: { name: true } },
           },
         },
@@ -49,7 +57,7 @@ export async function GET() {
         bookingId: e.booking_id,
         date: e.booking?.date.toISOString().split('T')[0] ?? null,
         time: e.booking?.time ?? null,
-        customerName: e.booking?.customer?.fullname ?? 'Khách hàng',
+        customerName: e.booking?.requester?.customer_info?.fullname ?? 'Khách hàng',
         packageName: e.booking?.package?.name ?? '',
       })),
     })

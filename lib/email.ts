@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { formatAmountK } from '@/lib/utils'
 
 // Create transporter lazily (after env vars are loaded)
 function getTransporter() {
@@ -106,7 +107,7 @@ export async function notifyAdminWithdrawal(data: {
       
       <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <p><strong>Reader:</strong> ${data.readerName}</p>
-        <p><strong>Số tiền:</strong> ${(data.amount / 1000).toFixed(0)}k VND</p>
+        <p><strong>Số tiền:</strong> ${formatAmountK(data.amount)}</p>
         <p><strong>Tài khoản:</strong> ${data.bankAccount}</p>
         <p><strong>ID yêu cầu:</strong> #${data.withdrawalId}</p>
       </div>
@@ -124,9 +125,9 @@ export async function notifyAdminWithdrawal(data: {
 
   return sendEmail({
     to: data.adminEmail,
-    subject: `💰 Yêu cầu rút tiền - ${(data.amount / 1000).toFixed(0)}k từ ${data.readerName}`,
+    subject: `💰 Yêu cầu rút tiền - ${formatAmountK(data.amount)} từ ${data.readerName}`,
     html,
-    text: `${data.readerName} yêu cầu rút ${(data.amount / 1000).toFixed(0)}k VND`,
+    text: `${data.readerName} yêu cầu rút ${formatAmountK(data.amount)}`,
   })
 }
 
@@ -135,10 +136,12 @@ export async function notifyAdminWithdrawal(data: {
  */
 export async function notifyAdminReaderRegistration(data: {
   readerName: string
-  email: string
-  phone: string
-  experienceYear: number
-  specialties: string[]
+  email?: string
+  phone?: string
+  experienceYear?: number
+  specialties?: string[]
+  description?: string
+  facebook?: string
   adminEmail: string
 }) {
   const html = `
@@ -147,10 +150,12 @@ export async function notifyAdminReaderRegistration(data: {
       
       <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <p><strong>Tên reader:</strong> ${data.readerName}</p>
-        <p><strong>Email:</strong> ${data.email}</p>
-        <p><strong>Điện thoại:</strong> ${data.phone}</p>
-        <p><strong>Kinh nghiệm:</strong> ${data.experienceYear} năm</p>
-        <p><strong>Chuyên môn:</strong> ${data.specialties.join(', ')}</p>
+        <p><strong>Email:</strong> ${data.email || '—'}</p>
+        <p><strong>Điện thoại:</strong> ${data.phone || '—'}</p>
+        <p><strong>Kinh nghiệm:</strong> ${typeof data.experienceYear === 'number' ? `${data.experienceYear} năm` : '—'}</p>
+        <p><strong>Chuyên môn:</strong> ${(data.specialties && data.specialties.length) ? data.specialties.join(', ') : '—'}</p>
+        <p><strong>Mô tả bản thân:</strong> ${data.description ? data.description.replace(/\n/g, '<br/>') : '—'}</p>
+        ${data.facebook ? `<p><strong>Facebook:</strong> <a href="${data.facebook}" target="_blank" rel="noopener noreferrer">${data.facebook}</a></p>` : ''}
       </div>
 
       <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/readers" 
@@ -164,11 +169,21 @@ export async function notifyAdminReaderRegistration(data: {
     </div>
   `
 
+  const plainTextParts = [
+    `Tên reader: ${data.readerName}`,
+    data.email ? `Email: ${data.email}` : undefined,
+    data.phone ? `Điện thoại: ${data.phone}` : undefined,
+    typeof data.experienceYear === 'number' ? `Kinh nghiệm: ${data.experienceYear} năm` : undefined,
+    (data.specialties && data.specialties.length) ? `Chuyên môn: ${data.specialties.join(', ')}` : undefined,
+    data.description ? `Mô tả: ${data.description}` : undefined,
+    data.facebook ? `Facebook: ${data.facebook}` : undefined,
+  ].filter(Boolean).join('\n')
+
   return sendEmail({
     to: data.adminEmail,
     subject: `👤 Yêu cầu đăng ký Reader mới - ${data.readerName}`,
     html,
-    text: `Có yêu cầu đăng ký reader mới từ ${data.readerName} (${data.email})`,
+    text: `Có yêu cầu đăng ký reader mới:\n${plainTextParts}`,
   })
 }
 
@@ -188,7 +203,7 @@ export async function notifyAdminPaymentConfirm(data: {
       
       <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <p><strong>Khách hàng:</strong> ${data.customerName}</p>
-        <p><strong>Số tiền:</strong> ${(data.amount / 1000).toFixed(0)}k VND</p>
+        <p><strong>Số tiền:</strong> ${formatAmountK(data.amount)}</p>
         <p><strong>Phương thức:</strong> ${data.method}</p>
         <p><strong>Payment ID:</strong> #${data.paymentId}</p>
       </div>
@@ -206,8 +221,8 @@ export async function notifyAdminPaymentConfirm(data: {
 
   return sendEmail({
     to: data.adminEmail,
-    subject: `💳 Thanh toán ${(data.amount / 1000).toFixed(0)}k từ ${data.customerName}`,
+    subject: `💳 Thanh toán ${formatAmountK(data.amount)} từ ${data.customerName}`,
     html,
-    text: `${data.customerName} thanh toán ${(data.amount / 1000).toFixed(0)}k VND qua ${data.method}`,
+    text: `${data.customerName} thanh toán ${formatAmountK(data.amount)} qua ${data.method}`,
   })
 }

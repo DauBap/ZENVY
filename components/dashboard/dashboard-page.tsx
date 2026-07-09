@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Star as StarIcon } from 'lucide-react'
-import { useHeartbeat } from '@/hooks/use-heartbeat'
 import { motion } from 'framer-motion'
 import {
   Calendar, Clock, Heart, Bell, History, CreditCard, Banknote,
@@ -27,7 +26,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ReaderPackagesTab, type PackageItem } from '@/components/profile/reader-packages-tab'
 import { ReaderAvailabilityTab, type AvailabilityItem } from '@/components/profile/reader-availability-tab'
 import { ReaderWithdrawalTab } from '@/components/profile/reader-withdrawal-tab'
-import { cn } from '@/lib/utils'
+import { cn, formatAmountK } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { SerializedReader } from '@/lib/serializers'
 import { generateGoogleCalendarLink } from '@/lib/google-calendar'
@@ -112,12 +111,6 @@ interface ReaderEarningsWidgetProps {
 function ReaderEarningsWidget({ total, count, items }: ReaderEarningsWidgetProps) {
   const [showAll, setShowAll] = useState(false)
 
-  const formatVnd = (n: number) => {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2).replace('.00', '')} triệu k`
-    if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`
-    return `${n.toLocaleString('vi-VN')} k`
-  }
-
   const displayItems = showAll ? items : items.slice(0, 5)
 
   return (
@@ -131,7 +124,7 @@ function ReaderEarningsWidget({ total, count, items }: ReaderEarningsWidgetProps
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="p-4 rounded-xl bg-[#768064]/10 border border-[#768064]/20">
             <div className="text-sm text-muted-foreground mb-1">Tổng thu nhập</div>
-            <div className="text-3xl font-bold gradient-text">{formatVnd(total)}</div>
+            <div className="text-3xl font-bold gradient-text">{formatAmountK(total)}</div>
           </div>
           <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
             <div className="text-sm text-muted-foreground mb-1">Phiên đã hoàn thành</div>
@@ -166,7 +159,7 @@ function ReaderEarningsWidget({ total, count, items }: ReaderEarningsWidgetProps
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-semibold text-green-400">+{formatVnd(e.amount)}</div>
+                    <div className="text-sm font-semibold text-green-400">+{formatAmountK(e.amount)}</div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(e.createdAt).toLocaleDateString('vi-VN')}
                     </div>
@@ -256,8 +249,6 @@ export function DashboardPage({
 
   const isReader = viewerRole === 'READER'
   const partnerLabel = isReader ? 'Khách hàng' : 'Reader'
-  // Reader thấy thêm tab Dịch vụ + Lịch trống
-  const navTabs = isReader ? [...tabs, ...readerTabs] : tabs
 
   // Trạng thái cho các thao tác hủy / xác nhận
   const [busyId, setBusyId] = useState<number | null>(null)
@@ -393,20 +384,39 @@ export function DashboardPage({
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-1">
               <GlassCard className="p-4">
                 <nav className="space-y-1">
-                  {navTabs.map((tab) => (
-                    <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                      className={cn('w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all',
-                        activeTab === tab.id ? 'bg-[#768064]/20 text-[#4C583E]' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground')}>
-                      <tab.icon className="w-5 h-5" />
-                      <span className="font-medium">{tab.label}</span>
-                    </button>
-                  ))}
+                  {/* Menu người dùng */}
+                  <div className="mb-4">
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 py-2">Tài khoản</div>
+                    {tabs.map((tab) => (
+                      <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                        className={cn('w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all',
+                          activeTab === tab.id ? 'bg-[#768064]/20 text-[#4C583E]' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground')}>
+                        <tab.icon className="w-5 h-5" />
+                        <span className="font-medium">{tab.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Menu reader (chỉ hiển thị nếu là reader) */}
+                  {isReader && (
+                    <div className="border-t border-white/10 pt-4">
+                      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 py-2">Reader</div>
+                      {readerTabs.map((tab) => (
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                          className={cn('w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all',
+                            activeTab === tab.id ? 'bg-[#768064]/20 text-[#4C583E]' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground')}>
+                          <tab.icon className="w-5 h-5" />
+                          <span className="font-medium">{tab.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </nav>
                 <div className="mt-4 pt-4 border-t border-white/10">
                   <button onClick={logout}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-red-400 hover:bg-red-500/10 transition-all">
                     <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Đăng xuất</span>  
+                    <span className="font-medium">Đăng xuất</span>
                   </button>
                 </div>
               </GlassCard>
@@ -656,7 +666,7 @@ export function DashboardPage({
                               <div className="text-xs text-muted-foreground">{b.date} {b.time}</div>
                             </div>
                             <div className="text-right">
-                              <div className="font-semibold gradient-text">{(price / 1000).toFixed(0)}k</div>
+                              <div className="font-semibold gradient-text">{formatAmountK(price)}</div>
                               <div className={cn('text-xs', STATUS_MAP[b.status]?.className ?? '')}>
                                 {STATUS_MAP[b.status]?.label ?? b.status}
                               </div>

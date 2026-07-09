@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { createNotificationForAdmins } from '@/lib/notifications'
-import { notifyAdminNewBooking } from '@/lib/email'
+import { notifyAdminNewBooking, notifyAdminPaymentConfirm } from '@/lib/email'
 
 // POST /api/bookings — tạo booking mới
 export async function POST(request: NextRequest) {
@@ -12,19 +12,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Vui lòng đăng nhập.' }, { status: 401 })
     }
 
-    const { readerId, packageId, date, time } = await request.json()
+    const { readerId, providerId, packageId, date, time, couponCode } = await request.json()
 
-    if (!readerId || !packageId || !date || !time) {
+    if (!packageId || !date || !time) {
       return NextResponse.json({ error: 'Thiếu thông tin đặt lịch.' }, { status: 400 })
     }
 
-    // Lấy customer_info từ user
-    const customerInfo = await prisma.customerInfo.findUnique({
-      where: { user_id: Number(session.sub) },
+    const requesterId = Number(session.sub)
+    let providerUserId: number
+
+    // Support both old readerId and new providerId
+    if (providerId) {
+      providerUserId = Number(providerId)
+    } else if (readerId) {
+      // Convert old ReaderInfo.id to User.id
+      const readerInfo = await prisma.readerInfo.findUnique({
+        where: { id: Number(readerId) },
+        select: { user_id: true },
+      })
+      if (!readerInfo) {
+        return NextResponse.json({ error: 'Không tìm thấy Reader.' }, { status: 404 })
+      }
+      providerUserId = readerInfo.user_id
+    } else {
+      return NextResponse.json({ error: 'Thiếu thông tin Provider.' }, { status: 400 })
+    }
+
+    if (requesterId === providerUserId) {
+      return NextResponse.json({ error: 'Không thể đặt lịch với chính mình.' }, { status: 400 })
+    }
+
+    // Get provider reader info
+    const providerInfo = await prisma.readerInfo.findUnique({
+      where: { user_id: providerUserId },
+      select: { id: true, display_name: true, avatar_url: true },
     })
 
-    if (!customerInfo) {
-      return NextResponse.json({ error: 'Không tìm thấy thông tin khách hàng.' }, { status: 404 })
+    if (!providerInfo) {
+      return NextResponse.json({ error: 'Người dùng không phải là Reader.' }, { status: 400 })
     }
 
     // Chỉ cho đặt vào ngày + giờ reader đã bật (lịch trống)
@@ -33,7 +58,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Ngày đặt lịch không hợp lệ.' }, { status: 400 })
     }
     const avail = await prisma.availability.findFirst({
-      where: { reader_id: Number(readerId), date: bookingDate },
+      where: { reader_id: providerInfo.id, date: bookingDate },
       select: { slots: true },
     })
     if (!avail || !avail.slots.includes(time)) {
@@ -55,9 +80,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Chặn nếu slot (ngày + giờ) đã có booking CONFIRMED cho khách khác
+    // Chặn nếu slot (ngày + giờ) đã có booking CONFIRMED cho khách khác với provider này
     const taken = await prisma.booking.findFirst({
-      where: { reader_id: Number(readerId), date: bookingDate, time, status: 'CONFIRMED' },
+      where: { provider_id: providerUserId, date: bookingDate, time, status: 'CONFIRMED' },
       select: { id: true },
     })
     if (taken) {
@@ -67,11 +92,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Chống trùng: khách này đã có booking đang chờ/đã xác nhận cho đúng slot này
+    // Chống trùng: người dùng này đã có booking đang chờ/đã xác nhận cho đúng slot này với provider này
     const dup = await prisma.booking.findFirst({
       where: {
-        customer_id: customerInfo.id,
-        reader_id: Number(readerId),
+        requester_id: requesterId,
+        provider_id: providerUserId,
         date: bookingDate,
         time,
         status: { in: ['PENDING', 'CONFIRMED'] },
@@ -85,19 +110,68 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const requesterUser = await prisma.user.findUnique({
+      where: { id: requesterId },
+    })
+
+    // Validate coupon nếu có
+    let couponId: number | null = null
+    let discountAmount = 0
+    let finalPrice: number | null = null
+
+    if (couponCode && typeof couponCode === 'string') {
+      const code = couponCode.trim().toUpperCase()
+      const coupon = await prisma.coupon.findUnique({ where: { code } })
+
+      if (!coupon) {
+        return NextResponse.json({ error: 'Mã khuyến mãi không tồn tại.' }, { status: 400 })
+      }
+      if (!coupon.active) {
+        return NextResponse.json({ error: 'Mã khuyến mãi đã bị vô hiệu hóa.' }, { status: 400 })
+      }
+      const now = new Date()
+      if (coupon.start_date && coupon.start_date > now) {
+        return NextResponse.json({ error: 'Mã khuyến mãi chưa đến ngày hiệu lực.' }, { status: 400 })
+      }
+      if (coupon.end_date && coupon.end_date < now) {
+        return NextResponse.json({ error: 'Mã khuyến mãi đã hết hạn.' }, { status: 400 })
+      }
+      if (coupon.max_uses !== null && coupon.used_count >= coupon.max_uses) {
+        return NextResponse.json({ error: 'Mã khuyến mãi đã hết lượt sử dụng.' }, { status: 400 })
+      }
+
+      // Lấy giá gói để tính discount
+      const pkg = await prisma.package.findUnique({ where: { id: Number(packageId) }, select: { price: true } })
+      const originalPrice = pkg?.price ?? 0
+
+      if (coupon.discount_type === 'PERCENTAGE') {
+        discountAmount = Math.floor(originalPrice * coupon.discount_value / 100)
+      } else {
+        discountAmount = Math.min(coupon.discount_value, originalPrice)
+      }
+      finalPrice = Math.max(0, originalPrice - discountAmount)
+      couponId = coupon.id
+    }
+
     const bookingCreatePayload = {
       data: {
-        customer_id: customerInfo.id,
-        reader_id: Number(readerId),
+        requester_id: requesterId,
+        provider_id: providerUserId,
+        requester_role: 'CUSTOMER',
+        provider_role: 'READER',
         package_id: Number(packageId),
         date: new Date(date),
         time,
         status: 'PENDING' as const,
+        ...(couponId !== null && {
+          coupon_id: couponId,
+          discount_amount: discountAmount,
+          final_price: finalPrice,
+        }),
       },
       include: {
-        reader: { select: { display_name: true, avatar_url: true, user_id: true } },
+        provider: { select: { email: true } },
         package: { select: { name: true, duration: true, price: true } },
-        customer: { select: { user: { select: { id: true } } } },
       },
     }
 
@@ -123,6 +197,14 @@ export async function POST(request: NextRequest) {
       booking = await prisma.booking.create(bookingCreatePayload)
     }
 
+    // Tăng used_count cho coupon nếu có dùng
+    if (couponId !== null) {
+      await prisma.coupon.update({
+        where: { id: couponId },
+        data: { used_count: { increment: 1 } },
+      }).catch(() => {})
+    }
+
     // Gửi thông báo cho admin để duyệt trước khi booking được chuyển tới reader
     createNotificationForAdmins({
       title: 'Có lịch hẹn mới cần duyệt',
@@ -132,19 +214,30 @@ export async function POST(request: NextRequest) {
     }).catch(() => {})
 
     // ✅ Gửi email thông báo cho admin
-    const user = await prisma.user.findUnique({
-      where: { id: Number(session.sub) },
-      select: { name: true },
+    const requesterInfo = await prisma.customerInfo.findUnique({
+      where: { user_id: requesterId },
+      select: { fullname: true },
     })
 
+    const customerName = requesterInfo?.fullname || requesterUser?.email?.split('@')[0] || 'Khách hàng'
+
     await notifyAdminNewBooking({
-      customerName: user?.name || customerInfo.fullname || 'Guest',
-      readerName: booking.reader.display_name || 'Unknown Reader',
-      date: new Date(booking.date).toISOString().split('T')[0],
+      customerName,
+      readerName: providerInfo.display_name || 'Unknown Reader',
+      date: new Date(bookingDate).toISOString().split('T')[0],
       time: booking.time,
       bookingId: booking.id,
       adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
     }).catch((err) => console.error('Email error:', err))
+
+    // ✅ Gửi email thông báo thanh toán cho admin (ngay khi user bấm xác nhận)
+    await notifyAdminPaymentConfirm({
+      customerName,
+      amount: booking.package.price,
+      method: 'Bank transfer',
+      paymentId: booking.id,
+      adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
+    }).catch((err) => console.error('Payment email error:', err))
 
     return NextResponse.json({ success: true, booking }, { status: 201 })
   } catch (error) {
@@ -162,30 +255,44 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const customerInfo = await prisma.customerInfo.findUnique({
-      where: { user_id: Number(session.sub) },
-    })
-
-    if (!customerInfo) {
-      return NextResponse.json({ bookings: [] })
-    }
+    const userId = Number(session.sub)
 
     const bookings = await prisma.booking.findMany({
-      where: { customer_id: customerInfo.id },
+      where: {
+        OR: [
+          { requester_id: userId },
+          { provider_id: userId },
+        ],
+      },
       include: {
-        reader: { select: { id: true, display_name: true, avatar_url: true, verified: true } },
+        provider: { select: { id: true } },
+        requester: { select: { id: true } },
         package: { select: { id: true, name: true, duration: true, price: true } },
       },
       orderBy: [{ date: 'asc' }, { time: 'asc' }],
     })
 
-    // Serialize dates
-    const serialized = bookings.map((b) => ({
-      ...b,
-      date: b.date.toISOString().split('T')[0],
-      created_at: b.created_at.toISOString(),
-      updated_at: b.updated_at.toISOString(),
-    }))
+    // Serialize dates and add provider/requester display info
+    const serialized = await Promise.all(
+      bookings.map(async (b) => {
+        const otherUserId = b.requester_id === userId ? b.provider_id : b.requester_id
+        const otherUserInfo = await prisma.user.findUnique({
+          where: { id: otherUserId },
+          select: { reader_info: { select: { id: true, display_name: true, avatar_url: true, verified: true } } },
+        })
+
+        return {
+          ...b,
+          otherUserId,
+          otherUserName: otherUserInfo?.reader_info?.display_name || 'Unknown',
+          otherUserAvatar: otherUserInfo?.reader_info?.avatar_url || null,
+          otherUserVerified: otherUserInfo?.reader_info?.verified || false,
+          date: b.date.toISOString().split('T')[0],
+          created_at: b.created_at.toISOString(),
+          updated_at: b.updated_at.toISOString(),
+        }
+      })
+    )
 
     return NextResponse.json({ bookings: serialized })
   } catch (error) {

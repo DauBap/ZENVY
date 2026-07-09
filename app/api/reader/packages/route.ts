@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const price = Number(body.price)
-    if (!Number.isFinite(price) || price <= 0) {
+    if (!Number.isFinite(price) || price < 0) {
       return NextResponse.json({ error: 'Giá không hợp lệ.' }, { status: 400 })
     }
 

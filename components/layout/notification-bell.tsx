@@ -43,7 +43,10 @@ export function NotificationBell() {
     setLoading(true)
     try {
       const res = await fetch('/api/notifications?limit=20')
-      if (!res.ok) return
+      if (!res.ok) {
+        console.error('Failed to fetch notifications, status:', res.status)
+        return
+      }
       const data = await res.json()
       // Filter to show only booking-related notifications (not messages)
       const bookingNotifications = (data.notifications ?? []).filter(
@@ -53,6 +56,8 @@ export function NotificationBell() {
       // Count all unread notifications excluding messages
       const unreadBookingNotifications = bookingNotifications.filter((n: Notification) => !n.isRead)
       setUnreadCount(unreadBookingNotifications.length)
+    } catch (err) {
+      console.error('Error fetching notifications:', err)
     } finally {
       setLoading(false)
     }
@@ -84,21 +89,31 @@ export function NotificationBell() {
   }, [])
 
   async function markAllRead() {
-    await fetch('/api/notifications', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}' })
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
-    setUnreadCount(0)
+    try {
+      const res = await fetch('/api/notifications', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      if (!res.ok) throw new Error('Failed to mark notifications as read')
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+      setUnreadCount(0)
+    } catch (err) {
+      console.error('Error marking all notifications read:', err)
+    }
   }
 
   async function markOneRead(id: number, link: string | null) {
-    await fetch('/api/notifications', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    })
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
-    setUnreadCount(prev => Math.max(0, prev - 1))
-    setOpen(false)
-    if (link) window.location.href = link
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      if (!res.ok) throw new Error('Failed to mark notification as read')
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
+      setUnreadCount(prev => Math.max(0, prev - 1))
+      setOpen(false)
+      if (link) window.location.href = link
+    } catch (err) {
+      console.error('Error marking notification read:', err)
+    }
   }
 
   if (!user) return null

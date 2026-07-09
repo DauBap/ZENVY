@@ -1,4 +1,4 @@
-﻿import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import type { NotificationType } from '@prisma/client'
 import webpush from 'web-push'
 

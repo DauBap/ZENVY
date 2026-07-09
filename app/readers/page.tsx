@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { serializeReaders } from '@/lib/serializers'
+import { recomputeReaderRating } from '@/lib/rating'
 import { specialties as SPECIALTIES } from '@/lib/data'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -16,12 +17,13 @@ export default async function ReadersRoutePage() {
 
   try {
     const dbReaders = await prisma.readerInfo.findMany({
-      where: { verified: true }, // Chỉ hiển thị readers đã được admin duyệt
+      where: { status: 'ACTIVE' },
       orderBy: { rating: 'desc' },
       include: {
         packages: true,
         _count: {
           select: {
+            reviews: true,
             session_reviews: true,
             bookings: { where: { status: 'COMPLETED' } },
           },
@@ -30,7 +32,25 @@ export default async function ReadersRoutePage() {
     })
 
     if (dbReaders.length > 0) {
-      readers = serializeReaders(dbReaders)
+      // Recompute rating cho tất cả readers từ session_reviews thực tế
+      await Promise.all(dbReaders.map(r => recomputeReaderRating(r.id).catch(() => {})))
+
+      // Fetch lại sau khi recompute để có rating đúng
+      const updatedReaders = await prisma.readerInfo.findMany({
+        where: { status: 'ACTIVE' },
+        orderBy: { rating: 'desc' },
+        include: {
+          packages: true,
+          _count: {
+            select: {
+              reviews: true,
+              session_reviews: true,
+              bookings: { where: { status: 'COMPLETED' } },
+            },
+          },
+        },
+      })
+      readers = serializeReaders(updatedReaders)
     }
   } catch (error) {
     console.error('ReadersRoutePage failed:', error)

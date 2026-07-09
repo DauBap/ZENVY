@@ -14,7 +14,7 @@ export async function GET() {
       where: { user_id: userId },
       orderBy: { created_at: 'desc' },
       include: {
-        reader: { include: { packages: true } },
+        reader: { include: { packages: true, _count: { select: { reviews: true, session_reviews: true } } } },
       },
     })
 

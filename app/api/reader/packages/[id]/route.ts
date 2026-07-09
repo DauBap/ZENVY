@@ -54,7 +54,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Thời lượng không hợp lệ.' }, { status: 400 })
     }
     const price = Number(body.price)
-    if (!Number.isFinite(price) || price <= 0) {
+    if (!Number.isFinite(price) || price < 0) {
       return NextResponse.json({ error: 'Giá không hợp lệ.' }, { status: 400 })
     }
 

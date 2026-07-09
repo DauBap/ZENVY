@@ -10,14 +10,25 @@ export async function GET(
     const { id } = await params
     const readerId = Number(id)
 
+    // Lấy user_id từ ReaderInfo để query Booking.provider_id
+    const readerInfo = await prisma.readerInfo.findUnique({
+      where: { id: readerId },
+      select: { user_id: true },
+    })
+    const providerUserId = readerInfo?.user_id
+
     const [
       followCount,
       completedBookings,
       cancelledBookings,
     ] = await Promise.all([
       prisma.readerFavorite.count({ where: { reader_id: readerId } }),
-      prisma.booking.count({ where: { reader_id: readerId, status: 'COMPLETED' } }),
-      prisma.booking.count({ where: { reader_id: readerId, status: 'CANCELLED' } }),
+      providerUserId
+        ? prisma.booking.count({ where: { provider_id: providerUserId, status: 'COMPLETED' } })
+        : Promise.resolve(0),
+      providerUserId
+        ? prisma.booking.count({ where: { provider_id: providerUserId, status: 'CANCELLED' } })
+        : Promise.resolve(0),
     ])
 
     // Cách C: COMPLETED / (COMPLETED + CANCELLED)
@@ -25,18 +36,26 @@ export async function GET(
     const closedBookings = completedBookings + cancelledBookings
     const completionRate = closedBookings > 0
       ? Math.round((completedBookings / closedBookings) * 100)
-      : 100 // chưa có booking nào kết thúc → mặc định 100%
+      : 0 // chưa có booking nào kết thúc → mặc định 0%
 
-    // Tính avgRating chỉ từ session_reviews
-    const sessionAgg = await prisma.sessionReview.aggregate({
-      where: { reader_id: readerId },
-      _avg: { rating: true },
-      _count: true,
-    })
+    // Tính avgRating và reviewCount gộp cả legacy reviews và session reviews
+    const [legacyAgg, sessionAgg] = await Promise.all([
+      prisma.reviews.aggregate({
+        where: { reader_id: readerId },
+        _count: { _all: true },
+        _sum: { rating: true },
+      }),
+      prisma.sessionReview.aggregate({
+        where: { reader_id: readerId },
+        _count: { _all: true },
+        _sum: { rating: true },
+      }),
+    ])
 
-    const reviewCount = sessionAgg._count ?? 0
+    const reviewCount = (legacyAgg._count._all ?? 0) + (sessionAgg._count._all ?? 0)
+    const totalRatingSum = (legacyAgg._sum.rating ?? 0) + (sessionAgg._sum.rating ?? 0)
     const avgRating = reviewCount > 0
-      ? Math.round((sessionAgg._avg.rating ?? 0) * 10) / 10
+      ? Math.round((totalRatingSum / reviewCount) * 10) / 10
       : 0
 
     return NextResponse.json({

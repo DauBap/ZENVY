@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import {
   ChevronLeft, Check, Calendar, Clock, CreditCard,
-  Shield, ChevronRight, Sparkles,
+  Shield, ChevronRight, Sparkles, Ticket, X,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { CosmicBackground } from '@/components/ui/floating-elements'
@@ -17,7 +17,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from '@/components/ui/alert-dialog'
-import { cn } from '@/lib/utils'
+import { cn, formatAmountK } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { SerializedReader } from '@/lib/serializers'
 
@@ -42,6 +42,18 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
   const [submitting, setSubmitting] = useState(false)
   const [showPaymentConfirm, setShowPaymentConfirm] = useState(false)
 
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('')
+  const [couponInput, setCouponInput] = useState('')
+  const [couponValidating, setCouponValidating] = useState(false)
+  const [couponResult, setCouponResult] = useState<{
+    valid: boolean
+    discountAmount: number
+    finalPrice: number
+    coupon: { code: string; discount_type: string; discount_value: number }
+  } | null>(null)
+  const [couponError, setCouponError] = useState('')
+
   // Hiển thị popup chính sách hủy ngay khi vừa vào bước Thanh toán
   useEffect(() => {
     if (currentStep === 3) setShowPaymentConfirm(true)
@@ -49,6 +61,48 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
 
   // Luôn tìm đúng package từ DB data
   const selectedPkg = reader.packages?.find((p) => p.id === selectedPackageId) ?? null
+
+  // Reset coupon khi đổi gói
+  const handleSelectPackage = (pkgId: number) => {
+    setSelectedPackageId(pkgId)
+    setCouponCode('')
+    setCouponInput('')
+    setCouponResult(null)
+    setCouponError('')
+  }
+
+  async function handleValidateCoupon() {
+    if (!couponInput.trim()) return
+    if (!selectedPkg) { setCouponError('Vui lòng chọn gói dịch vụ trước.'); return }
+    setCouponValidating(true)
+    setCouponError('')
+    setCouponResult(null)
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponInput.trim(), originalPrice: selectedPkg.price }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setCouponError(data.error ?? 'Mã không hợp lệ.')
+      } else {
+        setCouponResult(data)
+        setCouponCode(couponInput.trim().toUpperCase())
+      }
+    } catch {
+      setCouponError('Không thể kiểm tra mã. Vui lòng thử lại.')
+    } finally {
+      setCouponValidating(false)
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setCouponCode('')
+    setCouponInput('')
+    setCouponResult(null)
+    setCouponError('')
+  }
 
   // Chỉ cho chọn slot reader đã bật và chưa bị chiếm
   // Filter theo NGÀY (bỏ qua ngày đã qua hoàn toàn), KHÔNG filter theo giờ
@@ -62,7 +116,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
 
   const availByDate = (reader.availability ?? [])
     .map((a) => {
-      const date = typeof a.date === 'string' ? a.date.split('T')[0] : a.date.toISOString().split('T')[0]
+      const date = a.date.split('T')[0]
       return {
         date,
         // Chỉ loại slot đã bị chiếm bởi booking khác
@@ -128,6 +182,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
           packageId: selectedPackageId,
           date: selectedDate,
           time: selectedTime,
+          ...(couponCode && { couponCode }),
         }),
       })
       const data = await res.json()
@@ -148,7 +203,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
     }
   }
 
-  const formatPrice = (p: number) => p >= 1000 ? `${(p / 1000).toFixed(0)}k` : `${p}`
+  const formatPrice = (p: number) => formatAmountK(p)
 
   return (
     <>
@@ -201,7 +256,7 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                     {reader.packages && reader.packages.length > 0 ? (
                       <div className="space-y-3">
                         {reader.packages.map((pkg) => (
-                          <button key={pkg.id} onClick={() => setSelectedPackageId(pkg.id)}
+                          <button key={pkg.id} onClick={() => handleSelectPackage(pkg.id)}
                             className={cn('w-full p-4 rounded-xl text-left transition-all border',
                               selectedPackageId === pkg.id
                                 ? 'bg-[#768064]/20 border-[#768064]/50'
@@ -305,6 +360,51 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                         </button>
                       ))}
                     </div>
+
+                    {/* Mã khuyến mãi */}
+                    <div className="mt-6">
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        <Ticket className="w-4 h-4 inline mr-1.5 text-[#768064]" />
+                        Mã khuyến mãi
+                      </label>
+                      {couponResult ? (
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/30">
+                          <div>
+                            <span className="font-mono font-bold text-green-400">{couponResult.coupon.code}</span>
+                            <span className="ml-2 text-sm text-green-400">
+                              — Giảm {couponResult.coupon.discount_type === 'PERCENTAGE'
+                                ? `${couponResult.coupon.discount_value}%`
+                                : formatAmountK(couponResult.coupon.discount_value)}
+                            </span>
+                          </div>
+                          <button onClick={handleRemoveCoupon} className="p-1 text-green-400 hover:text-white transition-colors">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={couponInput}
+                            onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError('') }}
+                            onKeyDown={e => e.key === 'Enter' && handleValidateCoupon()}
+                            placeholder="Nhập mã khuyến mãi"
+                            className="flex-1 h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground placeholder:text-muted-foreground focus:border-[#768064]/50 focus:outline-none font-mono uppercase"
+                          />
+                          <button
+                            onClick={handleValidateCoupon}
+                            disabled={couponValidating || !couponInput.trim()}
+                            className="px-4 h-10 rounded-lg bg-[#768064]/20 border border-[#768064]/30 text-sm text-[#4C583E] font-medium hover:bg-[#768064]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {couponValidating ? '…' : 'Áp dụng'}
+                          </button>
+                        </div>
+                      )}
+                      {couponError && (
+                        <p className="mt-1.5 text-xs text-red-400">{couponError}</p>
+                      )}
+                    </div>
+
                     <div className="mt-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
                       <div className="flex items-center gap-2 text-green-400">
                         <Shield className="w-5 h-5" />
@@ -314,7 +414,6 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                   </GlassCard>
                 </motion.div>
               )}
-
               {/* Step 4: Xác nhận */}
               {currentStep === 4 && (
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
@@ -412,6 +511,18 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                     {selectedPkg ? formatPrice(selectedPkg.price) : '---'}
                   </span>
                 </div>
+                {couponResult && (
+                  <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Giảm giá</span>
+                      <span className="text-green-400">−{formatPrice(couponResult.discountAmount)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-foreground">Thanh toán</span>
+                      <span className="text-2xl font-bold text-green-400">{formatPrice(couponResult.finalPrice)}</span>
+                    </div>
+                  </div>
+                )}
               </GlassCard>
             </div>
           </div>

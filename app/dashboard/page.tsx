@@ -8,31 +8,18 @@ export default async function DashboardRoutePage() {
   const session = await getSession()
   if (!session) redirect('/readers?login=1')
 
-  // Lấy danh sách readers gợi ý (chỉ dùng cho customer sidebar gợi ý)
   let readers: any[] = []
   let bookings: any[] = []
-  let userName = 'Người dùng'
-  let viewerRole = session.role || 'CUSTOMER'
+  let userName = session.name || 'Người dùng'
+  let viewerRole = 'CUSTOMER'
   let readerPackages: any[] = []
   let readerAvailability: any[] = []
-  let readerEarnings: {
-    total: number
-    count: number
-    items: Array<{
-      id: number
-      amount: number
-      createdAt: string
-      bookingId: number
-      date: string | null
-      time: string | null
-      customerName: string
-      packageName: string
-    }>
-  } | undefined = undefined
+  let readerEarnings: any = undefined
 
   try {
+    // Gợi ý readers cho customer sidebar
     const dbReaders = await prisma.readerInfo.findMany({
-      where: { verified: true }, // Chỉ lấy readers đã được duyệt
+      where: { status: 'ACTIVE' },
       orderBy: { rating: 'desc' },
       take: 6,
       include: {
@@ -45,125 +32,149 @@ export default async function DashboardRoutePage() {
     readers = []
   }
 
-  if (session) {
-    try {
-      userName = session.name || 'Người dùng'
-      viewerRole = session.role || 'CUSTOMER'
+  try {
+    const userId = Number(session.sub)
 
-      if (viewerRole === 'READER') {
-        // Reader: xem các lịch khách đã đặt với mình → query theo reader_id
-        const readerInfo = await prisma.readerInfo.findUnique({
-          where: { user_id: Number(session.sub) },
-          include: {
-            packages: { orderBy: { id: 'asc' } },
-            availability: { orderBy: { date: 'asc' } },
-          },
-        })
-        if (readerInfo) {
-          readerPackages = readerInfo.packages.map((p) => ({
-            id: p.id,
-            name: p.name,
-            duration: p.duration,
-            price: p.price,
-            description: p.description,
-            popular: p.popular,
-          }))
-          readerAvailability = readerInfo.availability.map((a) => ({
-            id: a.id,
-            date: a.date.toISOString().split('T')[0],
-            slots: a.slots,
-          }))
+    // Kiểm tra reader status
+    const readerInfo = await prisma.readerInfo.findUnique({
+      where: { user_id: userId },
+      include: {
+        packages: { orderBy: { id: 'asc' } },
+        availability: { orderBy: { date: 'asc' } },
+      },
+    })
 
-          // Thu nhập: SUM từ reader_earnings (không cần cột balance)
-          const earningsRaw = await prisma.readerEarning.findMany({
-            where: { reader_id: readerInfo.id },
-            orderBy: { created_at: 'desc' },
-            include: {
-              booking: {
+    const isActiveReader = readerInfo?.status === 'ACTIVE'
+
+    if (isActiveReader && readerInfo) {
+      viewerRole = 'READER'
+
+      readerPackages = readerInfo.packages.map((p) => ({
+        id: p.id,
+        name: p.name,
+        duration: p.duration,
+        price: p.price,
+        description: p.description,
+        popular: p.popular,
+      }))
+
+      readerAvailability = readerInfo.availability.map((a) => ({
+        id: a.id,
+        date: a.date.toISOString().split('T')[0],
+        slots: a.slots,
+      }))
+
+      // Thu nhập reader
+      const earningsRaw = await prisma.readerEarning.findMany({
+        where: { reader_id: readerInfo.id },
+        orderBy: { created_at: 'desc' },
+        include: {
+          booking: {
+            select: {
+              id: true,
+              date: true,
+              time: true,
+              package: { select: { name: true } },
+              requester: {
                 select: {
-                  id: true,
-                  date: true,
-                  time: true,
-                  customer: { select: { fullname: true } },
-                  package: { select: { name: true } },
+                  customer_info: { select: { fullname: true } },
+                  reader_info: { select: { display_name: true } },
                 },
               },
             },
-          })
-          readerEarnings = {
-            total: earningsRaw.reduce((sum, e) => sum + e.amount, 0),
-            count: earningsRaw.length,
-            items: earningsRaw.map((e) => ({
-              id: e.id,
-              amount: e.amount,
-              createdAt: e.created_at.toISOString(),
-              bookingId: e.booking_id,
-              date: e.booking?.date.toISOString().split('T')[0] ?? null,
-              time: e.booking?.time ?? null,
-              customerName: e.booking?.customer?.fullname ?? 'Khách hàng',
-              packageName: e.booking?.package?.name ?? '',
-            })),
-          }
+          },
+        },
+      })
 
-          const raw = await prisma.booking.findMany({
-            where: {
-              reader_id: readerInfo.id,
-              // Reader thấy lịch từ lúc khách đặt (PENDING)
-              // Bao gồm: PENDING (vừa đặt), PAYMENT_CONFIRMED (admin duyệt TT), CONFIRMED (reader xác nhận), COMPLETED
-              status: { in: ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED', 'COMPLETED'] },
-            },
-            include: {
-              customer: { select: { id: true, fullname: true, avatar_url: true } },
-              package: { select: { id: true, name: true, duration: true, price: true } },
-            },
-            orderBy: [{ date: 'asc' }, { time: 'asc' }],
-          })
-          bookings = raw.map((b) => ({
-            ...b,
-            date: b.date.toISOString().split('T')[0],
-            created_at: b.created_at.toISOString(),
-            updated_at: b.updated_at.toISOString(),
-            // Đối tác của reader là khách hàng
-            counterparty: {
-              id: b.customer?.id,
-              name: b.customer?.fullname ?? 'Khách hàng',
-              avatar: b.customer?.avatar_url ?? '/placeholder-user.jpg',
-              verified: false,
-            },
-          }))
-        }
-      } else {
-        // Customer: xem các lịch mình đã đặt → query theo customer_id
-        const customerInfo = await prisma.customerInfo.findUnique({
-          where: { user_id: Number(session.sub) },
-        })
-        if (customerInfo) {
-          const raw = await prisma.booking.findMany({
-            where: { customer_id: customerInfo.id },
-            include: {
-              reader: { select: { id: true, display_name: true, avatar_url: true, verified: true } },
-              package: { select: { id: true, name: true, duration: true, price: true } },
-            },
-            orderBy: [{ date: 'asc' }, { time: 'asc' }],
-          })
-          bookings = raw.map((b) => ({
-            ...b,
-            date: b.date.toISOString().split('T')[0],
-            created_at: b.created_at.toISOString(),
-            updated_at: b.updated_at.toISOString(),
-            // Đối tác của khách hàng là reader
-            counterparty: {
-              id: b.reader?.id,
-              name: b.reader?.display_name ?? 'Reader',
-              avatar: b.reader?.avatar_url ?? '/placeholder-user.jpg',
-              verified: b.reader?.verified ?? false,
-            },
-          }))
-        }
+      readerEarnings = {
+        total: earningsRaw.reduce((sum, e) => sum + e.amount, 0),
+        count: earningsRaw.length,
+        items: earningsRaw.map((e) => ({
+          id: e.id,
+          amount: e.amount,
+          createdAt: e.created_at.toISOString(),
+          bookingId: e.booking_id,
+          date: e.booking?.date.toISOString().split('T')[0] ?? null,
+          time: e.booking?.time ?? null,
+          customerName:
+            e.booking?.requester?.customer_info?.fullname ??
+            e.booking?.requester?.reader_info?.display_name ??
+            'Khách hàng',
+          packageName: e.booking?.package?.name ?? '',
+        })),
       }
-    } catch (e) {
-      console.error('Dashboard bookings error:', e)
+
+      // Bookings của reader (provider)
+      const raw = await prisma.booking.findMany({
+        where: {
+          provider_id: userId,
+          status: { in: ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED', 'COMPLETED', 'CANCELLED'] },
+        },
+        include: {
+          requester: {
+            select: {
+              id: true,
+              customer_info: { select: { fullname: true, avatar_url: true } },
+              reader_info: { select: { display_name: true, avatar_url: true } },
+            },
+          },
+          package: { select: { id: true, name: true, duration: true, price: true } },
+        },
+        orderBy: [{ date: 'asc' }, { time: 'asc' }],
+      })
+
+      bookings = raw.map((b) => ({
+        ...b,
+        date: b.date.toISOString().split('T')[0],
+        created_at: b.created_at.toISOString(),
+        updated_at: b.updated_at.toISOString(),
+        counterparty: {
+          id: b.requester?.id,
+          name:
+            b.requester?.customer_info?.fullname ??
+            b.requester?.reader_info?.display_name ??
+            'Khách hàng',
+          avatar:
+            b.requester?.customer_info?.avatar_url ??
+            b.requester?.reader_info?.avatar_url ??
+            '/placeholder-user.jpg',
+          verified: false,
+        },
+      }))
+    } else {
+      // Customer: bookings mình đã đặt (requester)
+      const raw = await prisma.booking.findMany({
+        where: {
+          requester_id: userId,
+          status: { in: ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED', 'COMPLETED', 'CANCELLED'] },
+        },
+        include: {
+          provider: {
+            select: {
+              id: true,
+              reader_info: { select: { id: true, display_name: true, avatar_url: true, verified: true } },
+            },
+          },
+          package: { select: { id: true, name: true, duration: true, price: true } },
+        },
+        orderBy: [{ date: 'asc' }, { time: 'asc' }],
+      })
+
+      bookings = raw.map((b) => ({
+        ...b,
+        date: b.date.toISOString().split('T')[0],
+        created_at: b.created_at.toISOString(),
+        updated_at: b.updated_at.toISOString(),
+        counterparty: {
+          id: b.provider?.reader_info?.id,
+          name: b.provider?.reader_info?.display_name ?? 'Reader',
+          avatar: b.provider?.reader_info?.avatar_url ?? '/placeholder-user.jpg',
+          verified: b.provider?.reader_info?.verified ?? false,
+        },
+      }))
     }
+  } catch (e) {
+    console.error('Dashboard error:', e)
   }
 
   return (

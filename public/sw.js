@@ -1,5 +1,5 @@
-﻿// SAGETO Service Worker — Web Push Notifications
-// Phiên bản: 1.0.0
+﻿// ZENVY Service Worker — Web Push Notifications
+// Phiên bản: 2.0.0
 
 self.addEventListener('install', (event) => {
   self.skipWaiting()
@@ -15,18 +15,19 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {}
   } catch {
-    data = { title: 'SAGETO', body: event.data ? event.data.text() : '' }
+    data = { title: 'ZENVY', body: event.data ? event.data.text() : '' }
   }
 
-  const title = data.title || 'SAGETO Thông báo'
+  const title = data.title || 'ZENVY Thông báo'
   const options = {
     body: data.body || '',
     icon: data.icon || '/icon-light-32x32.png',
     badge: data.badge || '/icon-dark-32x32.png',
-    data: { link: data.link || '/' },
+    data: { link: data.link || '/dashboard' },
     vibrate: [200, 100, 200],
     requireInteraction: false,
-    tag: 'sageto-notification',  // replace cùng tag thay vì stack
+    // Không dùng tag cố định — cho phép stack nhiều notifications
+    timestamp: Date.now(),
   }
 
   event.waitUntil(
@@ -37,15 +38,15 @@ self.addEventListener('push', (event) => {
 // Xử lý click vào notification
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const link = event.notification.data?.link || '/'
+  const link = event.notification.data?.link || '/dashboard'
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Nếu app đang mở → focus tab đó
+      // Nếu app đang mở → focus tab đó và navigate
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.focus()
-          client.navigate(link)
+          if ('navigate' in client) client.navigate(link)
           return
         }
       }

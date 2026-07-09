@@ -7,7 +7,7 @@ import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import { cn, formatAmountK } from '@/lib/utils'
 
 const ROLE_OPTIONS = [{ value: '', label: 'Tất cả role' }, { value: 'CUSTOMER', label: 'Customer' }, { value: 'READER', label: 'Reader' }, { value: 'ADMIN', label: 'Admin' }]
 const STATUS_OPTIONS = [{ value: '', label: 'Tất cả trạng thái' }, { value: 'ACTIVE', label: 'Active' }, { value: 'INACTIVE', label: 'Inactive' }, { value: 'BANNED', label: 'Banned' }]
@@ -185,7 +185,7 @@ export function AdminUsersPage() {
                     </div>
                     <div className="sm:col-span-2">
                       <p className="text-xs uppercase text-muted-foreground">Giá/phiên</p>
-                      <p className="text-sm text-foreground font-medium">{detailUser.readerInfo.price_per_session ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(detailUser.readerInfo.price_per_session) : '—'}</p>
+                      <p className="text-sm text-foreground font-medium">{detailUser.readerInfo.price_per_session ? formatAmountK(detailUser.readerInfo.price_per_session) : '—'}</p>
                     </div>
                   </div>
                 </div>

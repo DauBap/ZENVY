@@ -9,6 +9,8 @@ import { Camera, Loader2, Save, ShieldCheck, Star, X, ChevronDown, Check, Clock 
 import { Header } from '@/components/layout/header'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { CosmicBackground } from '@/components/ui/floating-elements'
+import RegisterReaderForm from '@/components/auth/register-reader-form'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { GlassCard } from '@/components/ui/glass-card'
 import { AudioPlayer } from '@/components/ui/audio-player'
 import { Button } from '@/components/ui/button'
@@ -91,7 +93,8 @@ export function ProfilePage(props: Props) {
   const [description, setDescription] = useState(isReader ? (initial as ReaderInitial).description : '')
   const [expYear, setExpYear] = useState(String(isReader ? (initial as ReaderInitial).experience_year : 0))
   const [price, setPrice] = useState(String(isReader ? (initial as ReaderInitial).price_per_session : 0))
-
+  const audioFileRef = useRef<HTMLInputElement>(null)
+  const [audioFileName, setAudioFileName] = useState<string | null>(null)
   const [avatar, setAvatar] = useState(initial.avatar_url)
   const [busy, setBusy] = useState(false)
 
@@ -107,6 +110,8 @@ export function ProfilePage(props: Props) {
   const [serverVoiceSample, setServerVoiceSample] = useState<string | null>(
     isReader ? (initial as ReaderInitial).voiceSample ?? null : null
   )
+
+  const [showRegisterDialog, setShowRegisterDialog] = useState(false)
 
   // Reader: specialty tags — chọn từ danh sách cố định
   const [specialty, setSpecialty] = useState<string[]>(isReader ? (initial as ReaderInitial).specialty : [])
@@ -218,6 +223,23 @@ export function ProfilePage(props: Props) {
     }
   }
 
+  async function handleAudioFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('audio/')) {
+      toast.error('Vui lòng chọn file âm thanh (mp3, wav, webm).')
+      return
+    }
+    setAudioFileName(file.name)
+    const blobUrl = URL.createObjectURL(file)
+    setRecordedUrl(blobUrl)
+    const reader = new FileReader()
+    reader.onload = () => {
+      setRecordedDataUrl(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
   const deleteVoiceSample = async () => {
     if (!serverVoiceSample) return
     try {
@@ -265,7 +287,7 @@ export function ProfilePage(props: Props) {
     setBusy(true)
     try {
       const payload = isReader
-        ? {
+            ? {
             display_name: displayName,
             description,
             experience_year: Number(expYear),
@@ -313,6 +335,13 @@ export function ProfilePage(props: Props) {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Chỉnh sửa hồ sơ</h1>
             <p className="text-muted-foreground">Cập nhật thông tin cá nhân của bạn</p>
+            {!isReader && (
+              <div className="mt-3">
+                <button onClick={() => setShowRegisterDialog(true)} className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#4C583E] text-white">
+                  Đăng ký làm reader
+                </button>
+              </div>
+            )}
           </motion.div>
 
           <form onSubmit={handleSubmit}>
@@ -376,7 +405,7 @@ export function ProfilePage(props: Props) {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-0">
                     <Label>Chuyên môn <span className="text-muted-foreground font-normal">(tối đa 8)</span></Label>
 
                     {specialty.length > 0 && (
@@ -444,11 +473,18 @@ export function ProfilePage(props: Props) {
                           <div className="text-xs text-muted-foreground">Ghi lại mẫu giọng ngắn để hiển thị với khách hàng.</div>
                         </div>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                          {!recording ? (
-                            <Button type="button" size="sm" onClick={startRecording} className="bg-[#4C583E] text-white">Bắt đầu ghi</Button>
-                          ) : (
-                            <Button type="button" size="sm" onClick={stopRecording} className="bg-red-600 text-white">Dừng ({recordingTime}s)</Button>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {!recording ? (
+                              <Button type="button" size="sm" onClick={startRecording} className="bg-[#4C583E] text-white">Bắt đầu ghi</Button>
+                            ) : (
+                              <Button type="button" size="sm" onClick={stopRecording} className="bg-red-600 text-white">Dừng ({recordingTime}s)</Button>
+                            )}
+                            <input ref={audioFileRef} id="audio-file-input" type="file" accept="audio/*" className="hidden" onChange={handleAudioFile} />
+                            <Button type="button" size="sm" onClick={() => audioFileRef.current?.click()} className="bg-white/5 text-muted-foreground hover:bg-white/10">
+                              Chọn file
+                            </Button>
+                            {audioFileName && <div className="text-xs text-muted-foreground">{audioFileName}</div>}
+                          </div>
                           <div className="flex-1 min-w-0">
                             {recordedUrl ? (
                               <AudioPlayer src={recordedUrl} className="w-full" />
@@ -456,16 +492,16 @@ export function ProfilePage(props: Props) {
                               <AudioPlayer src={serverVoiceSample} className="w-full" />
                             ) : (
                               <div className="rounded-lg border border-dashed border-white/10 px-4 py-3 text-sm text-muted-foreground">
-                                Chưa có mẫu giọng. Ghi âm để lưu mẫu mới.
+                                Chưa có mẫu giọng. Ghi âm hoặc tải file lên để lưu mẫu mới.
                               </div>
                             )}
                           </div>
                           <div className="flex flex-col gap-2 sm:gap-3">
-                            <Button type="button" size="sm" onClick={saveVoiceSample} disabled={savingVoice || !recordedUrl}
+                            <Button type="button" size="sm" onClick={saveVoiceSample} disabled={savingVoice || !recordedDataUrl}
                               className="bg-green-600 text-white whitespace-nowrap">
                               {savingVoice ? 'Đang lưu…' : 'Lưu mẫu'}
                             </Button>
-                            {serverVoiceSample && !recordedUrl && (
+                            {serverVoiceSample && !recordedDataUrl && (
                               <Button type="button" size="sm" onClick={deleteVoiceSample} disabled={savingVoice}
                                 className="bg-white/5 text-muted-foreground hover:bg-white/10 whitespace-nowrap">
                                 Xóa mẫu
@@ -541,6 +577,14 @@ export function ProfilePage(props: Props) {
           </form>
         </div>
       </main>
+      <Dialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Đăng ký làm Reader</DialogTitle>
+          </DialogHeader>
+          <RegisterReaderForm hideAccountFields={true} onSuccess={() => setShowRegisterDialog(false)} />
+        </DialogContent>
+      </Dialog>
       <MobileNav />
     </>
   )

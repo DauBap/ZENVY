@@ -5,6 +5,7 @@ import { AuthModalProvider } from '@/contexts/auth-modal-context'
 import { AuthModal } from '@/components/auth/auth-modal'
 import { NotificationToast } from '@/components/layout/notification-toast'
 import { Toaster } from '@/components/ui/sonner'
+import { PageProgress } from '@/components/ui/page-progress'
 import './globals.css'
 
 const inter = Inter({ 
@@ -53,8 +54,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" className={`${inter.variable} ${playfair.variable} bg-background`} suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="ZENVY" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
+      </head>
       <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         <AuthModalProvider>
+          <PageProgress />
           {children}
           <AuthModal />
           <NotificationToast />

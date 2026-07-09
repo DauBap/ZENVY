@@ -101,7 +101,7 @@ const profileCache = new Map<number, MentionProfile>()
 // Chip mention bấm được → mở popup thông tin user/reader
 function MentionChip({ name, userId }: { name: string; userId: number }) {
   const { user } = useAuthModal()
-  const viewerIsReader = user?.role === 'READER'
+  const viewerIsReader = user?.role === 'READER' && user?.readerStatus === 'ACTIVE'
   const [profile, setProfile] = useState<MentionProfile | null>(profileCache.get(userId) ?? null)
   const [loading, setLoading] = useState(false)
 

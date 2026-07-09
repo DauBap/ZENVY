@@ -131,21 +131,13 @@ export function ReaderPackagesTab({ initial }: { initial: PackageItem[] }) {
                 onChange={(v) => update(idx, { duration: Number(v) })} />
             </div>
             <div className="space-y-2">
-              <Label>Giá (k) — nhập 100 = 100,000đ</Label>
+              <Label>Giá (k)</Label>
               <NumberInput
                 min={0}
                 step={1}
                 value={pkg.price / 1000}
                 onChange={(v) => update(idx, { price: Math.round(Number(v) * 1000) })}
               />
-              {pkg.price > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  = {pkg.price.toLocaleString('vi-VN')}đ
-                </p>
-              )}
-              {pkg.price === 0 && (
-                <p className="text-xs text-green-400">Miễn phí</p>
-              )}
             </div>
           </div>
 

@@ -11,7 +11,7 @@ export async function GET() {
   // Lấy thêm avatar mới nhất từ DB
   const user = await prisma.user.findUnique({
     where: { id: Number(session.sub) },
-    include: { customer_info: true, reader_info: true },
+    include: { role: true, customer_info: true, reader_info: true },
   })
 
   if (!user || user.status !== 'ACTIVE') {
@@ -23,13 +23,19 @@ export async function GET() {
     user.reader_info?.avatar_url ??
     null
 
+  const currentRole =
+    user.role?.name === 'READER' || user.reader_info?.status === 'ACTIVE'
+      ? 'READER'
+      : user.role?.name ?? 'CUSTOMER'
+
   return NextResponse.json({
     user: {
       id: user.id,
       email: user.email,
       name: session.name,
-      role: session.role,
+      role: currentRole,
       avatar,
+      readerStatus: user.reader_info?.status ?? null,
     },
   })
 }

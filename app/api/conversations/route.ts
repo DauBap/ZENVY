@@ -13,7 +13,7 @@ export async function GET() {
     const userId = Number(session.sub)
 
     const convs = await prisma.conversation.findMany({
-      where: { OR: [{ customer_user_id: userId }, { reader_user_id: userId }] },
+      where: { OR: [{ participant_1_id: userId }, { participant_2_id: userId }] },
       orderBy: { last_message_at: 'desc' },
       include: {
         messages: { orderBy: { id: 'desc' }, take: 1 },
@@ -22,9 +22,9 @@ export async function GET() {
 
     const items = await Promise.all(
       convs.map(async (c) => {
-        const counterpartId = c.customer_user_id === userId ? c.reader_user_id : c.customer_user_id
+        const counterpartId = c.participant_1_id === userId ? c.participant_2_id : c.participant_1_id
         const display = await getUserDisplay(counterpartId)
-        const myLastRead = c.customer_user_id === userId ? c.customer_last_read_at : c.reader_last_read_at
+        const myLastRead = c.participant_1_id === userId ? c.participant_1_last_read : c.participant_2_last_read
         const unread = await prisma.message.count({
           where: {
             conversation_id: c.id,
@@ -36,9 +36,18 @@ export async function GET() {
 
         const bookings = await prisma.booking.findMany({
           where: {
-            customer: { user_id: c.customer_user_id },
-            reader: { user_id: c.reader_user_id },
-            status: 'CONFIRMED',
+            OR: [
+              {
+                requester_id: c.participant_1_id,
+                provider_id: c.participant_2_id,
+                status: 'CONFIRMED',
+              },
+              {
+                requester_id: c.participant_2_id,
+                provider_id: c.participant_1_id,
+                status: 'CONFIRMED',
+              },
+            ],
           },
           select: { id: true, date: true, time: true },
         })
@@ -72,7 +81,7 @@ export async function GET() {
   }
 }
 
-// POST /api/conversations — get-or-create theo counterpart
+// POST /api/conversations — get-or-create conversation with participant
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
@@ -85,11 +94,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Dữ liệu không hợp lệ.' }, { status: 400 })
     }
 
-    let customerUserId: number
-    let readerUserId: number
+    let participant1Id: number
+    let participant2Id: number
+    let participant1Role: string
+    let participant2Role: string
 
-    if (session.role === 'READER') {
-      // Reader mở hội thoại với một khách hàng (customerId = CustomerInfo.id)
+    // Support both old API (customerId/readerId) and new generic API (userId)
+    if (body.userId) {
+      // New generic participant API
+      const participantId = Number(body.userId)
+      if (!Number.isInteger(participantId)) {
+        return NextResponse.json({ error: 'Thiếu thông tin participant.' }, { status: 400 })
+      }
+      
+      // Get participant user info
+      const participantUser = await prisma.user.findUnique({
+        where: { id: participantId },
+        select: { id: true, reader_info: { select: { status: true } } },
+      })
+      if (!participantUser) {
+        return NextResponse.json({ error: 'Người dùng không tồn tại.' }, { status: 404 })
+      }
+
+      if (userId === participantId) {
+        return NextResponse.json({ error: 'Không thể tự nhắn tin với chính mình.' }, { status: 400 })
+      }
+
+      // Determine roles based on reader status
+      const currentUserIsReader = session.role === 'READER' || (session.role !== 'READER' && (await prisma.readerInfo.findUnique({ where: { user_id: userId }, select: { status: true } }))?.status === 'ACTIVE')
+      const participantIsReader = participantUser.reader_info?.status === 'ACTIVE'
+
+      // Always put smaller ID first for unique constraint
+      if (userId < participantId) {
+        participant1Id = userId
+        participant2Id = participantId
+        participant1Role = currentUserIsReader ? 'READER' : 'CUSTOMER'
+        participant2Role = participantIsReader ? 'READER' : 'CUSTOMER'
+      } else {
+        participant1Id = participantId
+        participant2Id = userId
+        participant1Role = participantIsReader ? 'READER' : 'CUSTOMER'
+        participant2Role = currentUserIsReader ? 'READER' : 'CUSTOMER'
+      }
+    } else if (body.customerId && body.customerId !== undefined) {
+      // Legacy API: reader opens conversation with customer
       const customerId = Number(body.customerId)
       if (!Number.isInteger(customerId)) {
         return NextResponse.json({ error: 'Thiếu thông tin khách hàng.' }, { status: 400 })
@@ -98,10 +146,17 @@ export async function POST(request: NextRequest) {
       if (!ci) {
         return NextResponse.json({ error: 'Không tìm thấy khách hàng.' }, { status: 404 })
       }
-      customerUserId = ci.user_id
-      readerUserId = userId
-    } else {
-      // Khách mở hội thoại với một reader (readerId = ReaderInfo.id)
+      const customerUserId = ci.user_id
+      if (userId === customerUserId) {
+        return NextResponse.json({ error: 'Không thể tự nhắn tin với chính mình.' }, { status: 400 })
+      }
+      // Customer ID should be smaller for unique constraint
+      participant1Id = Math.min(userId, customerUserId)
+      participant2Id = Math.max(userId, customerUserId)
+      participant1Role = participant1Id === userId ? 'READER' : 'CUSTOMER'
+      participant2Role = participant2Id === userId ? 'READER' : 'CUSTOMER'
+    } else if (body.readerId) {
+      // Legacy API: someone opens conversation with a reader (by ReaderInfo.id)
       const readerId = Number(body.readerId)
       if (!Number.isInteger(readerId)) {
         return NextResponse.json({ error: 'Thiếu thông tin reader.' }, { status: 400 })
@@ -110,21 +165,40 @@ export async function POST(request: NextRequest) {
       if (!ri) {
         return NextResponse.json({ error: 'Không tìm thấy reader.' }, { status: 404 })
       }
-      customerUserId = userId
-      readerUserId = ri.user_id
-    }
-
-    if (customerUserId === readerUserId) {
-      return NextResponse.json({ error: 'Không thể tự nhắn tin với chính mình.' }, { status: 400 })
+      const readerUserId = ri.user_id
+      if (userId === readerUserId) {
+        return NextResponse.json({ error: 'Không thể tự nhắn tin với chính mình.' }, { status: 400 })
+      }
+      // Determine current user's actual role
+      const currentUserIsReader = session.role === 'READER'
+      // Always put smaller ID first for unique constraint
+      if (userId < readerUserId) {
+        participant1Id = userId
+        participant2Id = readerUserId
+        participant1Role = currentUserIsReader ? 'READER' : 'CUSTOMER'
+        participant2Role = 'READER'
+      } else {
+        participant1Id = readerUserId
+        participant2Id = userId
+        participant1Role = 'READER'
+        participant2Role = currentUserIsReader ? 'READER' : 'CUSTOMER'
+      }
+    } else {
+      return NextResponse.json({ error: 'Thiếu thông tin participant.' }, { status: 400 })
     }
 
     const conv = await prisma.conversation.upsert({
-      where: { customer_user_id_reader_user_id: { customer_user_id: customerUserId, reader_user_id: readerUserId } },
+      where: { participant_1_id_participant_2_id: { participant_1_id: participant1Id, participant_2_id: participant2Id } },
       update: {},
-      create: { customer_user_id: customerUserId, reader_user_id: readerUserId },
+      create: {
+        participant_1_id: participant1Id,
+        participant_2_id: participant2Id,
+        participant_1_role: participant1Role,
+        participant_2_role: participant2Role,
+      },
     })
 
-    const counterpartId = conv.customer_user_id === userId ? conv.reader_user_id : conv.customer_user_id
+    const counterpartId = conv.participant_1_id === userId ? conv.participant_2_id : conv.participant_1_id
     const display = await getUserDisplay(counterpartId)
 
     return NextResponse.json({

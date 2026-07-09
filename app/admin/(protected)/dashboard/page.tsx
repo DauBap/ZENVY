@@ -25,8 +25,8 @@ export default async function AdminDashboardPage() {
     prisma.booking.findMany({
       take: 8, orderBy: { created_at: 'desc' },
       include: {
-        customer: { select: { fullname: true } },
-        reader: { select: { display_name: true } },
+        requester: { select: { customer_info: { select: { fullname: true } }, reader_info: { select: { display_name: true } } } },
+        provider: { select: { reader_info: { select: { display_name: true } } } },
         package: { select: { name: true, price: true } },
       },
     }),
@@ -46,8 +46,8 @@ export default async function AdminDashboardPage() {
     date: b.date.toISOString().split('T')[0],
     time: b.time,
     status: b.status,
-    customer: b.customer.fullname ?? '—',
-    reader: b.reader.display_name ?? '—',
+    customer: b.requester.customer_info?.fullname ?? b.requester.reader_info?.display_name ?? '—',
+    reader: b.provider.reader_info?.display_name ?? '—',
     packageName: b.package.name,
     amount: b.package.price,
     createdAt: b.created_at.toISOString(),

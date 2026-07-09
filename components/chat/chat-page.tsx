@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import {
   Send, ChevronLeft, ChevronDown, CheckCheck, MessageSquare, Loader2,
-  Phone, Video, ImagePlus, Mic, Smile, Sticker, X, Square,
+  Phone, Video, ImagePlus, Mic, Smile, Sticker, X, Square, Star,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { MobileNav } from '@/components/layout/mobile-nav'
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { resizeImage } from '@/lib/image'
 import { EMOJIS, STICKERS } from '@/components/chat/emoji-data'
 import { cn } from '@/lib/utils'
@@ -58,11 +59,14 @@ interface SessionItem {
   duration: number
   completedAt?: string | null
   graceEndsAt?: string | null
+  hasReview?: boolean
+  review?: { rating: number; comment?: string | null } | null
 }
 
 interface ChatClientProps {
   currentUserId: number
   currentRole: string
+  currentReaderStatus: string | null
   initialReaderId: number | null
   initialCustomerId: number | null
   initialBookingId: number | null
@@ -85,8 +89,8 @@ function apptLabel(s: SessionItem): string {
   return `Cuộc hẹn · ${s.time} ${d}/${m}/${y}`
 }
 
-export function ChatClient({ currentUserId, currentRole, initialReaderId, initialCustomerId, initialBookingId }: ChatClientProps) {
-  const isReader = currentRole === 'READER'
+export function ChatClient({ currentUserId, currentRole, currentReaderStatus, initialReaderId, initialCustomerId, initialBookingId }: ChatClientProps) {
+  const isReader = currentRole === 'READER' && currentReaderStatus === 'ACTIVE'
 
   const [conversations, setConversations] = useState<ConversationItem[]>([])
   const [activeId, setActiveId] = useState<number | null>(null)
@@ -102,6 +106,11 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
   const [sessions, setSessions] = useState<SessionItem[]>([])
   // Ghi âm
   const [recording, setRecording] = useState(false)
+
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [reviewRating, setReviewRating] = useState(5)
+  const [reviewComment, setReviewComment] = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   const maxIdRef = useRef(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -374,6 +383,39 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
     }
   }
 
+  async function submitReview() {
+    if (!activeSession) return
+    setSubmittingReview(true)
+    try {
+      const res = await fetch(`/api/bookings/${activeSession.bookingId}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: reviewRating, comment: reviewComment }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || 'Đánh giá thất bại.')
+        return
+      }
+      toast.success('Đánh giá thành công! Cảm ơn bạn.')
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.bookingId === activeSession.bookingId
+            ? { ...s, hasReview: true, review: { rating: reviewRating, comment: reviewComment } }
+            : s
+        )
+      )
+      setShowReviewModal(false)
+      setReviewRating(5)
+      setReviewComment('')
+    } catch (err) {
+      console.error(err)
+      toast.error('Có lỗi xảy ra, vui lòng thử lại.')
+    } finally {
+      setSubmittingReview(false)
+    }
+  }
+
   const fmt = (iso: string) =>
     new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
 
@@ -488,6 +530,21 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
                           </AlertDialogContent>
                         </AlertDialog>
                       </>
+                    )}
+                    {/* Customer đánh giá session khi đã hoàn thành */}
+                    {!isReader && activeSession?.phase === 'past' && (
+                      activeSession.hasReview ? (
+                        <div className="flex items-center gap-1 text-xs text-yellow-400 bg-yellow-500/10 px-2.5 py-1 rounded-full border border-yellow-500/20 mr-1 shrink-0">
+                          <span>Đã đánh giá</span>
+                          <span className="font-bold">{activeSession.review?.rating}</span>
+                          <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                        </div>
+                      ) : (
+                        <Button size="sm" onClick={() => setShowReviewModal(true)}
+                          className="bg-yellow-600 hover:bg-yellow-500 text-white mr-1 text-xs px-2.5 h-8 shrink-0">
+                          Đánh giá phiên
+                        </Button>
+                      )
                     )}
                     {/* Icon gọi / video — trang trí, chưa hoạt động */}
                     <button title="Gọi thoại (sắp ra mắt)" disabled
@@ -712,6 +769,74 @@ export function ChatClient({ currentUserId, currentRole, initialReaderId, initia
       </main>
 
       <MobileNav />
+
+      {/* Modal đánh giá phiên */}
+      <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
+        <DialogContent className="sm:max-w-[425px] bg-[#1a1f16] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-center text-white">Đánh giá phiên Tarot</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <p className="text-sm text-gray-300 text-center">
+              Hãy chia sẻ cảm nhận của bạn về phiên xem Tarot này nhé!
+            </p>
+            
+            {/* Star Rating */}
+            <div className="flex items-center gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setReviewRating(star)}
+                  className="p-1 hover:scale-110 transition-transform"
+                  type="button"
+                >
+                  <Star
+                    className={cn(
+                      "w-8 h-8 transition-colors",
+                      star <= reviewRating
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-600 hover:text-yellow-400/60"
+                    )}
+                  />
+                </button>
+              ))}
+            </div>
+            
+            <div className="w-full space-y-2 mt-2">
+              <label className="text-xs text-gray-400">Nhận xét của bạn (không bắt buộc)</label>
+              <textarea
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                placeholder="Nhập cảm nhận của bạn..."
+                className="w-full min-h-[100px] bg-white/5 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-[#768064]/50 resize-none text-white placeholder-gray-500"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowReviewModal(false)}
+              className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white"
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={submitReview}
+              disabled={submittingReview}
+              className="bg-[#768064] hover:bg-[#768064]/80 text-white"
+            >
+              {submittingReview ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                  Đang gửi...
+                </>
+              ) : (
+                'Gửi đánh giá'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

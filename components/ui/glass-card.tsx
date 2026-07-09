@@ -7,7 +7,7 @@ interface GlassCardProps extends HTMLMotionProps<'div'> {
   children: React.ReactNode
   className?: string
   hover?: boolean
-  glow?: 'purple' | 'gold' | 'blue' | 'none'
+  glow?: 'purple' | 'gold' | 'blue' | 'olive' | 'none'
 }
 
 export function GlassCard({
@@ -18,7 +18,8 @@ export function GlassCard({
   ...props
 }: GlassCardProps) {
   const glowStyles = {
-    purple: 'hover:shadow-[0_0_30px_rgba(165,179,139,0.3)]',
+    purple: 'hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]',
+    olive: 'hover:shadow-[0_0_30px_rgba(165,179,139,0.3)]',
     gold: 'hover:shadow-[0_0_30px_rgba(251,191,36,0.3)]',
     blue: 'hover:shadow-[0_0_30px_rgba(99,102,241,0.3)]',
     none: '',

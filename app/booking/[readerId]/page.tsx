@@ -16,7 +16,7 @@ export default async function BookingPage({
 
   const reader = await prisma.readerInfo.findUnique({
     where: { id: Number(readerId) },
-    include: { packages: true, availability: true },
+    include: { packages: true, availability: true, _count: { select: { reviews: true, session_reviews: true } } },
   })
 
   if (!reader) return notFound()
@@ -37,7 +37,7 @@ export default async function BookingPage({
   // → ngăn double-booking ở mọi giai đoạn thanh toán
   const confirmed = await prisma.booking.findMany({
     where: {
-      reader_id: Number(readerId),
+      provider_id: reader.user_id,
       status: { in: ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED'] },
     },
     select: { date: true, time: true },

@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
         name: displayName,
         role: user.role.name,
         avatar: user.customer_info?.avatar_url ?? user.reader_info?.avatar_url ?? null,
+        readerStatus: user.reader_info?.status ?? null,
       },
     })
 

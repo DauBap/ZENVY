@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 // Trả về rating mới (đã làm tròn 1 chữ số thập phân).
 export async function recomputeReaderRating(readerId: number): Promise<number> {
   const [legacy, session] = await Promise.all([
-    prisma.review.aggregate({
+    prisma.reviews.aggregate({
       where: { reader_id: readerId },
       _sum: { rating: true },
       _count: true,

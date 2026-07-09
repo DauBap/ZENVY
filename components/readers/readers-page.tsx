@@ -155,11 +155,31 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
 ]
 
 // ─── Main page ────────────────────────────────────────────────────────────────
-export function ReadersPage({ readers, specialties }: ReadersPageProps) {
+export function ReadersPage({ readers: initialReaders, specialties }: ReadersPageProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([])
   const searchParams = useSearchParams()
   const { openLogin, user } = useAuthModal()
+
+  // Online status polling — cập nhật mỗi 30s mà không reload trang
+  const [onlineMap, setOnlineMap] = useState<Record<number, boolean>>({})
+  useEffect(() => {
+    const fetchOnline = () => {
+      fetch('/api/readers/online-status')
+        .then(r => r.json())
+        .then((data: Record<number, boolean>) => setOnlineMap(data))
+        .catch(() => {})
+    }
+    fetchOnline()
+    const id = setInterval(fetchOnline, 30_000)
+    return () => clearInterval(id)
+  }, [])
+
+  // Merge online status vào readers
+  const readers = initialReaders.map(r => ({
+    ...r,
+    isOnline: onlineMap[r.id] ?? r.isOnline,
+  }))
 
   // Tự mở login modal khi redirect từ trang protected (?login=1)
   useEffect(() => {
@@ -240,13 +260,13 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
               Tìm <span className="gradient-text">Tarot Reader</span> của bạn
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              {readers.length}+ Readers được xác minh. Đặt lịch ngay hôm nay.
+              {readers.filter(r => r.isVerified).length}+ Readers được xác minh. Đặt lịch ngay hôm nay.
             </p>
           </motion.div>
 
           {/* Reader Mới */}
           <ReaderScrollSection
-            title="Reader Mới"
+            title="GESIGN"
             icon={<Sparkles className="w-5 h-5 text-[#4C583E]" />}
             readers={newReaders}
             badge="Mới tham gia"
@@ -272,7 +292,7 @@ export function ReadersPage({ readers, specialties }: ReadersPageProps) {
           </div>
 
           {/* Search + Filter + Sort */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mb-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mb-6 relative z-10">
             <GlassCard className="p-4 overflow-visible">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="relative flex-1">

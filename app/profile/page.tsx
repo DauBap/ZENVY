@@ -13,14 +13,16 @@ export default async function ProfileRoutePage() {
 
   const userId = Number(session.sub)
 
-  if (session.role === 'READER') {
-    const reader = await prisma.readerInfo.findUnique({
-      where: { user_id: userId },
-      include: {
-        packages: { orderBy: { id: 'asc' } },
-        availability: { orderBy: { date: 'asc' } },
-      },
-    })
+  const reader = await prisma.readerInfo.findUnique({
+    where: { user_id: userId },
+    include: {
+      packages: { orderBy: { id: 'asc' } },
+      availability: { orderBy: { date: 'asc' } },
+    },
+  })
+
+  // Chỉ hiển thị giao diện Reader khi đã được admin duyệt (status = ACTIVE)
+  if (reader?.status === 'ACTIVE') {
     const initial = {
       display_name: reader?.display_name ?? '',
       description: reader?.description ?? '',

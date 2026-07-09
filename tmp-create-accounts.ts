@@ -41,7 +41,7 @@ async function ensureUser(email: string, roleName: 'CUSTOMER' | 'READER' | 'ADMI
         user_id: user.id,
         display_name: displayName,
         description: 'Test reader account',
-        price_per_session: new Prisma.Decimal('0'),
+        price_per_session: 0,
         rating: new Prisma.Decimal('0'),
       },
     })

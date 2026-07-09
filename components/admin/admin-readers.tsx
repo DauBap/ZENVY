@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 
 export function AdminReadersPage() {
@@ -16,6 +17,10 @@ export function AdminReadersPage() {
   const [busyId, setBusyId] = useState<number | null>(null)
   const [detail, setDetail] = useState<any | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<'approve' | 'reject' | null>(null)
+  const [confirmUserId, setConfirmUserId] = useState<number | null>(null)
+  const [confirmReason, setConfirmReason] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -38,30 +43,56 @@ export function AdminReadersPage() {
   }
 
   async function approveReader(userId: number) {
-    setBusyId(userId)
-    const res = await fetch(`/api/admin/users/${userId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ approve: true }),
-    })
-    if (res.ok) {
-      toast.success('Đã duyệt Reader. Tài khoản đã được kích hoạt.')
-      setDetailOpen(false)
-      load()
-    } else toast.error('Duyệt thất bại.')
-    setBusyId(null)
+    setConfirmAction('approve')
+    setConfirmUserId(userId)
+    setConfirmReason('')
+    setConfirmOpen(true)
   }
 
   async function rejectReader(userId: number) {
-    if (!confirm('Từ chối và xóa hồ sơ reader này?')) return
-    setBusyId(userId)
-    const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' })
-    if (res.ok) {
-      toast.success('Đã từ chối.')
-      setDetailOpen(false)
-      load()
-    } else toast.error('Thao tác thất bại.')
-    setBusyId(null)
+    setConfirmAction('reject')
+    setConfirmUserId(userId)
+    setConfirmReason('')
+    setConfirmOpen(true)
+  }
+
+  async function confirmExecute() {
+    if (!confirmUserId || !confirmAction) return
+    setBusyId(confirmUserId)
+    try {
+      if (confirmAction === 'approve') {
+        const res = await fetch(`/api/admin/users/${confirmUserId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approve: true, reason: confirmReason }),
+        })
+        if (res.ok) {
+          toast.success('Đã kích hoạt Reader. Vui lòng xác minh thủ công khi cần.')
+          setDetailOpen(false)
+          load()
+        } else toast.error('Kích hoạt thất bại.')
+      } else if (confirmAction === 'reject') {
+        const res = await fetch(`/api/admin/users/${confirmUserId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: confirmReason }),
+        })
+        if (res.ok) {
+          toast.success('Đã từ chối.')
+          setDetailOpen(false)
+          load()
+        } else toast.error('Thao tác thất bại.')
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('Thao tác thất bại.')
+    } finally {
+      setBusyId(null)
+      setConfirmOpen(false)
+      setConfirmReason('')
+      setConfirmAction(null)
+      setConfirmUserId(null)
+    }
   }
 
   return (
@@ -172,7 +203,7 @@ export function AdminReadersPage() {
 
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {[
-                  ['SĐT', detail.phone ?? '—'],
+                  ['SĐT', 'Coming soon'],
                   ['Kinh nghiệm', `${detail.readerInfo?.experience_year ?? 0} năm`],
                   ['Chuyên môn', (detail.readerInfo?.specialty ?? []).join(', ') || '—'],
                 ].map(([label, value]) => (
@@ -201,7 +232,7 @@ export function AdminReadersPage() {
                 <Button onClick={() => approveReader(detail.id)} disabled={busyId === detail.id}
                   className="flex-1 bg-green-600 hover:bg-green-500 text-white">
                   <Check className="w-4 h-4 mr-2" />
-                  {busyId === detail.id ? 'Đang xử lý...' : 'Duyệt & Kích hoạt'}
+                  {busyId === detail.id ? 'Đang xử lý...' : 'Kích hoạt tài khoản'}
                 </Button>
                 <Button onClick={() => rejectReader(detail.id)} disabled={busyId === detail.id}
                   variant="destructive" className="flex-1">
@@ -211,6 +242,28 @@ export function AdminReadersPage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmOpen} onOpenChange={o => !o && setConfirmOpen(false)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{confirmAction === 'approve' ? 'Xác nhận duyệt Reader' : 'Xác nhận từ chối'}</DialogTitle>
+            <DialogDescription>{confirmAction === 'approve' ? 'Bạn có chắc muốn kích hoạt reader này?' : 'Bạn có chắc muốn từ chối hồ sơ này? Ghi rõ lý do sẽ được gửi tới người dùng.'}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {confirmAction === 'reject' && (
+              <label className="block text-sm">Lý do từ chối
+                <Textarea value={confirmReason} onChange={(e) => setConfirmReason(e.target.value)} className="mt-2" rows={4} />
+              </label>
+            )}
+            <div className="flex gap-3 pt-2">
+              <Button onClick={confirmExecute} className="flex-1 bg-green-600 hover:bg-green-500 text-white">
+                {confirmAction === 'approve' ? 'Xác nhận duyệt' : 'Xác nhận từ chối'}
+              </Button>
+              <Button variant="destructive" onClick={() => setConfirmOpen(false)} className="flex-1">Huỷ</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

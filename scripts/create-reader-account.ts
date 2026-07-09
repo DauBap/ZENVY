@@ -45,7 +45,7 @@ async function main() {
       display_name: 'Reader Account',
       description: 'Auto-created reader account',
       experience_year: 1,
-      price_per_session: new Prisma.Decimal('10.00'),
+      price_per_session: 10,
       rating: new Prisma.Decimal('4.5'),
       verified: true,
       avatar_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',

@@ -28,15 +28,20 @@ export async function GET(
       return NextResponse.json({ error: 'Bạn không có quyền với hội thoại này.' }, { status: 403 })
     }
 
-    // Booking giữa đúng cặp customer/reader của hội thoại này (bỏ phiên đã hủy)
+    // Booking giữa đúng cặp 2 người trong hội thoại này (bỏ phiên đã hủy)
     const bookings = await prisma.booking.findMany({
       where: {
-        customer: { user_id: conv.customer_user_id },
-        reader: { user_id: conv.reader_user_id },
+        OR: [
+          { requester_id: conv.participant_1_id, provider_id: conv.participant_2_id },
+          { requester_id: conv.participant_2_id, provider_id: conv.participant_1_id },
+        ],
         status: { not: 'CANCELLED' },
       },
       orderBy: [{ date: 'desc' }, { time: 'desc' }],
-      include: { package: { select: { name: true, duration: true } } },
+      include: {
+        package: { select: { name: true, duration: true } },
+        review: { select: { id: true, rating: true, comment: true } },
+      },
     })
 
     const now = Date.now()
@@ -58,6 +63,10 @@ export async function GET(
         phase = 'pending'
       }
 
+      // Ẩn booking pending/payment_confirmed đã quá giờ hẹn — không hiển thị trong danh sách
+      const isExpiredPending = phase === 'pending' && now > startMs
+      if (isExpiredPending) return null
+
       const completedAt = b.status === 'COMPLETED' ? b.updated_at : null
       return {
         bookingId: b.id,
@@ -69,10 +78,12 @@ export async function GET(
         duration: b.package?.duration ?? 0,
         completedAt: completedAt?.toISOString() ?? null,
         graceEndsAt: completedAt ? new Date(completedAt.getTime() + 30 * 60 * 1000).toISOString() : null,
+        hasReview: !!b.review,
+        review: b.review,
       }
     })
 
-    return NextResponse.json({ sessions })
+    return NextResponse.json({ sessions: sessions.filter(Boolean) })
   } catch (error) {
     console.error('List sessions error:', error)
     return NextResponse.json({ error: 'Lỗi server.' }, { status: 500 })

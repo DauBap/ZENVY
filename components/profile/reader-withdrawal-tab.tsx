@@ -7,20 +7,13 @@ import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { cn } from '@/lib/utils'
+import { cn, formatAmountK } from '@/lib/utils'
 import { resizeImage } from '@/lib/image'
 
 const STATUS_MAP: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
   PENDING:  { label: 'Đang chờ', icon: <Clock className="w-3.5 h-3.5" />,       cls: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
   APPROVED: { label: 'Đã duyệt', icon: <CheckCircle className="w-3.5 h-3.5" />, cls: 'bg-green-500/20  text-green-400  border-green-500/30'  },
   REJECTED: { label: 'Từ chối',  icon: <XCircle className="w-3.5 h-3.5" />,     cls: 'bg-red-500/20    text-red-400    border-red-500/30'    },
-}
-
-const fmt = (n: number) => {
-  if (!Number.isFinite(n) || n === 0) return '0k'
-  const k = n / 1000
-  if (k >= 1000) return `${(k / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 2 })}M`
-  return `${Number.isInteger(k) ? k.toLocaleString('vi-VN') : k.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}k`
 }
 
 const parseAmt = (raw: string) => {
@@ -266,15 +259,15 @@ export function ReaderWithdrawalTab() {
           <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Số tiền yêu cầu</span>
-              <span className="font-medium text-foreground">{fmt(requestedAmt)}</span>
+              <span className="font-medium text-foreground">{formatAmountK(requestedAmt)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Phí sàn ({commissionRate}%)</span>
-              <span className="text-red-400">−{fmt(commission)}</span>
+              <span className="text-red-400">−{formatAmountK(commission)}</span>
             </div>
             <div className="flex justify-between border-t border-white/10 pt-2">
               <span className="font-semibold text-foreground">Thực nhận về ATM</span>
-              <span className="font-bold text-base text-green-400">{fmt(receivedAmt)}</span>
+              <span className="font-bold text-base text-green-400">{formatAmountK(receivedAmt)}</span>
             </div>
           </div>
         )}
@@ -286,7 +279,7 @@ export function ReaderWithdrawalTab() {
             : <><Banknote className="w-4 h-4 mr-2" />Gửi yêu cầu rút tiền</>}
         </Button>
         {requestedAmt > availableBalance && requestedAmt > 0 && (
-          <p className="text-xs text-red-400 text-center">Số dư khả dụng chỉ còn {fmt(availableBalance)}</p>
+          <p className="text-xs text-red-400 text-center">Số dư khả dụng chỉ còn {formatAmountK(availableBalance)}</p>
         )}
       </GlassCard>
 
@@ -305,7 +298,7 @@ export function ReaderWithdrawalTab() {
               return (
                 <div key={w.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
                   <div>
-                    <div className="text-sm font-medium text-foreground">{fmt(w.amountRequested)}</div>
+                    <div className="text-sm font-medium text-foreground">{formatAmountK(w.amountRequested)}</div>
                     <div className="text-xs text-muted-foreground">
                       {w.bankName} · {w.bankAccount} · Phí sàn {w.commissionRate}%
                     </div>
@@ -315,7 +308,7 @@ export function ReaderWithdrawalTab() {
                     <span className={cn('flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border', st.cls)}>
                       {st.icon}{st.label}
                     </span>
-                    <span className="text-xs text-green-400 font-medium">→ {fmt(w.amountToPay)}</span>
+                    <span className="text-xs text-green-400 font-medium">→ {formatAmountK(w.amountToPay)}</span>
                     <span className="text-xs text-muted-foreground">
                       {new Date(w.createdAt).toLocaleDateString('vi-VN')}
                     </span>
