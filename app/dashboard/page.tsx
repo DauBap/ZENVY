@@ -64,31 +64,39 @@ export default async function DashboardRoutePage() {
         slots: a.slots,
       }))
 
-      // Thu nhập reader
-      const earningsRaw = await prisma.readerEarning.findMany({
-        where: { reader_id: readerInfo.id },
-        orderBy: { created_at: 'desc' },
-        include: {
-          booking: {
-            select: {
-              id: true,
-              date: true,
-              time: true,
-              package: { select: { name: true } },
-              requester: {
-                select: {
-                  customer_info: { select: { fullname: true } },
-                  reader_info: { select: { display_name: true } },
+      // Thu nhập reader — chỉ lấy 100 gần nhất, tổng tính riêng bằng aggregate
+      const [earningsAgg, earningsRaw] = await Promise.all([
+        prisma.readerEarning.aggregate({
+          where: { reader_id: readerInfo.id },
+          _sum: { amount: true },
+          _count: true,
+        }),
+        prisma.readerEarning.findMany({
+          where: { reader_id: readerInfo.id },
+          orderBy: { created_at: 'desc' },
+          take: 100,
+          include: {
+            booking: {
+              select: {
+                id: true,
+                date: true,
+                time: true,
+                package: { select: { name: true } },
+                requester: {
+                  select: {
+                    customer_info: { select: { fullname: true } },
+                    reader_info: { select: { display_name: true } },
+                  },
                 },
               },
             },
           },
-        },
-      })
+        }),
+      ])
 
       readerEarnings = {
-        total: earningsRaw.reduce((sum, e) => sum + e.amount, 0),
-        count: earningsRaw.length,
+        total: earningsAgg._sum.amount ?? 0,
+        count: earningsAgg._count,
         items: earningsRaw.map((e) => ({
           id: e.id,
           amount: e.amount,
@@ -104,7 +112,7 @@ export default async function DashboardRoutePage() {
         })),
       }
 
-      // Bookings của reader (provider)
+      // Bookings của reader (provider) — chỉ lấy 200 gần nhất
       const raw = await prisma.booking.findMany({
         where: {
           provider_id: userId,
@@ -120,7 +128,8 @@ export default async function DashboardRoutePage() {
           },
           package: { select: { id: true, name: true, duration: true, price: true } },
         },
-        orderBy: [{ date: 'asc' }, { time: 'asc' }],
+        orderBy: [{ date: 'desc' }, { time: 'desc' }],
+        take: 200,
       })
 
       bookings = raw.map((b) => ({
@@ -142,7 +151,7 @@ export default async function DashboardRoutePage() {
         },
       }))
     } else {
-      // Customer: bookings mình đã đặt (requester)
+      // Customer: bookings mình đã đặt (requester) — chỉ lấy 200 gần nhất
       const raw = await prisma.booking.findMany({
         where: {
           requester_id: userId,
@@ -157,7 +166,8 @@ export default async function DashboardRoutePage() {
           },
           package: { select: { id: true, name: true, duration: true, price: true } },
         },
-        orderBy: [{ date: 'asc' }, { time: 'asc' }],
+        orderBy: [{ date: 'desc' }, { time: 'desc' }],
+        take: 200,
       })
 
       bookings = raw.map((b) => ({

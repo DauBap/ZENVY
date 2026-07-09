@@ -15,64 +15,95 @@ export async function GET() {
     const convs = await prisma.conversation.findMany({
       where: { OR: [{ participant_1_id: userId }, { participant_2_id: userId }] },
       orderBy: { last_message_at: 'desc' },
+      // Giới hạn 100 conversations mới nhất
+      take: 100,
       include: {
         messages: { orderBy: { id: 'desc' }, take: 1 },
       },
     })
 
-    const items = await Promise.all(
-      convs.map(async (c) => {
-        const counterpartId = c.participant_1_id === userId ? c.participant_2_id : c.participant_1_id
-        const display = await getUserDisplay(counterpartId)
+    // Fix: batch load tất cả counterpart users 1 lần thay vì N+1
+    const counterpartIds = convs.map((c) =>
+      c.participant_1_id === userId ? c.participant_2_id : c.participant_1_id
+    )
+    const counterpartUsers = await prisma.user.findMany({
+      where: { id: { in: counterpartIds } },
+      select: {
+        id: true,
+        reader_info: { select: { display_name: true, avatar_url: true, last_seen_at: true } },
+        customer_info: { select: { fullname: true, avatar_url: true } },
+      },
+    })
+    const userMap = new Map(counterpartUsers.map((u) => [u.id, u]))
+
+    // Fix: batch count unread thay vì N query riêng lẻ
+    const unreadCounts = await Promise.all(
+      convs.map((c) => {
         const myLastRead = c.participant_1_id === userId ? c.participant_1_last_read : c.participant_2_last_read
-        const unread = await prisma.message.count({
+        return prisma.message.count({
           where: {
             conversation_id: c.id,
             sender_user_id: { not: userId },
             ...(myLastRead ? { created_at: { gt: myLastRead } } : {}),
           },
         })
-        const last = c.messages[0]
+      })
+    )
 
-        const bookings = await prisma.booking.findMany({
-          where: {
-            OR: [
-              {
-                requester_id: c.participant_1_id,
-                provider_id: c.participant_2_id,
-                status: 'CONFIRMED',
-              },
-              {
-                requester_id: c.participant_2_id,
-                provider_id: c.participant_1_id,
-                status: 'CONFIRMED',
-              },
-            ],
-          },
-          select: { id: true, date: true, time: true },
-        })
-        const now = Date.now()
-        const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
-        const hasOngoingSession = bookings.some((b) => {
+    // Fix: 1 query batch tất cả CONFIRMED bookings giữa các cặp thay vì N queries
+    const convPairs = convs.map((c) => ({
+      p1: c.participant_1_id,
+      p2: c.participant_2_id,
+    }))
+    const allParticipantIds = [...new Set([...convPairs.map((p) => p.p1), ...convPairs.map((p) => p.p2)])]
+    const confirmedBookings = await prisma.booking.findMany({
+      where: {
+        status: 'CONFIRMED',
+        requester_id: { in: allParticipantIds },
+        provider_id: { in: allParticipantIds },
+      },
+      select: { id: true, requester_id: true, provider_id: true, date: true, time: true },
+    })
+
+    const now = Date.now()
+    const ICT_OFFSET_MS = 7 * 60 * 60 * 1000
+
+    const items = convs.map((c, i) => {
+      const counterpartId = c.participant_1_id === userId ? c.participant_2_id : c.participant_1_id
+      const u = userMap.get(counterpartId)
+      const name =
+        u?.reader_info?.display_name ?? u?.customer_info?.fullname ?? 'Người dùng'
+      const avatar =
+        u?.reader_info?.avatar_url ?? u?.customer_info?.avatar_url ?? '/placeholder-user.jpg'
+      const lastSeen = u?.reader_info?.last_seen_at
+      const isOnline = lastSeen ? now - new Date(lastSeen).getTime() < 5 * 60 * 1000 : false
+
+      const hasOngoingSession = confirmedBookings
+        .filter(
+          (b) =>
+            (b.requester_id === c.participant_1_id && b.provider_id === c.participant_2_id) ||
+            (b.requester_id === c.participant_2_id && b.provider_id === c.participant_1_id)
+        )
+        .some((b) => {
           const [hh, mm] = b.time.split(':').map(Number)
           const startMs =
             Date.UTC(b.date.getUTCFullYear(), b.date.getUTCMonth(), b.date.getUTCDate(), hh || 0, mm || 0) - ICT_OFFSET_MS
           return now >= startMs
         })
 
-        return {
-          id: c.id,
-          counterpartUserId: counterpartId,
-          name: display.name,
-          avatar: display.avatar,
-          isOnline: display.isOnline,
-          lastMessage: last?.body ?? '',
-          lastMessageAt: c.last_message_at?.toISOString() ?? null,
-          unread,
-          hasOngoingSession,
-        }
-      })
-    )
+      const last = c.messages[0]
+      return {
+        id: c.id,
+        counterpartUserId: counterpartId,
+        name,
+        avatar,
+        isOnline,
+        lastMessage: last?.body ?? '',
+        lastMessageAt: c.last_message_at?.toISOString() ?? null,
+        unread: unreadCounts[i],
+        hasOngoingSession,
+      }
+    })
 
     return NextResponse.json({ conversations: items })
   } catch (error) {

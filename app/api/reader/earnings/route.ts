@@ -24,6 +24,8 @@ export async function GET() {
     const earnings = await prisma.readerEarning.findMany({
       where: { reader_id: reader.id },
       orderBy: { created_at: 'desc' },
+      // Giới hạn 100 giao dịch gần nhất — tránh load toàn bộ khi dữ liệu lớn
+      take: 100,
       include: {
         booking: {
           select: {
@@ -45,11 +47,16 @@ export async function GET() {
       },
     })
 
-    const total = earnings.reduce((sum, e) => sum + e.amount, 0)
+    // Tính tổng thu nhập chính xác bằng aggregate (không phụ thuộc vào take: 100)
+    const totalAgg = await prisma.readerEarning.aggregate({
+      where: { reader_id: reader.id },
+      _sum: { amount: true },
+      _count: true,
+    })
 
     return NextResponse.json({
-      total,
-      count: earnings.length,
+      total: totalAgg._sum.amount ?? 0,
+      count: totalAgg._count,
       earnings: earnings.map((e) => ({
         id: e.id,
         amount: e.amount,
