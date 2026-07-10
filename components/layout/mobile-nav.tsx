@@ -20,8 +20,9 @@ export function MobileNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-      <div className="bg-[#DADED8]/90 backdrop-blur-xl border-t border-[#DADED8]/40 safe-area-inset-bottom">
-        <div className="flex items-center justify-around h-16">
+      <div className="bg-[#DADED8]/90 backdrop-blur-xl border-t border-[#DADED8]/40"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div className="flex items-center justify-around h-14 sm:h-16">
           {navItems.map((item) => {
             const isActive = pathname === item.href ||
               (item.href !== '/' && pathname.startsWith(item.href))

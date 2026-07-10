@@ -211,41 +211,42 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
       <Header />
 
       <main className="relative min-h-screen pt-20 pb-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 sm:px-6 lg:px-8">
 
           <Link href={`/readers/${reader.id}`}
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors mb-4 sm:mb-6">
             <ChevronLeft className="w-4 h-4 mr-1" /> Quay lại
           </Link>
 
-          {/* Steps */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          {/* Steps — thu nhỏ trên mobile */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 sm:mb-8">
             <div className="flex items-center justify-between">
               {STEPS.map((step, index) => (
                 <div key={step.id} className="flex items-center flex-1">
                   <div className="flex flex-col items-center">
                     <div className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all',
+                      'w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 transition-all text-sm',
                       currentStep > step.id ? 'bg-green-500 border-green-500 text-white'
                         : currentStep === step.id ? 'bg-[#768064] border-[#768064] text-white'
                         : 'bg-transparent border-white/20 text-muted-foreground'
                     )}>
-                      {currentStep > step.id ? <Check className="w-5 h-5" /> : step.id}
+                      {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
                     </div>
-                    <span className={cn('text-xs mt-2 hidden sm:block',
+                    <span className={cn('text-[10px] sm:text-xs mt-1.5 hidden sm:block',
                       currentStep >= step.id ? 'text-foreground' : 'text-muted-foreground')}>
                       {step.label}
                     </span>
                   </div>
                   {index < STEPS.length - 1 && (
-                    <div className={cn('flex-1 h-0.5 mx-2', currentStep > step.id ? 'bg-green-500' : 'bg-white/10')} />
+                    <div className={cn('flex-1 h-0.5 mx-1 sm:mx-2', currentStep > step.id ? 'bg-green-500' : 'bg-white/10')} />
                   )}
                 </div>
               ))}
             </div>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          {/* Grid — sidebar xuống dưới trên mobile */}
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             <div className="lg:col-span-2">
 
               {/* Step 1: Chọn gói */}
@@ -466,9 +467,9 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
               )}
             </div>
 
-            {/* Sidebar */}
-            <div>
-              <GlassCard className="p-6 sticky top-24">
+            {/* Sidebar summary — hiển thị dưới main content trên mobile */}
+            <div className="lg:order-last">
+              <GlassCard className="p-4 sm:p-6 lg:sticky lg:top-24">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Tóm tắt</h3>
 
                 <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
