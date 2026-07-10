@@ -21,11 +21,13 @@ export default async function ReadersRoutePage() {
       orderBy: { rating: 'desc' },
       include: {
         packages: true,
+        // Fix: _count.select chỉ nhận boolean — không được truyền where vào đây
+        // Đếm tổng bookings và session_reviews, không filter theo status
         _count: {
           select: {
             reviews: true,
             session_reviews: true,
-            bookings: { where: { status: 'COMPLETED' } },
+            bookings: true,
           },
         },
       },
@@ -45,7 +47,7 @@ export default async function ReadersRoutePage() {
             select: {
               reviews: true,
               session_reviews: true,
-              bookings: { where: { status: 'COMPLETED' } },
+              bookings: true,
             },
           },
         },
