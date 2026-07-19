@@ -360,16 +360,16 @@ export function DashboardPage({
       <Header />
 
       <main className="relative min-h-screen pt-20 lg:pt-24 pb-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 sm:px-6 lg:px-8">
 
           {/* Header row */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
                 Xin chào, <span className="gradient-text">{userName}</span> 👋
               </h1>
-              <p className="text-muted-foreground">Quản lý lịch hẹn và hoạt động của bạn</p>
+              <p className="text-sm text-muted-foreground">Quản lý lịch hẹn và hoạt động của bạn</p>
             </div>
             <div className="flex items-center gap-3">
               <Link href="/profile">
@@ -380,10 +380,28 @@ export function DashboardPage({
             </div>
           </motion.div>
 
-          <div className="grid lg:grid-cols-4 gap-6">
+          {/* Mobile tab bar — hiển thị thay sidebar trên mobile */}
+          <div className="lg:hidden mb-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex gap-2 pb-1 min-w-max">
+              {[...tabs, ...(isReader ? readerTabs : [])].map((tab) => (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all shrink-0',
+                    activeTab === tab.id
+                      ? 'bg-[#768064]/20 text-[#4C583E] border border-[#768064]/30'
+                      : 'bg-white/5 text-muted-foreground border border-white/10 hover:border-[#768064]/20'
+                  )}>
+                  <tab.icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-            {/* Sidebar */}
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-1">
+          <div className="grid lg:grid-cols-4 gap-4 lg:gap-6">
+
+            {/* Sidebar — chỉ hiển thị trên desktop lg+ */}
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="hidden lg:block lg:col-span-1">
               <GlassCard className="p-4">
                 <nav className="space-y-1">
                   {/* Menu người dùng */}
@@ -424,8 +442,8 @@ export function DashboardPage({
               </GlassCard>
             </motion.div>
 
-            {/* Content */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-3 space-y-6">
+            {/* Content — full width mobile, 3/4 desktop */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="col-span-1 lg:col-span-3 space-y-4 lg:space-y-6">
 
               {/* Tab: Lich hen */}
               {activeTab === 'bookings' && (
@@ -455,106 +473,96 @@ export function DashboardPage({
                         const partnerAvatar = b.counterparty?.avatar ?? '/placeholder-user.jpg'
                         const pkgLabel = b.package ? `${b.package.name} - ${b.package.duration} phút` : ''
                         return (
-                          <div key={b.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                            <div className="flex items-center gap-4">
-                              <div className="w-14 h-14 rounded-xl shrink-0"
+                          <div key={b.id} className="flex flex-col gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+                            {/* Row 1: Avatar + info + status badge */}
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl shrink-0"
                                 style={{ backgroundImage: `url("${partnerAvatar}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                              <div>
-                                <div className="font-medium text-foreground">{partnerName}</div>
-                                <div className="text-sm text-muted-foreground">{pkgLabel}</div>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Calendar className="w-4 h-4 text-[#768064]" />
-                                  <span className="text-sm text-foreground">{b.date}</span>
-                                  <Clock className="w-4 h-4 text-[#768064] ml-2" />
-                                  <span className="text-sm text-foreground">{b.time}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <div className="font-medium text-foreground truncate">{partnerName}</div>
+                                  <span className={cn('px-2 py-0.5 text-xs rounded-full border shrink-0', status.className)}>
+                                    {status.label}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-muted-foreground truncate">{pkgLabel}</div>
+                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                  <Calendar className="w-3.5 h-3.5 text-[#768064] shrink-0" />
+                                  <span className="text-xs text-foreground">{b.date}</span>
+                                  <Clock className="w-3.5 h-3.5 text-[#768064] ml-1 shrink-0" />
+                                  <span className="text-xs text-foreground">{b.time}</span>
                                 </div>
                               </div>
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                              <span className={cn('px-3 py-1 text-xs rounded-full border whitespace-nowrap', status.className)}>
-                                {status.label}
-                              </span>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Link href={`/chat?${isReader ? 'customer' : 'reader'}=${b.counterparty?.id}&booking=${b.id}`}>
-                                    <Button size="icon" className="bg-[#4C583E] hover:bg-[#768064] text-white">
-                                      <MessageSquare className="w-4 h-4" />
-                                    </Button>
-                                  </Link>
-                                </TooltipTrigger>
-                                <TooltipContent>Nhắn tin</TooltipContent>
-                              </Tooltip>
-                              {isReader && (b.status === 'PENDING' || b.status === 'PAYMENT_CONFIRMED') && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button size="icon" disabled={busyId === b.id}
-                                      onClick={() => runAction(b.id, 'confirm')}
-                                      className="bg-green-600 hover:bg-green-500 text-white">
-                                      <Check className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>{busyId === b.id ? 'Đang xử lý…' : 'Xác nhận'}</TooltipContent>
-                                </Tooltip>
+                            {/* Row 2: Action buttons — wrap on small screens */}
+                            <div className="flex flex-wrap gap-2">
+                              <Link href={`/chat?${isReader ? 'customer' : 'reader'}=${b.counterparty?.id}&booking=${b.id}`}>
+                                <Button size="sm" className="bg-[#4C583E] hover:bg-[#768064] text-white h-8 px-3 text-xs">
+                                  <MessageSquare className="w-3.5 h-3.5 mr-1" /> Chat
+                                </Button>
+                              </Link>
+                              {isReader && b.status === 'PENDING' && (
+                                <Button size="sm" disabled={busyId === b.id}
+                                  onClick={() => runAction(b.id, 'confirm')}
+                                  className="bg-green-600 hover:bg-green-500 text-white h-8 px-3 text-xs">
+                                  {busyId === b.id ? '…' : 'Xác nhận'}
+                                </Button>
+                              )}
+                              {isReader && b.status === 'PAYMENT_CONFIRMED' && (
+                                <Button size="sm" disabled={busyId === b.id}
+                                  onClick={() => runAction(b.id, 'confirm')}
+                                  className="bg-green-600 hover:bg-green-500 text-white h-8 px-3 text-xs">
+                                  {busyId === b.id ? '…' : 'Xác nhận'}
+                                </Button>
                               )}
                               {isReader && b.status === 'CONFIRMED' && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button size="icon" disabled={busyId === b.id}
-                                      onClick={() => runAction(b.id, 'complete')}
-                                      className="bg-blue-600 hover:bg-blue-500 text-white">
-                                      <CheckCheck className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>{busyId === b.id ? 'Đang xử lý…' : 'Hoàn thành'}</TooltipContent>
-                                </Tooltip>
+                                <Button size="sm" disabled={busyId === b.id}
+                                  onClick={() => runAction(b.id, 'complete')}
+                                  className="bg-blue-600 hover:bg-blue-500 text-white h-8 px-3 text-xs">
+                                  {busyId === b.id ? '…' : 'Hoàn thành'}
+                                </Button>
                               )}
                               {isReader && (b.status === 'PENDING' || b.status === 'PAYMENT_CONFIRMED' || b.status === 'CONFIRMED') && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button size="icon" variant="destructive" disabled={busyId === b.id}
-                                      onClick={() => { setReason(''); setReaderCancelTarget(b) }}>
-                                      <X className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Hủy lịch</TooltipContent>
-                                </Tooltip>
+                                <Button size="sm" variant="destructive" disabled={busyId === b.id}
+                                  className="h-8 px-3 text-xs"
+                                  onClick={() => { setReason(''); setReaderCancelTarget(b) }}>
+                                  Hủy lịch
+                                </Button>
                               )}
                               {!isReader && customerCanCancel(b) && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button size="icon" variant="outline" disabled={busyId === b.id}
-                                      className="border-red-500/30 text-red-400 hover:bg-red-500/10"
-                                      onClick={() => setCancelTarget(b)}>
-                                      <X className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Hủy lịch</TooltipContent>
-                                </Tooltip>
+                                <Button size="sm" variant="outline" disabled={busyId === b.id}
+                                  className="border-red-500/30 text-red-400 hover:bg-red-500/10 h-8 px-3 text-xs"
+                                  onClick={() => setCancelTarget(b)}>
+                                  Hủy lịch
+                                </Button>
                               )}
                               {/* Google Calendar — hiển thị khi CONFIRMED */}
                               {b.status === 'CONFIRMED' && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <a
-                                      href={generateGoogleCalendarLink({
-                                        date: b.date,
-                                        time: b.time,
-                                        durationMinutes: b.package?.duration ?? 30,
-                                        partnerName: b.counterparty?.name ?? (isReader ? 'Khách hàng' : 'Reader'),
-                                        packageName: b.package?.name ?? 'Tarot Session',
-                                        bookingId: b.id,
-                                      })}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <Button size="icon" variant="outline"
-                                        className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10">
-                                        <CalendarPlus className="w-4 h-4" />
-                                      </Button>
-                                    </a>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Lưu vào Google Calendar</TooltipContent>
-                                </Tooltip>
+                                <a
+                                  href={generateGoogleCalendarLink({
+                                    date: b.date,
+                                    time: b.time,
+                                    durationMinutes: b.package?.duration ?? 30,
+                                    partnerName: b.counterparty?.name ?? (isReader ? 'Khách hàng' : 'Reader'),
+                                    packageName: b.package?.name ?? 'Tarot Session',
+                                    bookingId: b.id,
+                                  })}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 gap-1.5 h-8 px-3 text-xs whitespace-nowrap"
+                                  >
+                                    <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none">
+                                      <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                                      <path d="M16 2v4M8 2v4M3 9h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                      <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                    </svg>
+                                    GG Calendar
+                                  </Button>
+                                </a>
                               )}
                             </div>
                           </div>

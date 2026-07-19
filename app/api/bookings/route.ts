@@ -227,6 +227,7 @@ export async function GET() {
 
     const userId = Number(session.sub)
 
+    // Fix: dùng include trực tiếp thay vì N+1 query (1 query thay vì N+1)
     const bookings = await prisma.booking.findMany({
       where: {
         OR: [
@@ -235,36 +236,41 @@ export async function GET() {
         ],
       },
       include: {
-        provider: { select: { id: true } },
-        requester: { select: { id: true } },
+        provider: {
+          select: {
+            id: true,
+            reader_info: { select: { id: true, display_name: true, avatar_url: true, verified: true } },
+          },
+        },
+        requester: {
+          select: {
+            id: true,
+            reader_info: { select: { id: true, display_name: true, avatar_url: true, verified: true } },
+          },
+        },
         package: { select: { id: true, name: true, duration: true, price: true } },
       },
       orderBy: [{ date: 'asc' }, { time: 'asc' }],
+      // Giới hạn 200 booking gần nhất để tránh phình bộ nhớ
+      take: 200,
     })
 
-    // Serialize dates and add provider/requester display info
-    const serialized = await Promise.all(
-      bookings.map(async (b) => {
-        const otherUserId = b.requester_id === userId ? b.provider_id : b.requester_id
-        const otherUserInfo = await prisma.user.findUnique({
-          where: { id: otherUserId },
-          select: { reader_info: { select: { id: true, display_name: true, avatar_url: true, verified: true } } },
-        })
-
-        return {
-          ...b,
-          // payos_order_code là BigInt → JSON.stringify sẽ throw; đổi sang Number (an toàn < 2^53)
-          payos_order_code: b.payos_order_code !== null ? Number(b.payos_order_code) : null,
-          otherUserId,
-          otherUserName: otherUserInfo?.reader_info?.display_name || 'Unknown',
-          otherUserAvatar: otherUserInfo?.reader_info?.avatar_url || null,
-          otherUserVerified: otherUserInfo?.reader_info?.verified || false,
-          date: b.date.toISOString().split('T')[0],
-          created_at: b.created_at.toISOString(),
-          updated_at: b.updated_at.toISOString(),
-        }
-      })
-    )
+    const serialized = bookings.map((b) => {
+      const isRequester = b.requester_id === userId
+      const other = isRequester ? b.provider : b.requester
+      return {
+        ...b,
+        // payos_order_code là BigInt → JSON.stringify sẽ throw; đổi sang Number (an toàn < 2^53)
+        payos_order_code: b.payos_order_code !== null ? Number(b.payos_order_code) : null,
+        otherUserId: other?.id,
+        otherUserName: other?.reader_info?.display_name || 'Unknown',
+        otherUserAvatar: other?.reader_info?.avatar_url || null,
+        otherUserVerified: other?.reader_info?.verified || false,
+        date: b.date.toISOString().split('T')[0],
+        created_at: b.created_at.toISOString(),
+        updated_at: b.updated_at.toISOString(),
+      }
+    })
 
     return NextResponse.json({ bookings: serialized })
   } catch (error) {
