@@ -197,6 +197,9 @@ export function AdminReadersPage() {
                 )}
                 <div>
                   <p className="font-semibold text-foreground text-lg">{detail.readerInfo?.display_name}</p>
+                  {detail.readerInfo?.real_name && detail.readerInfo.real_name !== detail.readerInfo.display_name && (
+                    <p className="text-sm text-muted-foreground">Tên thật: {detail.readerInfo.real_name}</p>
+                  )}
                   <p className="text-sm text-muted-foreground">{detail.email}</p>
                 </div>
               </div>

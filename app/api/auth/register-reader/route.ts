@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
 
     const {
       name,
+      nickname,
       email,
       password,
       facebookLink,
@@ -30,12 +31,13 @@ export async function POST(request: NextRequest) {
       voiceDataUrl,
     } = body as {
       name: string
+      nickname?: string
       email: string
       password: string
       facebookLink?: string
       facebook?: string
       phone: string
-      description: string
+      description?: string
       experienceYear: number
       specialty: string[]
       avatarDataUrl: string | null
@@ -45,24 +47,29 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
     const normalizedFacebook = (typeof facebookLink === 'string' ? facebookLink : (typeof facebook === 'string' ? facebook : '')).trim()
     const normalizedPhone = typeof phone === 'string' ? phone.trim() : ''
+    const normalizedNickname = typeof nickname === 'string' ? nickname.trim() : ''
+    const normalizedDescription = typeof description === 'string' ? description.trim() : ''
     const avatarRaw = typeof avatarDataUrl === 'string' ? avatarDataUrl.trim() : ''
     const voiceRaw = typeof voiceDataUrl === 'string' && voiceDataUrl.trim() ? voiceDataUrl.trim() : null
+    // display_name (nickname công khai) — fallback về họ tên thật nếu reader không đặt nickname
+    const displayName = normalizedNickname || (typeof name === 'string' ? name.trim() : '')
 
     // If user is logged in, we support submitting reader request for existing account
     const session = await getSession().catch(() => null)
     const isLoggedIn = Boolean(session)
 
+    // Bắt buộc: họ tên thật, SĐT, chuyên đề (multi), năm KN, ảnh đại diện, link FB/Zalo
+    // Không bắt buộc: nickname (dùng họ tên nếu trống), giới thiệu, ghi âm
     if (isLoggedIn) {
-      // For logged in users, require name, phone, description, experienceYear, specialty, avatar
       if (
         !name ||
         !normalizedPhone ||
-        !description ||
         typeof experienceYear !== 'number' ||
         !Array.isArray(specialty) ||
         specialty.length === 0 ||
         !specialty.every(s => typeof s === 'string' && s.trim().length > 0) ||
-        !avatarRaw
+        !avatarRaw ||
+        !normalizedFacebook
       ) {
         return NextResponse.json({ error: 'Thiếu thông tin yêu cầu.' }, { status: 400 })
       }
@@ -73,12 +80,12 @@ export async function POST(request: NextRequest) {
         !password ||
         !name ||
         !normalizedPhone ||
-        !description ||
         typeof experienceYear !== 'number' ||
         !Array.isArray(specialty) ||
         specialty.length === 0 ||
         !specialty.every(s => typeof s === 'string' && s.trim().length > 0) ||
-        !avatarRaw
+        !avatarRaw ||
+        !normalizedFacebook
       ) {
         return NextResponse.json({ error: 'Thiếu thông tin yêu cầu.' }, { status: 400 })
       }
@@ -111,8 +118,9 @@ export async function POST(request: NextRequest) {
           phone: normalizedPhone || undefined,
           reader_info: {
             create: {
-              display_name: name,
-              description,
+              display_name: displayName,
+              real_name: name,
+              description: normalizedDescription || null,
               experience_year: experienceYear,
               specialty: specialty,
               avatar_url: avatarRaw,
@@ -142,8 +150,9 @@ export async function POST(request: NextRequest) {
           role_id: readerRole.id,
           reader_info: {
             create: {
-              display_name: name,
-              description,
+              display_name: displayName,
+              real_name: name,
+              description: normalizedDescription || null,
               experience_year: experienceYear,
               specialty: specialty,
               avatar_url: avatarRaw,
@@ -167,21 +176,23 @@ export async function POST(request: NextRequest) {
 
     await notifyAdminReaderRegistration({
       readerName: name,
+      nickname: displayName,
       email: normalizedEmail || (user && user.email) || '',
       phone: normalizedPhone,
       experienceYear,
       specialties: specialty,
-      description,
+      description: normalizedDescription,
       facebook: normalizedFacebook,
       adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
     }).catch((err) => console.error('Email error:', err))
 
     // Re-sign JWT so the new READER role is reflected immediately (no re-login needed)
+    // name trong token = nickname công khai (dùng cho chat/dashboard); admin xem tên thật qua real_name
     const newToken = await signToken({
       sub: String(user.id),
       email: user.email,
       role: 'READER',
-      name,
+      name: displayName,
     })
 
     const res = NextResponse.json({

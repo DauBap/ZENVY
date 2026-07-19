@@ -136,6 +136,7 @@ export async function notifyAdminWithdrawal(data: {
  */
 export async function notifyAdminReaderRegistration(data: {
   readerName: string
+  nickname?: string
   email?: string
   phone?: string
   experienceYear?: number
@@ -147,9 +148,10 @@ export async function notifyAdminReaderRegistration(data: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px;">
       <h2 style="color: #4C583E;">👤 Yêu cầu đăng ký Reader mới</h2>
-      
+
       <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <p><strong>Tên reader:</strong> ${data.readerName}</p>
+        <p><strong>Tên thật:</strong> ${data.readerName}</p>
+        ${data.nickname ? `<p><strong>Nickname (hiển thị công khai):</strong> ${data.nickname}</p>` : ''}
         <p><strong>Email:</strong> ${data.email || '—'}</p>
         <p><strong>Điện thoại:</strong> ${data.phone || '—'}</p>
         <p><strong>Kinh nghiệm:</strong> ${typeof data.experienceYear === 'number' ? `${data.experienceYear} năm` : '—'}</p>
@@ -170,7 +172,8 @@ export async function notifyAdminReaderRegistration(data: {
   `
 
   const plainTextParts = [
-    `Tên reader: ${data.readerName}`,
+    `Tên thật: ${data.readerName}`,
+    data.nickname ? `Nickname: ${data.nickname}` : undefined,
     data.email ? `Email: ${data.email}` : undefined,
     data.phone ? `Điện thoại: ${data.phone}` : undefined,
     typeof data.experienceYear === 'number' ? `Kinh nghiệm: ${data.experienceYear} năm` : undefined,

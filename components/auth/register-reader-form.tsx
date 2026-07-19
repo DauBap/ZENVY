@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import { toast } from 'sonner'
-import { ImagePlus, X, Check, Eye, EyeOff } from 'lucide-react'
+import { ImagePlus, X, Check, Eye, EyeOff, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { specialties } from '@/lib/data'
 import { cn } from '@/lib/utils'
 
@@ -18,6 +20,7 @@ interface Props {
 export default function RegisterReaderForm({ hideAccountFields = false, onSuccess }: Props) {
   const { user } = useAuthModal()
   const [name, setName] = useState('')
+  const [nickname, setNickname] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -50,9 +53,11 @@ export default function RegisterReaderForm({ hideAccountFields = false, onSucces
     }
   }, [hideAccountFields, user])
 
+  // Bắt buộc: họ tên, SĐT, chuyên đề (≥1), năm KN, ảnh đại diện, link FB/Zalo
+  // Không bắt buộc: nickname, giới thiệu, ghi âm
   const isFormValid = hideAccountFields
-    ? name.trim().length > 0 && phone.trim().length > 0 && description.trim().length > 20 && selectedSpecialties.length > 0 && avatarDataUrl && agreed
-    : name.trim().length > 0 && email.trim().length > 0 && password.length >= 6 && password === confirmPassword && phone.trim().length > 0 && description.trim().length > 20 && selectedSpecialties.length > 0 && avatarDataUrl && agreed
+    ? name.trim().length > 0 && phone.trim().length > 0 && selectedSpecialties.length > 0 && experienceYear.trim() !== '' && Number(experienceYear) >= 0 && avatarDataUrl && facebook.trim().length > 0 && agreed
+    : name.trim().length > 0 && email.trim().length > 0 && password.length >= 6 && password === confirmPassword && phone.trim().length > 0 && selectedSpecialties.length > 0 && experienceYear.trim() !== '' && Number(experienceYear) >= 0 && avatarDataUrl && facebook.trim().length > 0 && agreed
 
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault()
@@ -61,8 +66,9 @@ export default function RegisterReaderForm({ hideAccountFields = false, onSucces
     try {
       const payload: any = {
         name,
+        nickname: nickname.trim() || undefined,
         phone: phone.trim(),
-        description,
+        description: description.trim() || undefined,
         experienceYear: Number(experienceYear),
         specialty: selectedSpecialties,
         avatarDataUrl,
@@ -87,6 +93,7 @@ export default function RegisterReaderForm({ hideAccountFields = false, onSucces
       }
       toast.success('Yêu cầu đã được gửi. Admin sẽ duyệt.')
       setName('')
+      setNickname('')
       setEmail('')
       setPassword('')
       setConfirmPassword('')
@@ -171,11 +178,11 @@ export default function RegisterReaderForm({ hideAccountFields = false, onSucces
       {!hideAccountFields && (
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
-            Email
+            Email <span className="text-red-500">*</span>
             <Input value={email} onChange={(e) => setEmail(e.target.value)} className={cn('mt-2 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} required />
           </label>
           <label className="block text-sm">
-            Mật khẩu
+            Mật khẩu <span className="text-red-500">*</span>
             <div className="relative mt-2">
               <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className={cn('pr-10 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} required />
               <button type="button" className="absolute inset-y-0 right-3" onClick={() => setShowPassword(p => !p)}>
@@ -187,29 +194,58 @@ export default function RegisterReaderForm({ hideAccountFields = false, onSucces
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block text-sm">Họ và tên <Input value={name} onChange={(e) => setName(e.target.value)} className={cn('mt-2 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} required /></label>
-        <label className="block text-sm">Số điện thoại <Input value={phone} onChange={(e) => setPhone(e.target.value)} className={cn('mt-2 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} required /></label>
+        <label className="block text-sm">Họ và tên <span className="text-red-500">*</span>
+          <Input value={name} onChange={(e) => setName(e.target.value)} className={cn('mt-2 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} required />
+        </label>
+        <label className="block text-sm">Nickname
+          <Input value={nickname} onChange={(e) => setNickname(e.target.value)} className={cn('mt-2 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} placeholder="Tên hiển thị công khai (để trống dùng họ tên)" />
+        </label>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block text-sm">Chọn chủ đề
-          <div className="mt-2">
-            <select
-              value={selectedSpecialties[0] ?? ''}
-              onChange={(e) => setSelectedSpecialties(e.target.value ? [e.target.value] : [])}
-              className={cn('w-full mt-0 h-10 appearance-none border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2 bg-white dark:bg-transparent leading-6')}
-            >
-              <option value="">-- Chọn chủ đề --</option>
-              {specialties.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
+        <label className="block text-sm">Số điện thoại <span className="text-red-500">*</span>
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} className={cn('mt-2 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} required />
         </label>
-        <label className="block text-sm">Năm kinh nghiệm <Input type="number" min={0} value={experienceYear} onChange={(e) => setExperienceYear(e.target.value)} className={cn('mt-2 h-10 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} /></label>
+        <label className="block text-sm">Năm kinh nghiệm <span className="text-red-500">*</span>
+          <Input type="number" min={0} value={experienceYear} onChange={(e) => setExperienceYear(e.target.value)} className={cn('mt-2 h-10 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} required />
+        </label>
       </div>
 
-      <label className="block text-sm">Chân dung
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="block text-sm">Chọn chủ đề <span className="text-red-500">*</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" className="mt-2 flex w-full h-10 items-center justify-between gap-2 rounded-md border border-gray-200 dark:border-neutral-700 bg-white dark:bg-transparent px-3 py-2 text-left leading-6">
+                <span className={cn('truncate', selectedSpecialties.length === 0 && 'text-muted-foreground')}>
+                  {selectedSpecialties.length === 0 ? '-- Chọn chủ đề --' : selectedSpecialties.join(', ')}
+                </span>
+                <ChevronDown className="w-4 h-4 shrink-0 opacity-60" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="max-h-72 overflow-y-auto p-1 w-[var(--radix-popover-trigger-width)]" align="start">
+              {specialties.map((s) => {
+                const checked = selectedSpecialties.includes(s)
+                return (
+                  <label key={s} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent">
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={(v) => {
+                        setSelectedSpecialties(prev => v ? [...prev, s] : prev.filter(x => x !== s))
+                      }}
+                    />
+                    <span>{s}</span>
+                  </label>
+                )
+              })}
+            </PopoverContent>
+          </Popover>
+        </div>
+        <label className="block text-sm">Link Facebook hoặc Zalo <span className="text-red-500">*</span>
+          <Input value={facebook} onChange={(e) => setFacebook(e.target.value)} className={cn('mt-2 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} placeholder="https://facebook.com/ hoặc zalo.me/..." required />
+        </label>
+      </div>
+
+      <div className="block text-sm">Ảnh đại diện <span className="text-red-500">*</span>
         <div className="mt-2">
           <div className="mb-2 h-24 w-24 overflow-hidden rounded-lg bg-white/5 border border-gray-200 dark:border-neutral-700">
             {avatarDataUrl ? <img src={avatarDataUrl} className="h-full w-full object-cover" /> : null}
@@ -228,35 +264,30 @@ export default function RegisterReaderForm({ hideAccountFields = false, onSucces
             {avatarName && <div className="text-xs text-muted-foreground">{avatarName}</div>}
           </div>
         </div>
-      </label>
+      </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block text-sm">Link Facebook để liên hệ
-          <Input value={facebook} onChange={(e) => setFacebook(e.target.value)} className={cn('mt-2 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} placeholder="https://facebook.com/yourname" />
-        </label>
-        <label className="block text-sm">Tải ghi âm
-          <div className="mt-2">
-            <input ref={audioFileRef} id="reader-audio-input" type="file" accept="audio/*" className="hidden" onChange={handleAudioFile} />
-            <div className="flex flex-wrap items-center gap-2">
-              {!recording ? (
-                <button type="button" className="inline-flex items-center gap-2 rounded-full bg-[#4C583E] px-3 py-2 text-sm text-white" onClick={startRecording}>Ghi âm trực tiếp</button>
-              ) : (
-                <button type="button" className="inline-flex items-center gap-2 rounded-full bg-red-600 px-3 py-2 text-sm text-white" onClick={stopRecording}>Dừng ({recordingTime}s)</button>
-              )}
-              <button type="button" className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-2 text-sm text-muted-foreground" onClick={() => audioFileRef.current?.click()}>Chọn file</button>
-              {audioFileName && <div className="text-xs text-muted-foreground">{audioFileName}</div>}
-            </div>
-            {audioDataUrl && (
-              <div className="mt-2">
-                <audio src={audioDataUrl} controls className="w-full" />
-              </div>
+      <div className="block text-sm">Ghi âm giới thiệu
+        <div className="mt-2">
+          <input ref={audioFileRef} id="reader-audio-input" type="file" accept="audio/*" className="hidden" onChange={handleAudioFile} />
+          <div className="flex flex-wrap items-center gap-2">
+            {!recording ? (
+              <button type="button" className="inline-flex items-center gap-2 rounded-full bg-[#4C583E] px-3 py-2 text-sm text-white" onClick={startRecording}>Ghi âm trực tiếp</button>
+            ) : (
+              <button type="button" className="inline-flex items-center gap-2 rounded-full bg-red-600 px-3 py-2 text-sm text-white" onClick={stopRecording}>Dừng ({recordingTime}s)</button>
             )}
+            <button type="button" className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-2 text-sm text-muted-foreground" onClick={() => audioFileRef.current?.click()}>Chọn file</button>
+            {audioFileName && <div className="text-xs text-muted-foreground">{audioFileName}</div>}
           </div>
-        </label>
+          {audioDataUrl && (
+            <div className="mt-2">
+              <audio src={audioDataUrl} controls className="w-full" />
+            </div>
+          )}
+        </div>
       </div>
 
       <label className="block text-sm">Giới thiệu về bản thân
-        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className={cn('mt-2 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} rows={5} required />
+        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className={cn('mt-2 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2')} rows={5} />
       </label>
 
       <label className="flex items-start gap-3 cursor-pointer text-sm">

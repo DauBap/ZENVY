@@ -93,6 +93,8 @@ model ReaderInfo {
   id                Int                 @id @default(autoincrement())
   user_id           Int                 @unique
   display_name      String?             @db.VarChar(100)
+  /// Tên thật của reader — chỉ admin nhìn thấy, KHÔNG hiển thị công khai (display_name là nickname công khai)
+  real_name         String?             @db.VarChar(100)
   description       String?
   experience_year   Int                 @default(0)
   price_per_session Int                 @default(0)
