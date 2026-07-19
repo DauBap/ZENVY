@@ -266,7 +266,7 @@ export function ReadersPage({ readers: initialReaders, specialties }: ReadersPag
 
           {/* Reader Mới */}
           <ReaderScrollSection
-            title="GESIGN"
+            title="Reader mới"
             icon={<Sparkles className="w-5 h-5 text-[#4C583E]" />}
             readers={newReaders}
             badge="Mới tham gia"

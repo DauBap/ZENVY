@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { serializeReader } from '@/lib/serializers'
 import { BookingClient } from '@/components/booking/booking-page'
 import { getSession } from '@/lib/auth'
+import { expireStalePendingBookings } from '@/lib/bookings'
 
 export default async function BookingPage({
   params,
@@ -32,6 +33,9 @@ export default async function BookingPage({
     ...reader,
     availability: availFiltered,
   }
+
+  // Giải phóng slot bị giữ bởi booking PENDING quá hạn thanh toán
+  await expireStalePendingBookings(reader.user_id).catch(() => {})
 
   // Các slot đã bị chiếm bởi booking ở mọi trạng thái trừ CANCELLED
   // → ngăn double-booking ở mọi giai đoạn thanh toán

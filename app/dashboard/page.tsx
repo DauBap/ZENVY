@@ -104,11 +104,11 @@ export default async function DashboardRoutePage() {
         })),
       }
 
-      // Bookings của reader (provider)
+      // Bookings của reader (provider) — KHÔNG hiện PENDING (lịch chưa thanh toán, chỉ là giữ chỗ tạm)
       const raw = await prisma.booking.findMany({
         where: {
           provider_id: userId,
-          status: { in: ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED', 'COMPLETED', 'CANCELLED'] },
+          status: { in: ['PAYMENT_CONFIRMED', 'CONFIRMED', 'COMPLETED', 'CANCELLED'] },
         },
         include: {
           requester: {

@@ -12,6 +12,7 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^3.9.1",
+    "@payos/node": "^2.0.5",
     "@prisma/client": "^7.8.0",
     "@radix-ui/react-accordion": "1.2.12",
     "@radix-ui/react-alert-dialog": "1.1.15",
@@ -58,6 +59,7 @@
     "nodemailer": "^9.0.3",
     "openai": "^6.45.0",
     "prisma": "^7.8.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19",
     "react-day-picker": "9.13.2",
     "react-dom": "^19",

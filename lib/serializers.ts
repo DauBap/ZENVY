@@ -44,12 +44,12 @@ export function serializeReader(
   reader: ReaderInfo & {
     packages?: Package[]
     availability?: Availability[]
-    _count?: { reviews?: number; session_reviews?: number; bookings?: number }
+    _count?: { reviews?: number; session_reviews?: number; earnings?: number }
   }
 ): SerializedReader {
   const pricePerSession = toNumber(reader.price_per_session)
   const reviewCount = (reader._count?.reviews ?? 0) + (reader._count?.session_reviews ?? 0)
-  const totalSessions = reader._count?.bookings ?? 0
+  const totalSessions = reader._count?.earnings ?? 0
 
   return {
     ...reader,
@@ -81,7 +81,7 @@ export function serializeReaders(
     ReaderInfo & {
       packages?: Package[]
       availability?: Availability[]
-      _count?: { reviews?: number; session_reviews?: number; bookings?: number }
+      _count?: { reviews?: number; session_reviews?: number; earnings?: number }
     }
   >
 ): SerializedReader[] {

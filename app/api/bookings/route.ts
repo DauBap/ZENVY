@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
-import { createNotificationForAdmins } from '@/lib/notifications'
-import { notifyAdminNewBooking, notifyAdminPaymentConfirm } from '@/lib/email'
+import { expireStalePendingBookings } from '@/lib/bookings'
 
 // POST /api/bookings — tạo booking mới
 export async function POST(request: NextRequest) {
@@ -52,6 +51,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Người dùng không phải là Reader.' }, { status: 400 })
     }
 
+    // Giải phóng các slot bị giữ bởi booking PENDING quá hạn thanh toán trước khi kiểm tra
+    await expireStalePendingBookings(providerUserId).catch(() => {})
+
     // Chỉ cho đặt vào ngày + giờ reader đã bật (lịch trống)
     const bookingDate = new Date(date)
     if (isNaN(bookingDate.getTime())) {
@@ -80,9 +82,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Chặn nếu slot (ngày + giờ) đã có booking CONFIRMED cho khách khác với provider này
+    // Nếu CHÍNH khách này đã có booking cho đúng slot:
+    //  - PENDING còn hạn giữ chỗ → tái dùng booking cũ (client sẽ lấy lại QR cũ), KHÔNG tạo mới
+    //  - PAYMENT_CONFIRMED/CONFIRMED → đã trả tiền rồi → báo đã đặt
+    // (PENDING quá hạn đã bị expireStalePendingBookings hủy ở trên → không lọt vào đây)
+    const own = await prisma.booking.findFirst({
+      where: {
+        requester_id: requesterId,
+        provider_id: providerUserId,
+        date: bookingDate,
+        time,
+        status: { in: ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED'] },
+      },
+      select: { id: true, status: true },
+    })
+    if (own) {
+      if (own.status === 'PENDING') {
+        return NextResponse.json({ success: true, booking: { id: own.id }, reused: true }, { status: 200 })
+      }
+      return NextResponse.json({ error: 'Bạn đã đặt khung giờ này rồi.' }, { status: 409 })
+    }
+
+    // Chặn nếu slot đã bị giữ bởi khách KHÁC (kể cả PENDING đang chờ trả tiền)
     const taken = await prisma.booking.findFirst({
-      where: { provider_id: providerUserId, date: bookingDate, time, status: 'CONFIRMED' },
+      where: {
+        provider_id: providerUserId,
+        date: bookingDate,
+        time,
+        status: { in: ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED'] },
+        requester_id: { not: requesterId },
+      },
       select: { id: true },
     })
     if (taken) {
@@ -91,28 +120,6 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       )
     }
-
-    // Chống trùng: người dùng này đã có booking đang chờ/đã xác nhận cho đúng slot này với provider này
-    const dup = await prisma.booking.findFirst({
-      where: {
-        requester_id: requesterId,
-        provider_id: providerUserId,
-        date: bookingDate,
-        time,
-        status: { in: ['PENDING', 'CONFIRMED'] },
-      },
-      select: { id: true },
-    })
-    if (dup) {
-      return NextResponse.json(
-        { error: 'Bạn đã đặt khung giờ này rồi.' },
-        { status: 409 }
-      )
-    }
-
-    const requesterUser = await prisma.user.findUnique({
-      where: { id: requesterId },
-    })
 
     // Validate coupon nếu có
     let couponId: number | null = null
@@ -197,47 +204,10 @@ export async function POST(request: NextRequest) {
       booking = await prisma.booking.create(bookingCreatePayload)
     }
 
-    // Tăng used_count cho coupon nếu có dùng
-    if (couponId !== null) {
-      await prisma.coupon.update({
-        where: { id: couponId },
-        data: { used_count: { increment: 1 } },
-      }).catch(() => {})
-    }
-
-    // Gửi thông báo cho admin để duyệt trước khi booking được chuyển tới reader
-    createNotificationForAdmins({
-      title: 'Có lịch hẹn mới cần duyệt',
-      content: `Khách hàng vừa đặt lịch cho gói ${booking.package.name} vào ${new Date(booking.date).toLocaleDateString('vi-VN')} lúc ${booking.time}. `,
-      type: 'SYSTEM',
-      link: '/admin/bookings',
-    }).catch(() => {})
-
-    // ✅ Gửi email thông báo cho admin
-    const requesterInfo = await prisma.customerInfo.findUnique({
-      where: { user_id: requesterId },
-      select: { fullname: true },
-    })
-
-    const customerName = requesterInfo?.fullname || requesterUser?.email?.split('@')[0] || 'Khách hàng'
-
-    await notifyAdminNewBooking({
-      customerName,
-      readerName: providerInfo.display_name || 'Unknown Reader',
-      date: new Date(bookingDate).toISOString().split('T')[0],
-      time: booking.time,
-      bookingId: booking.id,
-      adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
-    }).catch((err) => console.error('Email error:', err))
-
-    // ✅ Gửi email thông báo thanh toán cho admin (ngay khi user bấm xác nhận)
-    await notifyAdminPaymentConfirm({
-      customerName,
-      amount: booking.package.price,
-      method: 'Bank transfer',
-      paymentId: booking.id,
-      adminEmail: process.env.ADMIN_EMAIL || 'sageto.support@gmail.com',
-    }).catch((err) => console.error('Payment email error:', err))
+    // Lưu ý: KHÔNG tăng used_count coupon và KHÔNG báo admin ở đây.
+    // Booking mới chỉ là "giữ chỗ chờ thanh toán" (PENDING) — mọi side-effect
+    // (tăng lượt coupon, thông báo admin) được dời sang confirmBookingPaid,
+    // chạy khi PayOS xác nhận đã trả tiền. Tránh tiêu lượt coupon cho lịch chưa trả.
 
     return NextResponse.json({ success: true, booking }, { status: 201 })
   } catch (error) {
@@ -283,6 +253,8 @@ export async function GET() {
 
         return {
           ...b,
+          // payos_order_code là BigInt → JSON.stringify sẽ throw; đổi sang Number (an toàn < 2^53)
+          payos_order_code: b.payos_order_code !== null ? Number(b.payos_order_code) : null,
           otherUserId,
           otherUserName: otherUserInfo?.reader_info?.display_name || 'Unknown',
           otherUserAvatar: otherUserInfo?.reader_info?.avatar_url || null,

@@ -184,6 +184,16 @@ model Booking {
   coupon          Coupon?        @relation(fields: [coupon_id], references: [id])
   discount_amount Int            @default(0)
   final_price     Int?
+  /// PayOS — orderCode duy nhất map webhook về booking; checkout/link để resume thanh toán
+  payos_order_code    BigInt?    @unique
+  payos_checkout_url  String?
+  payos_link_id       String?
+  /// PayOS — payload hiển thị QR chuyển khoản ngay trong app (lưu để refresh vẫn giữ đúng order)
+  payos_qr            String?
+  payos_account_no    String?    @db.VarChar(50)
+  payos_account_name  String?    @db.VarChar(100)
+  payos_bin           String?    @db.VarChar(20)
+  payos_amount        Int?
 
   @@index([requester_id])
   @@index([provider_id])

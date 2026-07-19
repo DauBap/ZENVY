@@ -25,7 +25,7 @@ export default async function ReadersRoutePage() {
           select: {
             reviews: true,
             session_reviews: true,
-            bookings: { where: { status: 'COMPLETED' } },
+            earnings: true,
           },
         },
       },
@@ -45,7 +45,7 @@ export default async function ReadersRoutePage() {
             select: {
               reviews: true,
               session_reviews: true,
-              bookings: { where: { status: 'COMPLETED' } },
+              earnings: true,
             },
           },
         },

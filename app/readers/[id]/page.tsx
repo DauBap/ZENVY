@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { serializeReader } from '@/lib/serializers'
 import { recomputeReaderRating } from '@/lib/rating'
+import { expireStalePendingBookings } from '@/lib/bookings'
 import { ReaderProfilePage } from '@/components/readers/reader-profile-page'
 
 export default async function ReaderRoutePage({
@@ -35,6 +36,9 @@ export default async function ReaderRoutePage({
     const vnNow = new Date(now.getTime() + 7 * 60 * 60 * 1000)
     return `${String(vnNow.getUTCHours()).padStart(2, '0')}:${String(vnNow.getUTCMinutes()).padStart(2, '0')}`
   })()
+
+  // Giải phóng slot bị giữ bởi booking PENDING quá hạn thanh toán
+  await expireStalePendingBookings(updatedReader.user_id).catch(() => {})
 
   const activeBookings = await prisma.booking.findMany({
     where: {

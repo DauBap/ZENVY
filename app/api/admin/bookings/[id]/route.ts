@@ -23,6 +23,8 @@ export async function PATCH(
         status,
         ...(cancel_reason && { cancel_reason }),
       },
+      // Không trả nguyên object: payos_order_code là BigInt sẽ làm JSON.stringify throw
+      select: { id: true, status: true, cancel_reason: true },
     })
 
     return NextResponse.json({ success: true, booking })

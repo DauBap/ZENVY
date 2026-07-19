@@ -7,8 +7,9 @@ import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import {
   ChevronLeft, Check, Calendar, Clock, CreditCard,
-  Shield, ChevronRight, Sparkles, Ticket, X,
+  Shield, ChevronRight, Sparkles, Ticket, X, Copy, Loader2,
 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { Header } from '@/components/layout/header'
 import { CosmicBackground } from '@/components/ui/floating-elements'
 import { GlassCard } from '@/components/ui/glass-card'
@@ -17,6 +18,9 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog'
 import { cn, formatAmountK } from '@/lib/utils'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { SerializedReader } from '@/lib/serializers'
@@ -42,6 +46,20 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
   const [submitting, setSubmitting] = useState(false)
   const [showPaymentConfirm, setShowPaymentConfirm] = useState(false)
 
+  // PayOS — dữ liệu QR chuyển khoản hiển thị ngay trong trang
+  const [payInfo, setPayInfo] = useState<{
+    bookingId: number
+    checkoutUrl: string
+    qrCode: string
+    accountNumber: string | null
+    accountName: string | null
+    bin: string | null
+    amount: number
+    expiresAt: number // epoch ms — mốc hết hạn giữ chỗ
+  } | null>(null)
+  const [paySuccess, setPaySuccess] = useState(false)
+  const [remainingMs, setRemainingMs] = useState(0) // đếm ngược tới expiresAt
+
   // Coupon state
   const [couponCode, setCouponCode] = useState('')
   const [couponInput, setCouponInput] = useState('')
@@ -58,6 +76,44 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
   useEffect(() => {
     if (currentStep === 3) setShowPaymentConfirm(true)
   }, [currentStep])
+
+  // Khi đã có QR → poll trạng thái thanh toán; thành công thì chuyển sang bước xác nhận
+  useEffect(() => {
+    if (!payInfo || paySuccess) return
+    let stop = false
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/bookings/${payInfo.bookingId}/payment`, { cache: 'no-store' })
+        const data = await res.json()
+        if (!stop && data.status === 'PAYMENT_CONFIRMED') {
+          setPaySuccess(true)
+          setPayInfo(null)
+          setCurrentStep(4)
+        }
+      } catch {
+        // bỏ qua, thử lại ở nhịp sau
+      }
+    }, 3000)
+    return () => { stop = true; clearInterval(interval) }
+  }, [payInfo, paySuccess])
+
+  // Đếm ngược tới hạn giữ chỗ; hết giờ thì đóng popup (QR đã hết hạn)
+  useEffect(() => {
+    if (!payInfo) return
+    const tick = () => {
+      const left = payInfo.expiresAt - Date.now()
+      if (left <= 0) {
+        setRemainingMs(0)
+        setPayInfo(null)
+        toast.error('Mã QR đã hết hạn. Vui lòng tạo lại.')
+      } else {
+        setRemainingMs(left)
+      }
+    }
+    tick()
+    const t = setInterval(tick, 1000)
+    return () => clearInterval(t)
+  }, [payInfo])
 
   // Luôn tìm đúng package từ DB data
   const selectedPkg = reader.packages?.find((p) => p.id === selectedPackageId) ?? null
@@ -102,6 +158,15 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
     setCouponInput('')
     setCouponResult(null)
     setCouponError('')
+  }
+
+  async function copyText(text: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success(`Đã sao chép ${label}`)
+    } catch {
+      toast.error('Không sao chép được. Vui lòng copy thủ công.')
+    }
   }
 
   // Chỉ cho chọn slot reader đã bật và chưa bị chiếm
@@ -195,7 +260,42 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
         toast.error(data.error || 'Đặt lịch thất bại.')
         return
       }
-      setCurrentStep(4)
+
+      // Tạo liên kết thanh toán PayOS rồi chuyển hướng sang cổng thanh toán
+      const bookingId = data.booking?.id
+      if (!bookingId) {
+        toast.error('Không lấy được mã lịch hẹn.')
+        return
+      }
+
+      const payRes = await fetch(`/api/bookings/${bookingId}/payment`, { method: 'POST' })
+      const payData = await payRes.json()
+
+      // Gói miễn phí → server đã xác nhận luôn, bỏ qua bước QR
+      if (payRes.ok && payData.free) {
+        setPaySuccess(true)
+        setCurrentStep(4)
+        return
+      }
+
+      if (!payRes.ok || !payData.qrCode) {
+        toast.error(payData.error || 'Không tạo được liên kết thanh toán.')
+        // Booking đã được tạo (PENDING) — hiển thị bước xác nhận để user thử lại từ dashboard
+        setCurrentStep(4)
+        return
+      }
+
+      // Hiển thị QR + thông tin chuyển khoản ngay trong trang (không rời app)
+      setPayInfo({
+        bookingId,
+        checkoutUrl: payData.checkoutUrl,
+        qrCode: payData.qrCode,
+        accountNumber: payData.accountNumber ?? null,
+        accountName: payData.accountName ?? null,
+        bin: payData.bin ?? null,
+        amount: payData.amount ?? (couponResult?.finalPrice ?? selectedPkg?.price ?? 0),
+        expiresAt: payData.expiresAt ?? (Date.now() + 15 * 60 * 1000),
+      })
     } catch {
       toast.error('Đã xảy ra lỗi. Vui lòng thử lại.')
     } finally {
@@ -350,15 +450,18 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                   <GlassCard className="p-6">
                     <h2 className="text-xl font-semibold text-foreground mb-6">
-                      <CreditCard className="w-5 h-5 inline mr-2" />Thanh toán
+                      <CreditCard className="w-5 h-5 inline mr-2" /> Cách thanh toán
                     </h2>
-                    <div className="space-y-3">
-                      {['Thẻ tín dụng/Ghi nợ','MoMo','VNPay','Chuyển khoản'].map((m) => (
-                        <button key={m} className="w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:border-[#768064]/30 transition-all text-left flex items-center justify-between">
-                          <span className="text-foreground">{m}</span>
-                          <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                        </button>
-                      ))}
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                      <p className="text-sm text-foreground">
+                        Bước 1: Kiểm tra lại thông tin phía bên phải
+                      </p>
+                      <p className="text-sm text-foreground">
+                        Bước 2: Nhập mã khuyến mãi (nếu có) và nhấn "Áp dụng"
+                      </p>
+                      <p className="text-sm text-foreground">
+                        Bước 3: Bấm "Xác nhận thanh toán" để hiển thị mã QR thanh toán
+                      </p>
                     </div>
 
                     {/* Mã khuyến mãi */}
@@ -528,6 +631,72 @@ export function BookingClient({ reader, takenSlots = [] }: { reader: SerializedR
           </div>
         </div>
       </main>
+
+      {/* Popup QR thanh toán PayOS */}
+      <Dialog open={!!payInfo} onOpenChange={(open) => { if (!open) setPayInfo(null) }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5" /> Quét mã để thanh toán
+            </DialogTitle>
+            <DialogDescription>
+              Mở app ngân hàng, quét mã VietQR bên dưới. Cửa sổ này sẽ tự cập nhật khi nhận được thanh toán.
+            </DialogDescription>
+          </DialogHeader>
+
+          {payInfo && (
+            <div className="space-y-5">
+              <div className="flex flex-col items-center">
+                <div className="p-4 bg-white rounded-2xl">
+                  <QRCodeSVG value={payInfo.qrCode} size={200} level="M" />
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-[#768064]">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Đang chờ thanh toán…</span>
+                </div>
+                <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <span>Mã QR hết hạn sau</span>
+                  <span className="font-mono font-semibold tabular-nums text-foreground">
+                    {String(Math.floor(remainingMs / 60000)).padStart(2, '0')}
+                    :
+                    {String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Thông tin chuyển khoản thủ công */}
+              <div className="space-y-2">
+                {[
+                  ['Số tiền', formatPrice(payInfo.amount), String(payInfo.amount)],
+                  payInfo.accountNumber ? ['Số tài khoản', payInfo.accountNumber, payInfo.accountNumber] : null,
+                  payInfo.accountName ? ['Chủ tài khoản', payInfo.accountName, payInfo.accountName] : null,
+                ].filter(Boolean).map((row) => {
+                  const [label, display, copyVal] = row as [string, string, string]
+                  return (
+                    <div key={label} className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border border-border">
+                      <div className="min-w-0">
+                        <div className="text-xs text-muted-foreground">{label}</div>
+                        <div className="text-foreground font-medium truncate">{display}</div>
+                      </div>
+                      <button onClick={() => copyText(copyVal, label.toLowerCase())}
+                        className="p-2 text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                        <Copy className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="flex flex-col items-center gap-3">
+                <a href={payInfo.checkoutUrl} target="_blank" rel="noopener noreferrer"
+                  className="text-sm text-[#768064] hover:text-[#4C583E] transition-colors">
+                  Gặp sự cố? Mở trang thanh toán PayOS →
+                </a>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Xác nhận trước khi thanh toán — nêu rõ chính sách hủy lịch */}
       <AlertDialog open={showPaymentConfirm} onOpenChange={setShowPaymentConfirm}>
