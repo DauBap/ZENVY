@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { specialties } from '@/lib/data'
+import { resizeImage } from '@/lib/image'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -254,12 +255,18 @@ export default function RegisterReaderForm({ hideAccountFields = false, onSucces
             <button type="button" className="inline-flex items-center gap-2 rounded-full bg-[#4C583E] px-4 py-2 text-sm text-white" onClick={() => document.getElementById('reader-avatar-input')?.click()}>
               <ImagePlus className="w-4 h-4" /> Chọn ảnh
             </button>
-            <input id="reader-avatar-input" type="file" accept="image/*" className="hidden" onChange={(e) => {
+            <input id="reader-avatar-input" type="file" accept="image/*" className="hidden" onChange={async (e) => {
               const file = e.target.files?.[0]
               if (!file) return
-              const r = new FileReader()
-              r.onload = () => { setAvatarDataUrl(r.result as string); setAvatarName(file.name) }
-              r.readAsDataURL(file)
+              try {
+                // Nén ảnh về webp trước khi gửi — tránh payload base64 quá lớn bị Vercel reject (413) trên mobile
+                const compressed = await resizeImage(file, 512)
+                setAvatarDataUrl(compressed)
+                setAvatarName(file.name)
+              } catch (err) {
+                console.error('resizeImage', err)
+                toast.error('Không thể xử lý ảnh. Vui lòng chọn ảnh khác.')
+              }
             }} />
             {avatarName && <div className="text-xs text-muted-foreground">{avatarName}</div>}
           </div>
