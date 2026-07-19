@@ -153,7 +153,7 @@ export async function notifyAdminCustom(data: {
       ` : ''}
 
       <p style="color: #999; font-size: 12px; margin-top: 30px;">
-        Đây là thông báo tự động từ ZENVY
+        Đây là thông báo tự động từ SageTo
       </p>
     </div>
   `

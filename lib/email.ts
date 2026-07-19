@@ -34,7 +34,7 @@ export async function sendEmail(options: EmailOptions) {
   try {
     const transporter = getTransporter()
     const result = await transporter.sendMail({
-      from: `"ZENVY Admin" <${process.env.EMAIL_USER}>`,
+      from: `"SageTo Admin" <${process.env.EMAIL_USER}>`,
       to: options.to,
       subject: options.subject,
       html: options.html,
