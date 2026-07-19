@@ -75,7 +75,9 @@ export function ImageLightbox({ src, alt = "Image", children, className }: Image
               <X className="w-6 h-6" />
             </button>
 
-            {/* Image */}
+            {/* Image — chỉ giới hạn max-w/max-h + object-contain: ảnh tự co theo tỉ lệ,
+                to tối đa trong vùng nhưng không tràn màn. KHÔNG thêm w-full/h-full
+                vì sẽ ép ảnh lấp vùng gây letterbox/crop thay vì hiển thị đúng tỉ lệ gốc. */}
             <motion.img
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
