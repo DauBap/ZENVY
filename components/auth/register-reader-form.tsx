@@ -237,7 +237,7 @@ export default function RegisterReaderForm({ hideAccountFields = false, onSucces
         <label className="block text-sm">Tải ghi âm
           <div className="mt-2">
             <input ref={audioFileRef} id="reader-audio-input" type="file" accept="audio/*" className="hidden" onChange={handleAudioFile} />
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {!recording ? (
                 <button type="button" className="inline-flex items-center gap-2 rounded-full bg-[#4C583E] px-3 py-2 text-sm text-white" onClick={startRecording}>Ghi âm trực tiếp</button>
               ) : (
