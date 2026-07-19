@@ -193,6 +193,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
       role: 'READER',
       name: displayName,
+      tokenVersion: user.token_version,
     })
 
     const res = NextResponse.json({

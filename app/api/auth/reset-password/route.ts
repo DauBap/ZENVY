@@ -28,10 +28,39 @@ export async function POST(request: NextRequest) {
 
     const hash = await bcrypt.hash(password, 10)
 
-    await prisma.$transaction([
-      prisma.user.update({ where: { id: resetToken.user_id }, data: { password_hash: hash } }),
-      prisma.passwordResetToken.update({ where: { id: resetToken.id }, data: { used: true } }),
-    ])
+    // Update password + bump token_version để invalidate mọi JWT/session cũ
+    // (kẻ tấn công giữ token cũ sẽ bị getSession từ chối do lệch token_version)
+    const updatedUser = await prisma.user.update({
+      where: { id: resetToken.user_id },
+      data: {
+        password_hash: hash,
+        token_version: { increment: 1 },
+      },
+      select: { id: true, email: true, password_hash: true },
+    })
+
+    console.log(`[RESET] Password updated for user ${updatedUser.email}, new hash starts with: ${updatedUser.password_hash?.substring(0, 10)}`)
+
+    // Verify the update was persisted
+    const verifyUser = await prisma.user.findUnique({
+      where: { id: resetToken.user_id },
+      select: { password_hash: true },
+    })
+    const verifyMatch = await bcrypt.compare(password, verifyUser?.password_hash ?? '')
+    console.log(`[RESET] Verification: password match = ${verifyMatch}`)
+
+    if (!verifyMatch) {
+      console.error(`[RESET] CRITICAL: Password was not persisted correctly for user ${resetToken.user_id}`)
+      return NextResponse.json({ error: 'Lỗi lưu mật khẩu. Vui lòng thử lại.' }, { status: 500 })
+    }
+
+    // Mark token as used
+    await prisma.passwordResetToken.update({
+      where: { id: resetToken.id },
+      data: { used: true },
+    })
+
+    console.log(`[RESET] Complete. Token marked as used.`)
 
     return NextResponse.json({ success: true, message: 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập.' })
   } catch (e) {

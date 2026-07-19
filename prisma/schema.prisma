@@ -23,6 +23,8 @@ model User {
   password_hash          String
   phone                  String?              @db.VarChar(20)
   status                 UserStatus           @default(ACTIVE)
+  /// Bump để invalidate mọi JWT cũ (đổi mật khẩu / reset password). Nhúng vào payload, getSession verify khớp DB.
+  token_version          Int                  @default(0)
   created_at             DateTime             @default(now()) @db.Timestamp(6)
   updated_at             DateTime             @updatedAt @db.Timestamp(6)
   conversations_as_p1    Conversation[]       @relation("ConversationParticipant1")

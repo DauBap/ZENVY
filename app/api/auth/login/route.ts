@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
       role: user.role.name,
       name: displayName,
+      tokenVersion: user.token_version,
     })
 
     // Gắn token vào httpOnly cookie
