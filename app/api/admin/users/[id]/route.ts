@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createNotification } from '@/lib/notifications'
+import { notifyReaderApproved } from '@/lib/email'
 import { getSession } from '@/lib/auth'
 
 export async function GET(
@@ -92,6 +93,18 @@ export async function PATCH(
           type: 'SYSTEM',
           link: '/profile',
         })
+
+        // Email báo reader biết đã được duyệt
+        const reader = await prisma.user.findUnique({
+          where: { id: uid },
+          select: { email: true, reader_info: { select: { real_name: true, display_name: true } } },
+        })
+        if (reader?.email) {
+          await notifyReaderApproved({
+            to: reader.email,
+            readerName: reader.reader_info?.real_name || reader.reader_info?.display_name || undefined,
+          }).catch((err) => console.error('Email reader approved failed:', err))
+        }
       }
     } catch (err) {
       console.error('Notify user on approve failed:', err)
@@ -117,6 +130,13 @@ export async function DELETE(
     // read optional reason from body to notify user
     const body = await _req.json().catch(() => ({}))
     const reason: string | undefined = body?.reason
+
+    // Fetch reader info trước khi SUSPENDED để gửi email (email/tên không đổi theo status)
+    const reader = await prisma.user.findUnique({
+      where: { id: Number(id) },
+      select: { email: true, reader_info: { select: { real_name: true, display_name: true } } },
+    }).catch(() => null)
+
     try {
       if (reason) {
         const uid = Number(id)
@@ -130,6 +150,15 @@ export async function DELETE(
       }
     } catch (err) {
       console.error('Notify user on reject failed:', err)
+    }
+
+    // Email báo reader biết hồ sơ bị từ chối kèm lý do
+    if (reader?.email) {
+      await notifyReaderRejected({
+        to: reader.email,
+        readerName: reader.reader_info?.real_name || reader.reader_info?.display_name || undefined,
+        reason: reason || 'Hồ sơ chưa đáp ứng đủ điều kiện ở thời điểm hiện tại.',
+      }).catch((err) => console.error('Email reader rejected failed:', err))
     }
 
     // Instead of deleting the user, mark reader_info status as SUSPENDED so user account remains usable

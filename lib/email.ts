@@ -191,6 +191,307 @@ export async function notifyAdminReaderRegistration(data: {
 }
 
 /**
+ * Send password reset email to user
+ */
+export async function sendPasswordResetEmail(data: {
+  to: string
+  resetUrl: string
+  appName?: string
+}) {
+  const appName = data.appName || 'SAGETO'
+
+  const html = `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #4C583E 0%, #2C3424 100%); padding: 32px 24px; text-align: center;">
+        <div style="display: inline-block; width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.15); line-height: 48px; font-size: 28px; margin-bottom: 8px;">☽</div>
+        <h1 style="color: #ffffff; margin: 8px 0 0; font-size: 22px; font-weight: 700; letter-spacing: 1px;">${appName}</h1>
+      </div>
+
+      <!-- Body -->
+      <div style="padding: 32px 24px;">
+        <p style="color: #333; font-size: 16px; margin: 0 0 16px;">Xin chào,</p>
+        
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+          Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.
+        </p>
+        
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
+          Để tạo mật khẩu mới, vui lòng nhấn vào nút bên dưới:
+        </p>
+
+        <!-- CTA Button -->
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${data.resetUrl}" 
+             style="display: inline-block; background: linear-gradient(135deg, #4C583E 0%, #2C3424 100%); color: #ffffff; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(76, 88, 62, 0.3);">
+            🔑 Đặt lại mật khẩu
+          </a>
+        </div>
+
+        <p style="color: #777; font-size: 13px; line-height: 1.6; margin: 24px 0 8px;">
+          Hoặc sao chép và mở liên kết sau trong trình duyệt:
+        </p>
+        <div style="background: #f5f5f5; padding: 12px 16px; border-radius: 6px; word-break: break-all; margin: 0 0 24px;">
+          <a href="${data.resetUrl}" style="color: #4C583E; font-size: 13px; text-decoration: none;">${data.resetUrl}</a>
+        </div>
+
+        <div style="background: #FFF8E1; border-left: 4px solid #FFC107; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 0 0 24px;">
+          <p style="color: #856404; font-size: 14px; margin: 0;">
+            ⏰ Liên kết này sẽ hết hạn sau <strong>30 phút</strong> vì lý do bảo mật.
+          </p>
+        </div>
+
+        <p style="color: #777; font-size: 14px; line-height: 1.6; margin: 0 0 8px;">
+          Nếu bạn không thực hiện yêu cầu này, bạn có thể bỏ qua email này. Mật khẩu hiện tại của bạn sẽ không bị thay đổi.
+        </p>
+
+        <p style="color: #777; font-size: 14px; line-height: 1.6; margin: 0;">
+          Nếu bạn cần hỗ trợ, vui lòng liên hệ với đội ngũ hỗ trợ của chúng tôi.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div style="background: #f9f9f9; padding: 20px 24px; text-align: center; border-top: 1px solid #eee;">
+        <p style="color: #999; font-size: 13px; margin: 0;">
+          Trân trọng,<br/>
+          <strong style="color: #4C583E;">Đội ngũ ${appName}</strong>
+        </p>
+        <p style="color: #ccc; font-size: 11px; margin: 12px 0 0;">
+          Đây là email tự động, vui lòng không trả lời email này.
+        </p>
+      </div>
+    </div>
+  `
+
+  const text = `Xin chào,
+
+Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.
+
+Để tạo mật khẩu mới, vui lòng mở liên kết sau trong trình duyệt:
+
+${data.resetUrl}
+
+Liên kết này sẽ hết hạn sau 30 phút vì lý do bảo mật.
+
+Nếu bạn không thực hiện yêu cầu này, bạn có thể bỏ qua email này. Mật khẩu hiện tại của bạn sẽ không bị thay đổi.
+
+Trân trọng,
+Đội ngũ ${appName}`
+
+  return sendEmail({
+    to: data.to,
+    subject: `🔑 Đặt lại mật khẩu - ${appName}`,
+    html,
+    text,
+  })
+}
+
+/**
+ * Email báo reader biết hồ sơ đã được admin phê duyệt
+ */
+export async function notifyReaderApproved(data: {
+  to: string
+  readerName?: string
+  appUrl?: string
+  appName?: string
+}) {
+  const appName = data.appName || 'SAGETO'
+  const appUrl = data.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://sageto.net'
+  const greeting = data.readerName ? `Xin chào ${data.readerName},` : 'Xin chào,'
+
+  const html = `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+      <div style="background: linear-gradient(135deg, #4C583E 0%, #2C3424 100%); padding: 32px 24px; text-align: center;">
+        <div style="display: inline-block; width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.15); line-height: 48px; font-size: 28px; margin-bottom: 8px;">☽</div>
+        <h1 style="color: #ffffff; margin: 8px 0 0; font-size: 22px; font-weight: 700; letter-spacing: 1px;">${appName}</h1>
+      </div>
+
+      <div style="padding: 32px 24px;">
+        <p style="color: #333; font-size: 16px; margin: 0 0 16px;">${greeting}</p>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+          Chúc mừng! Hồ sơ đăng ký trở thành <strong>Tarot Reader</strong> của bạn đã được phê duyệt.
+        </p>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+          Từ bây giờ, bạn đã có thể:
+        </p>
+
+        <ul style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 24px; padding-left: 24px;">
+          <li>Hoàn thiện hồ sơ cá nhân.</li>
+          <li>Thiết lập lịch làm việc.</li>
+          <li>Nhận và quản lý các booking từ khách hàng.</li>
+          <li>Bắt đầu hành trình kết nối và đồng hành cùng những người cần sự tư vấn.</li>
+        </ul>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">Đăng nhập ngay để bắt đầu:</p>
+
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${appUrl}"
+             style="display: inline-block; background: linear-gradient(135deg, #4C583E 0%, #2C3424 100%); color: #ffffff; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(76, 88, 62, 0.3);">
+            Đăng nhập ngay
+          </a>
+        </div>
+
+        <div style="background: #f5f5f5; padding: 12px 16px; border-radius: 6px; word-break: break-all; margin: 0 0 24px;">
+          <a href="${appUrl}" style="color: #4C583E; font-size: 13px; text-decoration: none;">${appUrl}</a>
+        </div>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+          Cảm ơn bạn đã trở thành một phần của <strong>${appName}</strong>. Chúng tôi hy vọng nền tảng sẽ giúp bạn tiếp cận nhiều khách hàng hơn và phát triển công việc của mình.
+        </p>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0;">
+          Chúc bạn có thật nhiều phiên đọc ý nghĩa!
+        </p>
+      </div>
+
+      <div style="background: #f9f9f9; padding: 20px 24px; text-align: center; border-top: 1px solid #eee;">
+        <p style="color: #999; font-size: 13px; margin: 0;">
+          Trân trọng,<br/>
+          <strong style="color: #4C583E;">Đội ngũ ${appName}</strong>
+        </p>
+        <p style="color: #ccc; font-size: 11px; margin: 12px 0 0;">
+          Đây là email tự động, vui lòng không trả lời email này.
+        </p>
+      </div>
+    </div>
+  `
+
+  const text = `${greeting}
+
+Chúc mừng! Hồ sơ đăng ký trở thành Tarot Reader của bạn đã được phê duyệt.
+
+Từ bây giờ, bạn đã có thể:
+- Hoàn thiện hồ sơ cá nhân.
+- Thiết lập lịch làm việc.
+- Nhận và quản lý các booking từ khách hàng.
+- Bắt đầu hành trình kết nối và đồng hành cùng những người cần sự tư vấn.
+
+Đăng nhập ngay để bắt đầu:
+${appUrl}
+
+Cảm ơn bạn đã trở thành một phần của ${appName}. Chúng tôi hy vọng nền tảng sẽ giúp bạn tiếp cận nhiều khách hàng hơn và phát triển công việc của mình.
+
+Chúc bạn có thật nhiều phiên đọc ý nghĩa!
+
+Trân trọng,
+Đội ngũ ${appName}`
+
+  return sendEmail({
+    to: data.to,
+    subject: `🎉 Hồ sơ Reader của bạn đã được phê duyệt - ${appName}`,
+    html,
+    text,
+  })
+}
+
+/**
+ * Email báo reader biết hồ sơ bị từ chối kèm lý do
+ */
+export async function notifyReaderRejected(data: {
+  to: string
+  readerName?: string
+  reason: string
+  appUrl?: string
+  appName?: string
+}) {
+  const appName = data.appName || 'SAGETO'
+  const appUrl = data.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://sageto.net'
+  const greeting = data.readerName ? `Xin chào ${data.readerName},` : 'Xin chào,'
+  const reason = data.reason || 'Chưa đáp ứng đủ điều kiện ở thời điểm hiện tại.'
+
+  const html = `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+      <div style="background: linear-gradient(135deg, #4C583E 0%, #2C3424 100%); padding: 32px 24px; text-align: center;">
+        <div style="display: inline-block; width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.15); line-height: 48px; font-size: 28px; margin-bottom: 8px;">☽</div>
+        <h1 style="color: #ffffff; margin: 8px 0 0; font-size: 22px; font-weight: 700; letter-spacing: 1px;">${appName}</h1>
+      </div>
+
+      <div style="padding: 32px 24px;">
+        <p style="color: #333; font-size: 16px; margin: 0 0 16px;">${greeting}</p>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+          Cảm ơn bạn đã đăng ký trở thành <strong>Tarot Reader</strong> trên ${appName}.
+        </p>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+          Sau khi xem xét, rất tiếc chúng tôi <strong>chưa thể phê duyệt</strong> hồ sơ của bạn ở thời điểm hiện tại.
+        </p>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 8px;"><strong>Lý do:</strong></p>
+        <div style="background: #FFF8E1; border-left: 4px solid #FFC107; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 0 0 24px;">
+          <p style="color: #856404; font-size: 14px; line-height: 1.6; margin: 0;">${reason}</p>
+        </div>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+          Bạn hoàn toàn có thể chỉnh sửa hoặc bổ sung thông tin theo góp ý ở trên và gửi lại hồ sơ để chúng tôi xem xét một lần nữa.
+        </p>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">Truy cập ứng dụng để cập nhật hồ sơ:</p>
+
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${appUrl}"
+             style="display: inline-block; background: linear-gradient(135deg, #4C583E 0%, #2C3424 100%); color: #ffffff; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(76, 88, 62, 0.3);">
+            Cập nhật hồ sơ
+          </a>
+        </div>
+
+        <div style="background: #f5f5f5; padding: 12px 16px; border-radius: 6px; word-break: break-all; margin: 0 0 24px;">
+          <a href="${appUrl}" style="color: #4C583E; font-size: 13px; text-decoration: none;">${appUrl}</a>
+        </div>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+          Chúng tôi luôn mong muốn mang đến trải nghiệm tốt nhất cho cả Reader và khách hàng, vì vậy quá trình xét duyệt được thực hiện nhằm đảm bảo chất lượng dịch vụ trên nền tảng.
+        </p>
+
+        <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0;">
+          Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với đội ngũ hỗ trợ. Chúng tôi luôn sẵn sàng hỗ trợ bạn.
+        </p>
+      </div>
+
+      <div style="background: #f9f9f9; padding: 20px 24px; text-align: center; border-top: 1px solid #eee;">
+        <p style="color: #999; font-size: 13px; margin: 0;">
+          Trân trọng,<br/>
+          <strong style="color: #4C583E;">Đội ngũ ${appName}</strong>
+        </p>
+        <p style="color: #ccc; font-size: 11px; margin: 12px 0 0;">
+          Đây là email tự động, vui lòng không trả lời email này.
+        </p>
+      </div>
+    </div>
+  `
+
+  const text = `${greeting}
+
+Cảm ơn bạn đã đăng ký trở thành Tarot Reader trên ${appName}.
+
+Sau khi xem xét, rất tiếc chúng tôi chưa thể phê duyệt hồ sơ của bạn ở thời điểm hiện tại.
+
+Lý do:
+${reason}
+
+Bạn hoàn toàn có thể chỉnh sửa hoặc bổ sung thông tin theo góp ý ở trên và gửi lại hồ sơ để chúng tôi xem xét một lần nữa.
+
+Truy cập ứng dụng để cập nhật hồ sơ:
+${appUrl}
+
+Chúng tôi luôn mong muốn mang đến trải nghiệm tốt nhất cho cả Reader và khách hàng, vì vậy quá trình xét duyệt được thực hiện nhằm đảm bảo chất lượng dịch vụ trên nền tảng.
+
+Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với đội ngũ hỗ trợ. Chúng tôi luôn sẵn sàng hỗ trợ bạn.
+
+Trân trọng,
+Đội ngũ ${appName}`
+
+  return sendEmail({
+    to: data.to,
+    subject: `Thông báo hồ sơ Reader - ${appName}`,
+    html,
+    text,
+  })
+}
+
+/**
  * Send admin notification for payment confirmation
  */
 export async function notifyAdminPaymentConfirm(data: {
