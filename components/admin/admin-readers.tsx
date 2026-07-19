@@ -9,6 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
+import { ImageLightbox } from '@/components/ui/image-lightbox'
 import { cn } from '@/lib/utils'
 
 export function AdminReadersPage() {
@@ -132,8 +133,10 @@ export function AdminReadersPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {u.avatar ? (
-                        <div className="w-8 h-8 rounded-full shrink-0"
-                          style={{ backgroundImage: `url("${u.avatar}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                        <ImageLightbox src={u.avatar} alt={u.name || 'Avatar'}>
+                          <div className="w-8 h-8 rounded-full shrink-0 bg-cover bg-center hover:ring-2 hover:ring-[#A5B38B]/60 transition-all cursor-pointer"
+                            style={{ backgroundImage: `url("${u.avatar}")` }} />
+                        </ImageLightbox>
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-[#768064]/20 flex items-center justify-center text-xs text-[#4C583E] shrink-0">
                           {u.name?.charAt(0) ?? '?'}
@@ -188,8 +191,10 @@ export function AdminReadersPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 {detail.readerInfo?.avatar_url ? (
-                  <div className="w-16 h-16 rounded-2xl shrink-0"
-                    style={{ backgroundImage: `url("${detail.readerInfo.avatar_url}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                  <ImageLightbox src={detail.readerInfo.avatar_url} alt={detail.readerInfo?.display_name || 'Avatar'}>
+                    <div className="w-16 h-16 rounded-2xl shrink-0 bg-cover bg-center hover:ring-2 hover:ring-[#A5B38B]/60 transition-all cursor-pointer"
+                      style={{ backgroundImage: `url("${detail.readerInfo.avatar_url}")` }} />
+                  </ImageLightbox>
                 ) : (
                   <div className="w-16 h-16 rounded-2xl bg-[#768064]/20 flex items-center justify-center text-2xl text-[#4C583E]">
                     {detail.readerInfo?.display_name?.charAt(0) ?? '?'}

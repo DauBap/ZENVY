@@ -24,6 +24,7 @@ import type { AvailabilityItem } from '@/components/profile/reader-availability-
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import { specialties as SPECIALTY_LIST } from '@/lib/data'
 import { cn } from '@/lib/utils'
+import { ImageLightbox } from '@/components/ui/image-lightbox'
 
 interface CustomerInitial {
   fullname: string
@@ -351,7 +352,9 @@ export function ProfilePage(props: Props) {
                 <div className="relative">
                   <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-[#A5B38B]/40 bg-gradient-to-br from-[#768064] to-[#4C583E] flex items-center justify-center">
                     {avatar ? (
-                      <Image src={avatar} alt="Avatar" width={96} height={96} className="w-full h-full object-cover" unoptimized />
+                      <ImageLightbox src={avatar} alt="Avatar">
+                        <Image src={avatar} alt="Avatar" width={96} height={96} className="w-full h-full object-cover hover:opacity-90 transition-opacity" unoptimized />
+                      </ImageLightbox>
                     ) : (
                       <span className="text-3xl font-semibold text-white">{initialChar}</span>
                     )}

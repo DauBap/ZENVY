@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { cn, formatAmountK } from '@/lib/utils'
+import { ImageLightbox } from '@/components/ui/image-lightbox'
 
 const ROLE_OPTIONS = [{ value: '', label: 'Tất cả role' }, { value: 'CUSTOMER', label: 'Customer' }, { value: 'READER', label: 'Reader' }, { value: 'ADMIN', label: 'Admin' }]
 const STATUS_OPTIONS = [{ value: '', label: 'Tất cả trạng thái' }, { value: 'ACTIVE', label: 'Active' }, { value: 'INACTIVE', label: 'Inactive' }, { value: 'BANNED', label: 'Banned' }]
@@ -128,7 +129,9 @@ export function AdminUsersPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 {detailUser.avatar ? (
-                  <div className="w-16 h-16 rounded-full bg-cover bg-center" style={{ backgroundImage: `url('${detailUser.avatar}')` }} />
+                  <ImageLightbox src={detailUser.avatar} alt={detailUser.name || 'Avatar'}>
+                    <div className="w-16 h-16 rounded-full bg-cover bg-center hover:ring-2 hover:ring-[#A5B38B]/60 transition-all" style={{ backgroundImage: `url('${detailUser.avatar}')` }} />
+                  </ImageLightbox>
                 ) : (
                   <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-xl text-muted-foreground">?</div>
                 )}
@@ -224,7 +227,9 @@ export function AdminUsersPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {u.avatar ? (
-                        <div className="w-7 h-7 rounded-full shrink-0" style={{ backgroundImage: `url("${u.avatar}")`, backgroundSize: 'cover' }} />
+                        <ImageLightbox src={u.avatar} alt={u.name || 'Avatar'}>
+                          <div className="w-7 h-7 rounded-full shrink-0 bg-cover bg-center hover:ring-2 hover:ring-[#A5B38B]/60 transition-all cursor-pointer" style={{ backgroundImage: `url("${u.avatar}")` }} />
+                        </ImageLightbox>
                       ) : (
                         <div className="w-7 h-7 rounded-full bg-[#768064]/20 flex items-center justify-center text-xs text-[#4C583E] shrink-0">
                           {u.name.charAt(0)}

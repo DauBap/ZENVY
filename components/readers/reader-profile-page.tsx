@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { VerifiedBadge } from '@/components/ui/verified-badge'
 import { AudioPlayer } from '@/components/ui/audio-player'
 import { cn, formatAmountK } from '@/lib/utils'
+import { ImageLightbox } from '@/components/ui/image-lightbox'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import type { SerializedReader } from '@/lib/serializers'
 
@@ -245,12 +246,14 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                 <div className="flex items-center gap-4 shrink-0">
                   {/* Avatar with ring */}
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-full ring-4 ring-white/30 overflow-hidden shrink-0"
-                      style={{
-                        backgroundImage: `url("${reader.avatar}")`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                      }} />
+                    <ImageLightbox src={reader.avatar} alt={reader.name}>
+                      <div className="w-16 h-16 rounded-full ring-4 ring-white/30 overflow-hidden shrink-0 hover:ring-[#A5B38B]/60 transition-all"
+                        style={{
+                          backgroundImage: `url("${reader.avatar}")`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }} />
+                    </ImageLightbox>
                     {reader.isOnline && (
                       <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-green-400 ring-2 ring-[#3b1f6e]" />
                     )}
@@ -327,15 +330,17 @@ export function ReaderProfilePage({ reader }: { reader: SerializedReader }) {
                 <GlassCard className="overflow-hidden p-0">
                   {/* Cover photo */}
                   <div className="relative w-full aspect-[4/5]">
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        backgroundImage: `url("${reader.avatar}")`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat',
-                      }}
-                    />
+                    <ImageLightbox src={reader.avatar} alt={reader.name}>
+                      <div
+                        className="absolute inset-0 hover:opacity-90 transition-opacity"
+                        style={{
+                          backgroundImage: `url("${reader.avatar}")`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          backgroundRepeat: 'no-repeat',
+                        }}
+                      />
+                    </ImageLightbox>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
 
                     {/* Online badge */}

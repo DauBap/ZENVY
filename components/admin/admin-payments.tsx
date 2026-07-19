@@ -5,6 +5,7 @@ import { Download, Search, ChevronLeft, ChevronRight, TrendingUp, DollarSign, St
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ImageLightbox } from '@/components/ui/image-lightbox'
 import { cn, formatAmountK } from '@/lib/utils'
 
 export function AdminPaymentsPage() {
@@ -87,7 +88,9 @@ export function AdminPaymentsPage() {
               <div key={r.readerId} className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground w-5">{i + 1}</span>
                 {r.avatar ? (
-                  <div className="w-7 h-7 rounded-full shrink-0" style={{ backgroundImage: `url("${r.avatar}")`, backgroundSize: 'cover' }} />
+                  <ImageLightbox src={r.avatar} alt={r.name || 'Avatar'}>
+                    <div className="w-7 h-7 rounded-full shrink-0 bg-cover bg-center hover:ring-2 hover:ring-[#A5B38B]/60 transition-all cursor-pointer" style={{ backgroundImage: `url("${r.avatar}")` }} />
+                  </ImageLightbox>
                 ) : (
                   <div className="w-7 h-7 rounded-full bg-[#768064]/20 flex items-center justify-center text-xs text-[#4C583E] shrink-0">
                     {r.name.charAt(0)}
