@@ -115,7 +115,7 @@ export function AITarotPage({ tarotCards }: { tarotCards: SerializedTarotCard[] 
               <span className="text-sm text-[#4C583E]">AI Tarot - Miễn phí</span>
             </div>
             <h1 className="text-3xl lg:text-5xl font-bold text-foreground mb-4">
-              Khám phá <span className="gradient-text">thông điệp</span> từ vũ trụ
+              Xem <span className="gradient-text">Tarot online</span> miễn phí với AI
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto">
               Đặt câu hỏi, chọn trải bài và nhận insight từ AI. Trải nghiệm hoàn toàn miễn phí!

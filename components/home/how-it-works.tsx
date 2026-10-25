@@ -55,7 +55,7 @@ export function HowItWorks() {
         </motion.div>
 
         {/* Steps */}
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid gap-6 md:grid-cols-3 md:gap-10 lg:gap-14">
           {steps.map((step, index) => (
             <motion.div
               key={step.title}
@@ -67,7 +67,10 @@ export function HowItWorks() {
             >
               <GlassCard className="p-6 lg:p-8 h-full" glow="olive">
                 {/* Step number */}
-                <div className="absolute -top-4 -left-4 w-10 h-10 rounded-xl bg-gradient-to-br from-[#4C583E] to-[#2C3424] flex items-center justify-center text-white font-bold shadow-lg shadow-[#768064]/20">
+                <div
+                  aria-label={`Bước ${index + 1}`}
+                  className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4C583E] to-[#2C3424] font-bold text-white shadow-lg shadow-[#768064]/20"
+                >
                   {index + 1}
                 </div>
 
@@ -84,15 +87,14 @@ export function HowItWorks() {
                   {step.description}
                 </p>
 
-                {/* Arrow (for desktop) */}
-                {index < steps.length - 1 && (
-                  <div className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10">
-                    <div className="w-8 h-8 rounded-full bg-background border border-white/10 flex items-center justify-center">
-                      <ArrowRight className="w-4 h-4 text-[#768064]" />
-                    </div>
-                  </div>
-                )}
               </GlassCard>
+
+              {/* Arrow (for desktop) */}
+              {index < steps.length - 1 && (
+                <div className="absolute -right-8 top-1/2 z-10 hidden h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-background md:flex lg:-right-11 lg:h-8 lg:w-8">
+                  <ArrowRight className="h-4 w-4 text-[#768064]" />
+                </div>
+              )}
 
               {/* Mobile arrow */}
               {index < steps.length - 1 && (

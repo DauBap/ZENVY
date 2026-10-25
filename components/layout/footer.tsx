@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import Link from 'next/link'
-import { Facebook, Instagram, Youtube, Twitter, Mail, Phone, MapPin } from 'lucide-react'
+import { Facebook, Instagram, Youtube, Twitter, Mail, Phone, MapPin, Moon } from 'lucide-react'
 
 const footerLinks = {
   company: [
@@ -45,7 +45,7 @@ export function Footer() {
           <div className="col-span-2 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#768064] via-[#4C583E] to-[#2C3424] flex items-center justify-center">
-                <span className="text-2xl">☽</span>
+                <Moon className="h-5 w-5 text-[#f7f3e8]" aria-hidden="true" />
               </div>
               <span className="text-xl font-bold gradient-text">SAGETO</span>
             </Link>

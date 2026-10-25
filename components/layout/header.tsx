@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Search, Mail, Sparkles, LogOut, LayoutDashboard, User } from 'lucide-react'
+import { Menu, X, Search, Mail, Sparkles, LogOut, LayoutDashboard, User, Moon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -95,7 +95,7 @@ export function Header() {
             <Link href="/" className="flex items-center gap-2 group">
               <div className="relative">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#768064] via-[#4C583E] to-[#2C3424] flex items-center justify-center">
-                  <span className="text-2xl">☽</span>
+                  <Moon className="h-5 w-5 text-[#f7f3e8]" aria-hidden="true" />
                 </div>
                 <div className="absolute inset-0 rounded-xl bg-[#768064]/25 blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
               </div>
@@ -103,7 +103,7 @@ export function Header() {
             </Link>
 
             {/* Desktop Nav */}
-            <nav className="hidden lg:flex items-center gap-8">
+            <nav aria-label="Điều hướng chính" className="hidden lg:flex items-center gap-8">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href || pathname.startsWith(link.href + '/')
                 return (
@@ -130,9 +130,13 @@ export function Header() {
 
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+              <Link
+                href="/readers"
+                aria-label="Tìm Tarot Reader"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
+              >
                 <Search className="w-5 h-5" />
-              </Button>
+              </Link>
 
               {!isLoadingUser && user && (
                 <Link href="/chat" className="relative">
@@ -173,10 +177,22 @@ export function Header() {
 
             {/* Mobile Menu Button */}
             <div className="flex items-center gap-2 lg:hidden">
-              <Button variant="ghost" size="icon" className="text-muted-foreground">
+              <Link
+                href="/readers"
+                aria-label="Tìm Tarot Reader"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
+              >
                 <Search className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-11 w-11"
+                aria-label={isMobileMenuOpen ? 'Đóng menu' : 'Mở menu'}
+                aria-expanded={isMobileMenuOpen}
+                aria-controls="mobile-navigation"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
                 {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </Button>
             </div>
@@ -192,7 +208,7 @@ export function Header() {
             exit={{ opacity: 0, y: -20 }}
             className="fixed inset-x-0 top-16 z-40 lg:hidden">
             <div className="bg-background/95 backdrop-blur-xl border-b border-white/10 shadow-xl">
-              <nav className="max-w-7xl mx-auto px-4 py-6 space-y-4">
+              <nav id="mobile-navigation" aria-label="Điều hướng chính" className="max-w-7xl mx-auto px-4 py-6 space-y-4">
                 {navLinks.map((link) => {
                   const isActive = pathname === link.href || pathname.startsWith(link.href + '/')
                   return (

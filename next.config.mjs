@@ -36,15 +36,6 @@ const nextConfig = {
       },
     ]
   },
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/readers',
-        permanent: false,
-      },
-    ]
-  },
 }
 
 export default nextConfig

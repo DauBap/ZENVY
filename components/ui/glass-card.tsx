@@ -29,9 +29,9 @@ export function GlassCard({
     <motion.div
       className={cn(
         'relative overflow-hidden rounded-2xl',
-        'bg-white/5 backdrop-blur-xl',
-        'border-[var(--border)]',
-        hover && 'transition-all duration-300 hover:bg-white/10 hover:border-[var(--ring)]',
+        'bg-card/85 backdrop-blur-xl shadow-[0_12px_36px_-24px_rgba(44,52,36,0.28)]',
+        'border border-[var(--border)]',
+        hover && 'transition-all duration-300 hover:bg-card hover:border-[var(--ring)]',
         glowStyles[glow],
         className
       )}

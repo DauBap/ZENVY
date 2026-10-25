@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { Sparkles, ArrowRight, Shuffle } from 'lucide-react'
+import { Sparkles, ArrowRight, Shuffle, Moon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { GlassCard } from '@/components/ui/glass-card'
 import { cn } from '@/lib/utils'
@@ -109,8 +109,11 @@ export function AITarotSection() {
             <GlassCard className="p-8 w-full max-w-md">
               {/* Card display */}
               <div className="flex justify-center mb-8">
-                <motion.div
-                  className="relative w-40 h-64 cursor-pointer"
+                <motion.button
+                  type="button"
+                  aria-label={isFlipped ? 'Lật úp lá bài' : 'Lật mở lá bài'}
+                  aria-pressed={isFlipped}
+                  className="relative h-64 w-40 cursor-pointer rounded-xl text-left"
                   onClick={() => setIsFlipped(!isFlipped)}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -126,7 +129,7 @@ export function AITarotSection() {
                         className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#4C583E] via-[#4C583E] to-[#2C3424] flex items-center justify-center shadow-2xl shadow-[#768064]/20"
                       >
                         <div className="text-center">
-                          <div className="text-4xl mb-2">☽</div>
+                          <Moon className="mx-auto mb-2 h-9 w-9 text-[#ead9ad]" strokeWidth={1.2} />
                           <div className="text-xs text-white/60">Chạm để lật</div>
                         </div>
                         <div className="absolute inset-0 border-2 border-white/10 rounded-xl" />
@@ -141,17 +144,17 @@ export function AITarotSection() {
                         transition={{ duration: 0.4 }}
                         className="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-500/20 via-yellow-500/10 to-amber-600/20 flex flex-col items-center justify-center p-4 shadow-2xl shadow-amber-500/20 border border-amber-500/30"
                       >
-                        <div className="text-5xl mb-3">✧</div>
+                        <Sparkles className="mb-3 h-10 w-10 text-[#946b2d]" strokeWidth={1.2} />
                         <div className="text-lg font-semibold text-foreground text-center">
                           {sampleCards[selectedCard].name}
                         </div>
-                        <div className="text-xs text-amber-300 text-center mt-1">
+                        <div className="mt-1 text-center text-xs text-[#76561f]">
                           {sampleCards[selectedCard].meaning}
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </motion.div>
+                </motion.button>
               </div>
 
               {/* Controls */}

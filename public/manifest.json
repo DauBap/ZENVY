@@ -1,8 +1,8 @@
 {
-  "name": "ZENVY",
-  "short_name": "ZENVY",
-  "description": "Nền tảng tarot reader chuyên nghiệp",
-  "start_url": "/readers",
+  "name": "SAGETO",
+  "short_name": "SAGETO",
+  "description": "Xem tarot online và đặt lịch với Tarot Reader chuyên nghiệp",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f0f",
   "theme_color": "#4C583E",

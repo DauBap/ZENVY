@@ -19,24 +19,15 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'SAGETO | Nền Tảng Booking Tarot Cao Cấp',
-  description: 'Kết nối với các Tarot Reader được xác minh. Đặt lịch tư vấn, chat realtime, và khám phá AI Tarot miễn phí.',
-  keywords: ['tarot', 'booking', 'tarot reader', 'tư vấn tarot', 'xem bói', 'bói bài'],
+  metadataBase: new URL('https://sageto.net'),
+  title: {
+    default: 'SAGETO | Xem Tarot Online & Đặt Lịch Reader Chuyên Nghiệp',
+    template: '%s | SAGETO',
+  },
+  description: 'Xem tarot online, đặt lịch tư vấn tình yêu và sự nghiệp với Tarot Reader được xác minh. Trải nghiệm AI Tarot miễn phí tại SAGETO.',
+  keywords: ['xem tarot online', 'đặt lịch tarot', 'booking tarot', 'tarot reader', 'AI tarot'],
   authors: [{ name: 'SAGETO' }],
   creator: 'SAGETO',
-  openGraph: {
-    type: 'website',
-    locale: 'vi_VN',
-    url: 'https://mystic-tarot.app',
-    title: 'SAGETO | Nền Tảng Booking Tarot Cao Cấp',
-    description: 'Kết nối với các Tarot Reader được xác minh',
-    siteName: 'SAGETO',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'SAGETO',
-    description: 'Nền Tảng Booking Tarot Cao Cấp',
-  },
 }
 
 export const viewport: Viewport = {
@@ -59,7 +50,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="ZENVY" />
+        <meta name="apple-mobile-web-app-title" content="SAGETO" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
       </head>
       <body className="font-sans antialiased min-h-screen bg-background text-foreground">

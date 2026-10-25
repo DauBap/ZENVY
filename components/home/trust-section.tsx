@@ -22,36 +22,36 @@ export function TrustSection({ platformStats }: TrustSectionProps) {
       icon: Star,
       value: platformStats.averageRating.toString(),
       label: 'Rating trung bình',
-      color: 'text-yellow-400',
-      bgColor: 'bg-yellow-500/20',
+      color: 'text-[#946b2d]',
+      bgColor: 'bg-[#d9c89f]/35',
     },
     {
       icon: Shield,
       value: platformStats.verifiedReaders.toString() + '+',
       label: 'Verified Readers',
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/20',
+      color: 'text-[#4C583E]',
+      bgColor: 'bg-[#768064]/15',
     },
     {
       icon: Clock,
       value: platformStats.avgResponseTime,
       label: 'Thời gian phản hồi',
-      color: 'text-green-400',
-      bgColor: 'bg-green-500/20',
+      color: 'text-[#4C583E]',
+      bgColor: 'bg-[#768064]/15',
     },
     {
       icon: ThumbsUp,
       value: platformStats.satisfactionRate + '%',
       label: 'Hài lòng',
-      color: 'text-pink-400',
-      bgColor: 'bg-pink-500/20',
+      color: 'text-[#4C583E]',
+      bgColor: 'bg-[#768064]/15',
     },
     {
       icon: Users,
       value: platformStats.onlineReaders.toString(),
       label: 'Readers Online',
-      color: 'text-emerald-400',
-      bgColor: 'bg-emerald-500/20',
+      color: 'text-[#4C583E]',
+      bgColor: 'bg-[#768064]/15',
     },
   ]
 
@@ -109,7 +109,7 @@ export function TrustSection({ platformStats }: TrustSectionProps) {
         >
           <div className="flex items-center gap-3 text-muted-foreground">
             <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
-              <Shield className="w-6 h-6 text-green-400" />
+              <Shield className="w-6 h-6 text-[#4C583E]" />
             </div>
             <div className="text-left">
               <div className="text-sm font-medium text-foreground">SSL Secured</div>
@@ -118,7 +118,7 @@ export function TrustSection({ platformStats }: TrustSectionProps) {
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">
             <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
-              <Users className="w-6 h-6 text-blue-400" />
+              <Users className="w-6 h-6 text-[#4C583E]" />
             </div>
             <div className="text-left">
               <div className="text-sm font-medium text-foreground">Verified Readers</div>
@@ -127,7 +127,7 @@ export function TrustSection({ platformStats }: TrustSectionProps) {
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">
             <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
-              <ThumbsUp className="w-6 h-6 text-pink-400" />
+              <ThumbsUp className="w-6 h-6 text-[#4C583E]" />
             </div>
             <div className="text-left">
               <div className="text-sm font-medium text-foreground">Hoàn tiền 100%</div>

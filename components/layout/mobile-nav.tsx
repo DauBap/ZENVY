@@ -39,6 +39,8 @@ export function MobileNav() {
                 key={item.href}
                 href={item.href}
                 onClick={handleClick}
+                aria-label={item.label}
+                aria-current={isActive ? 'page' : undefined}
                 className="relative flex flex-col items-center justify-center gap-1 w-16 h-full"
               >
                 <div className="relative">

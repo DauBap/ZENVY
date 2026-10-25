@@ -5,8 +5,11 @@ import { CosmicBackground } from '@/components/ui/floating-elements'
 import { AboutPage } from '@/components/about/about-page'
 
 export const metadata = {
-  title: 'Về Chúng Tôi | SAGETO',
+  title: 'Về Chúng Tôi',
   description: 'SAGETO — nền tảng kết nối bạn với các Tarot Reader được xác minh, mang đến sự rõ ràng và insight cho cuộc sống.',
+  alternates: {
+    canonical: '/about',
+  },
 }
 
 export default function AboutRoutePage() {
