@@ -162,7 +162,7 @@ export function Header() {
               ) : (
                 <>
                   <Button variant="ghost" onClick={() => openLogin()}
-                    className="text-muted-foreground hover:text-foreground">
+                    className="text-muted-foreground">
                     Đăng nhập
                   </Button>
                   <Button onClick={openRegister} className={cn(
