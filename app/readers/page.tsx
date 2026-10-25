@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { serializeReaders } from '@/lib/serializers'
-import { recomputeReaderRating } from '@/lib/rating'
+import { serializeReaderListings, type SerializedReaderListing } from '@/lib/serializers'
 import { specialties as SPECIALTIES } from '@/lib/data'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -8,52 +7,55 @@ import { MobileNav } from '@/components/layout/mobile-nav'
 import { CosmicBackground } from '@/components/ui/floating-elements'
 import { ReadersPage } from '@/components/readers/readers-page'
 
+export const metadata = {
+  title: 'Đặt Lịch Tarot Online Với Reader Chuyên Nghiệp',
+  description: 'Tìm Tarot Reader phù hợp và đặt lịch xem tarot online về tình yêu, sự nghiệp, tài chính. Xem hồ sơ, đánh giá và mức phí trước khi đặt.',
+  alternates: {
+    canonical: '/readers',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'vi_VN',
+    url: '/readers',
+    title: 'Đặt Lịch Tarot Online Với Reader Chuyên Nghiệp | SAGETO',
+    description: 'Tìm Tarot Reader phù hợp và đặt lịch xem tarot online về tình yêu, sự nghiệp, tài chính.',
+    siteName: 'SAGETO',
+  },
+}
+
 // Render on-demand so the build never depends on DB state
 export const dynamic = 'force-dynamic'
 
 export default async function ReadersRoutePage() {
-  let readers: any[] = []
   const specialties = SPECIALTIES
+  let readers: SerializedReaderListing[] = []
 
   try {
     const dbReaders = await prisma.readerInfo.findMany({
       where: { status: 'ACTIVE' },
       orderBy: { rating: 'desc' },
-      include: {
-        packages: true,
-        // Fix: _count.select chỉ nhận boolean — không được truyền where vào đây
-        // Đếm tổng bookings và session_reviews, không filter theo status
+      select: {
+        id: true,
+        display_name: true,
+        description: true,
+        price_per_session: true,
+        rating: true,
+        verified: true,
+        avatar_url: true,
+        specialty: true,
+        last_seen_at: true,
+        updated_at: true,
+        packages: { select: { id: true, price: true } },
         _count: {
           select: {
             reviews: true,
             session_reviews: true,
-            earnings: true,
           },
         },
       },
     })
 
-    if (dbReaders.length > 0) {
-      // Recompute rating cho tất cả readers từ session_reviews thực tế
-      await Promise.all(dbReaders.map(r => recomputeReaderRating(r.id).catch(() => {})))
-
-      // Fetch lại sau khi recompute để có rating đúng
-      const updatedReaders = await prisma.readerInfo.findMany({
-        where: { status: 'ACTIVE' },
-        orderBy: { rating: 'desc' },
-        include: {
-          packages: true,
-          _count: {
-            select: {
-              reviews: true,
-              session_reviews: true,
-              earnings: true,
-            },
-          },
-        },
-      })
-      readers = serializeReaders(updatedReaders)
-    }
+    readers = serializeReaderListings(dbReaders)
   } catch (error) {
     console.error('ReadersRoutePage failed:', error)
   }

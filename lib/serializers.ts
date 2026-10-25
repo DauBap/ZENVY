@@ -12,6 +12,19 @@ import { isReaderOnline } from '@/lib/online'
 
 export type SerializedPackage = Package
 export type SerializedAvailability = Omit<Availability, 'date'> & { date: string }
+export type SerializedReaderListing = {
+  id: number
+  name: string
+  avatar: string
+  specialty: string[]
+  bio: string
+  isOnline: boolean
+  isVerified: boolean
+  rating: number
+  reviewCount: number
+  pricePerSession: number
+  packages: Array<Pick<Package, 'id' | 'price'>>
+}
 export type SerializedReader = Omit<ReaderInfo, 'rating' | 'price_per_session' | 'balance'> & {
   rating: number
   price_per_session: number
@@ -39,6 +52,41 @@ export type SerializedPlatformStat = Omit<PlatformStat, 'averageRating'> & {
 }
 
 const toNumber = (value: Prisma.Decimal | number | string): number => Number(value)
+
+type ReaderListingRecord = Pick<
+  ReaderInfo,
+  | 'id'
+  | 'display_name'
+  | 'description'
+  | 'price_per_session'
+  | 'rating'
+  | 'verified'
+  | 'avatar_url'
+  | 'specialty'
+  | 'last_seen_at'
+  | 'updated_at'
+> & {
+  packages: Array<Pick<Package, 'id' | 'price'>>
+  _count: { reviews: number; session_reviews: number }
+}
+
+export function serializeReaderListings(readers: ReaderListingRecord[]): SerializedReaderListing[] {
+  return readers.map((reader) => ({
+    id: reader.id,
+    name: reader.display_name ?? 'Tarot Reader',
+    avatar: reader.avatar_url?.startsWith('data:image/')
+      ? `/api/readers/${reader.id}/avatar?v=${reader.updated_at.getTime()}`
+      : reader.avatar_url ?? '/placeholder-user.jpg',
+    specialty: reader.specialty ?? [],
+    bio: reader.description ?? '',
+    isOnline: isReaderOnline(reader.last_seen_at),
+    isVerified: reader.verified,
+    rating: toNumber(reader.rating),
+    reviewCount: reader._count.reviews + reader._count.session_reviews,
+    pricePerSession: reader.price_per_session,
+    packages: reader.packages,
+  }))
+}
 
 export function serializeReader(
   reader: ReaderInfo & {

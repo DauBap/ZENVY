@@ -1,18 +1,18 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Star, Heart } from 'lucide-react'
 import { VerifiedBadge } from '@/components/ui/verified-badge'
-import type { SerializedReader } from '@/lib/serializers'
+import type { SerializedReaderListing } from '@/lib/serializers'
 import { cn, formatAmountK } from '@/lib/utils'
 
 interface ReaderCardProps {
-  reader: SerializedReader
-  index?: number
+  reader: SerializedReaderListing
 }
 
-export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
+export function ReaderCard({ reader }: ReaderCardProps) {
   const minPrice = reader.packages && reader.packages.length > 0
     ? Math.min(...reader.packages.map((p) => p.price))
     : reader.pricePerSession
@@ -20,13 +20,7 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
   const priceDisplay = formatAmountK(minPrice)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.08 }}
-      whileHover={{ y: -4 }}
-      className="group"
-    >
+    <motion.div whileHover={{ y: -4 }} className="group">
       <Link href={`/readers/${reader.id}`}>
         <div className={cn(
           'relative rounded-[18px] overflow-hidden cursor-pointer',
@@ -37,15 +31,13 @@ export function ReaderCard({ reader, index = 0 }: ReaderCardProps) {
           {/* ── Ảnh background ── */}
           <div className="relative w-full aspect-[3/4]">
             {/* bg layer — khớp chính xác element mẫu */}
-            <div
-              className="absolute z-0 rounded-t-[12px] md:rounded-b-[18px] md:inset-0.5"
-              style={{
-                inset: 0,
-                backgroundImage: `url("${reader.avatar}")`,
-                backgroundSize: 'cover',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
-              }}
+            <Image
+              src={reader.avatar}
+              alt={`${reader.name}, Tarot Reader`}
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+              loading="lazy"
+              className="z-0 object-cover"
             />
 
             {/* Gradient fade bottom */}

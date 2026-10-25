@@ -13,12 +13,12 @@ import { Input } from '@/components/ui/input'
 import { useAuthModal } from '@/contexts/auth-modal-context'
 import { ReaderCard } from '@/components/reader-card'
 import { cn } from '@/lib/utils'
-import type { SerializedReader } from '@/lib/serializers'
+import type { SerializedReaderListing } from '@/lib/serializers'
 
 type SortBy = 'newest' | 'rating' | 'price_asc' | 'price_desc'
 
 interface ReadersPageProps {
-  readers: SerializedReader[]
+  readers: SerializedReaderListing[]
   specialties: string[]
 }
 
@@ -28,7 +28,7 @@ function ReaderScrollSection({
 }: {
   title: string
   icon: React.ReactNode
-  readers: SerializedReader[]
+  readers: SerializedReaderListing[]
   badge?: string
   delay?: number
   onViewAll: () => void

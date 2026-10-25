@@ -1,6 +1,7 @@
+import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import { serializeReaders, serializePlatformStat, serializeTestimonials, serializeFAQ } from '@/lib/serializers'
+import { serializeReaderListings, serializePlatformStat, serializeTestimonials, serializeFAQ } from '@/lib/serializers'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { MobileNav } from '@/components/layout/mobile-nav'
@@ -15,6 +16,27 @@ import { FAQSection } from '@/components/home/faq-section'
 
 import type { SerializedPlatformStat } from '@/lib/serializers'
 
+export const metadata: Metadata = {
+  title: 'Xem Tarot Online & Đặt Lịch Reader Chuyên Nghiệp',
+  description: 'Xem tarot online, đặt lịch tư vấn tình yêu và sự nghiệp với Tarot Reader được xác minh. Trải nghiệm AI Tarot miễn phí tại SAGETO.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'vi_VN',
+    url: '/',
+    title: 'SAGETO | Xem Tarot Online & Đặt Lịch Reader Chuyên Nghiệp',
+    description: 'Xem tarot online, đặt lịch tư vấn với Tarot Reader được xác minh hoặc trải nghiệm AI Tarot miễn phí.',
+    siteName: 'SAGETO',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SAGETO | Xem Tarot Online',
+    description: 'Đặt lịch tư vấn với Tarot Reader được xác minh hoặc trải nghiệm AI Tarot miễn phí.',
+  },
+}
+
 export default async function HomePage() {
   // Fetch all data in parallel from the database
   const [dbReaders, dbStat, dbTestimonials, dbFAQs] = await Promise.allSettled([
@@ -22,8 +44,18 @@ export default async function HomePage() {
       where: { verified: true }, // Chỉ lấy readers đã được duyệt
       orderBy: { rating: 'desc' },
       take: 10,
-      include: {
-        packages: true,
+      select: {
+        id: true,
+        display_name: true,
+        description: true,
+        price_per_session: true,
+        rating: true,
+        verified: true,
+        avatar_url: true,
+        specialty: true,
+        last_seen_at: true,
+        updated_at: true,
+        packages: { select: { id: true, price: true } },
         _count: { select: { reviews: true, session_reviews: true } },
       },
     }),
@@ -33,7 +65,7 @@ export default async function HomePage() {
   ])
 
   const readers = dbReaders.status === 'fulfilled'
-    ? serializeReaders((dbReaders as any).value)
+    ? serializeReaderListings(dbReaders.value)
     : []
 
   const platformStat = dbStat.status === 'fulfilled' && (dbStat as any).value

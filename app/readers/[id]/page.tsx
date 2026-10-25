@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { serializeReader } from '@/lib/serializers'
-import { recomputeReaderRating } from '@/lib/rating'
 import { expireStalePendingBookings } from '@/lib/bookings'
 import { ReaderProfilePage } from '@/components/readers/reader-profile-page'
 
@@ -19,16 +18,6 @@ export default async function ReaderRoutePage({
 
   if (!reader) return notFound()
 
-  // Recompute rating từ actual reviews trước khi serialize
-  await recomputeReaderRating(reader.id).catch(() => {})
-
-  // Fetch lại để có rating mới nhất
-  const updatedReader = await prisma.readerInfo.findUnique({
-    where: { id: Number(id) },
-    include: { packages: true, availability: true, _count: { select: { reviews: true, session_reviews: true } } },
-  })
-  if (!updatedReader) return notFound()
-
   // Lấy các slot đã bị đặt (trừ CANCELLED) để loại khỏi lịch trống hiển thị
   const now = new Date()
   const todayVN = new Date(now.getTime() + 7 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -38,11 +27,11 @@ export default async function ReaderRoutePage({
   })()
 
   // Giải phóng slot bị giữ bởi booking PENDING quá hạn thanh toán
-  await expireStalePendingBookings(updatedReader.user_id).catch(() => {})
+  await expireStalePendingBookings(reader.user_id).catch(() => {})
 
   const activeBookings = await prisma.booking.findMany({
     where: {
-      provider_id: updatedReader.user_id,
+      provider_id: reader.user_id,
       status: { in: ['PENDING', 'PAYMENT_CONFIRMED', 'CONFIRMED'] },
     },
     select: { date: true, time: true },
@@ -53,7 +42,7 @@ export default async function ReaderRoutePage({
   )
 
   // Lọc availability: bỏ ngày quá khứ, bỏ giờ đã qua hôm nay, bỏ slot đã đặt
-  const filteredAvailability = updatedReader.availability
+  const filteredAvailability = reader.availability
     .map((a) => {
       const dateStr = a.date.toISOString().split('T')[0]
       const slots = a.slots.filter((slot) => {
@@ -66,7 +55,7 @@ export default async function ReaderRoutePage({
     })
     .filter((a) => a.slots.length > 0)
 
-  const readerWithFilteredAvailability = { ...updatedReader, availability: filteredAvailability }
+  const readerWithFilteredAvailability = { ...reader, availability: filteredAvailability }
 
   return <ReaderProfilePage reader={serializeReader(readerWithFilteredAvailability)} />
 }

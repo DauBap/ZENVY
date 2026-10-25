@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button'
 import { FloatingElements } from '@/components/ui/floating-elements'
 import { OnlineIndicator } from '@/components/ui/online-indicator'
 import { cn } from '@/lib/utils'
-import type { SerializedReader, SerializedPlatformStat } from '@/lib/serializers'
+import type { SerializedReaderListing, SerializedPlatformStat } from '@/lib/serializers'
 
 interface HeroSectionProps {
-  readers: SerializedReader[]
+  readers: SerializedReaderListing[]
   platformStats: SerializedPlatformStat
 }
 

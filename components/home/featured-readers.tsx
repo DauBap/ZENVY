@@ -6,10 +6,10 @@ import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ReaderCard } from '@/components/reader-card'
 import { cn } from '@/lib/utils'
-import type { SerializedReader } from '@/lib/serializers'
+import type { SerializedReaderListing } from '@/lib/serializers'
 
 interface FeaturedReadersProps {
-  readers: SerializedReader[]
+  readers: SerializedReaderListing[]
 }
 
 export function FeaturedReaders({ readers }: FeaturedReadersProps) {
@@ -66,8 +66,8 @@ export function FeaturedReaders({ readers }: FeaturedReadersProps) {
 
         {/* Readers Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredReaders.map((reader, index) => (
-            <ReaderCard key={reader.id} reader={reader} index={index} />
+          {featuredReaders.map((reader) => (
+            <ReaderCard key={reader.id} reader={reader} />
           ))}
         </div>
 
